@@ -1,0 +1,40 @@
+.game-canvas {
+    border: 1px solid black;
+    background-color: white;
+    border-radius: 5px;
+    height: 198px;
+    width: 100%;
+}
+
+.title-message {
+    color: blue;
+    margin-top: 10px;
+}
+
+body {
+    background-color: rgb(50, 50, 50);
+    padding: 0;
+    margin: 10px;
+    overflow: hidden;
+    display: flex;
+
+    align-items: center;
+    flex-direction: column;
+    top: 0;
+    left: 0;
+    height: 100%;
+}
+
+.game-container {
+    position: relative;
+    width: 32%;
+    height: 198px;
+    margin: 0 auto;
+    border-radius: 5px;
+    transform: scale(3) translateY(50%);
+    outline: 1px solid white;
+}
+
+.game-canvas canvas {
+    image-rendering: pixelated;
+}
