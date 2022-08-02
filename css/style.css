@@ -11,6 +11,62 @@
     margin-top: 10px;
 }
 
+#chat {
+    border: none;
+    outline: rgba(200, 200, 200, .5) 1px solid;
+    font-size: 7px;
+    width: 60px;
+    height: 10px;
+    background: rgba(255, 255, 255, .2);
+    border-radius: 5px;
+    position: fixed;
+    top: 187px;
+}
+
+#say {
+    background-color: rgba(200, 200, 200, 0.2);
+    position: fixed;
+    top: 187px;
+    left: 63px;
+    border-radius: 5px;
+    outline: 1px solid rgba(200, 200, 200, .5);
+    cursor: pointer;
+    border: none;
+    height: 10px;
+    font-size: 5px;
+}
+
+#events {
+    /* margin: 10px 0px; */
+    height: 55px;
+    width: 73px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    position: fixed;
+    top: 112px;
+    left: 0;
+    color: rgba(0, 0, 0, .8);
+    overflow: auto;
+    list-style-type: none;
+    font-size: 7px;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: left;
+    padding: 5px;
+}
+
+.scroll {
+    background: rgba(255, 255, 255, 0.3);
+    width: 10px;
+}
+
+.scroll::-webkit-scrollbar {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 body {
     background-color: rgb(50, 50, 50);
     padding: 0;

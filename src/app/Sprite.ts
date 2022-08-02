@@ -59,8 +59,14 @@ export class Sprite {
             'walk-up': [
                 [1, 2], [0, 2], [3, 2], [0, 2]
             ],
-            'jump': [[0, 0]]
-
+            'walk-jump': [[0, 0]],
+            'idle-jump': [[0, 0]],
+            'idle-undefined': [[0, 0]],
+            'walking-undefined': [[0, 0]],
+            'idle-object': [[0, 0]],
+            'walking-object': [[0, 0]],
+            'idle-0': [[0, 0]],
+            'walking-0': [[0, 0]]
 
         }
 
@@ -75,11 +81,9 @@ export class Sprite {
     }
 
     get frame() {
-        // if (this.currentAnimationFrame == undefined || this.currentAnimationFrame == 0) {
-        //     this.currentAnimationFrame = 1;
-        // }
-        console.log('animations: ', this.animations);
-        console.log('this.currentAnimation: ', this.currentAnimation, ' currentAnimationFrame: ', this.currentAnimationFrame)
+
+        // console.log('animations: ', this.animations);
+        //onsole.log('this.currentAnimation: ', this.currentAnimation, ' currentAnimationFrame: ', this.currentAnimationFrame)
         return this.animations[this.currentAnimation][this.currentAnimationFrame];
     }
 

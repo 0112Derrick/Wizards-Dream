@@ -5,15 +5,30 @@
     <meta http-equiv="Content-Type">
     <meta lang="en" charset="UTF-8" content="text/html">
     <meta name="description" content="An rpg game">
+    <link rel="icon" href="/images/characters/players/witch-girl.png">
     <title>Wizards-dreams</title>
     <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 
 <body>
     <div class="title-message">Server started</div>
+
+
     <div class="game-container">
-        <canvas class="game-canvas" ></canvas>
-        <!-- width="352" height="198"-->
+
+        <div class="controls-wrapper">
+            <canvas class="game-canvas"></canvas>
+            <!-- width="352" height="198"-->
+            <ul id="events"></ul>
+            <div class="controls">
+                <div class="chat-wrapper">
+                    <form action="" id="chat-form">
+                        <input id="chat" autocomplete="off" title="chat" tabindex="0" />
+                        <button id="say" type="submit" tabindex="0">Say</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 

@@ -12,8 +12,8 @@ export class Player extends GameObject {
         this.isPlayerControlled = config.isPlayerControlled || false;
 
         this.directionUpdate = {
-            "up": ["posY", -0.7],
-            "down": ["posY", 0.7],
+            "up": ["posY", -0.5],
+            "down": ["posY", 0.5],
             "right": ["posX", 0.7],
             "left": ["posX", -0.7],
             "jump": ["posY", 0],
@@ -22,7 +22,7 @@ export class Player extends GameObject {
 
     update(state): void {
         this.updatePosition();
-        console.log(state);
+        //console.log(state);
         this.updateSprite(state);
 
         if (this.isPlayerControlled && this.movingProgressRemaining === 0 && state.arrow) {
@@ -46,7 +46,7 @@ export class Player extends GameObject {
         }
 
         if (this.movingProgressRemaining > 0) {
-            this.sprite.setAnimation('walking-' + this.direction);
+            this.sprite.setAnimation('walk-' + this.direction);
         }
 
 

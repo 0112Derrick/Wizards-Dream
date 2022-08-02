@@ -58,7 +58,7 @@ export class Overworld<T> {
     }
 
     init() {
-        console.log("Overworld ", this);
+       // console.log("Overworld ", this);
         this.map = new OverworldMap(window.OverworldMaps.grassyField);
         this.directionInput = new DirectionInput();
         this.directionInput.init();
