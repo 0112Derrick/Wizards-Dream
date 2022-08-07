@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import * as express from 'express';
 import * as socketio from 'socket.io';
+import { Overworld } from '/Overworld.js';
 import * as http from 'http';
 import exp from 'constants';
 import { nextTick } from 'process';
@@ -12,6 +13,7 @@ import { nextTick } from 'process';
 
     registerStaticPaths(app);
     configurePaths(app);
+
 
     app.engine('hbs', exhbs({
         defaultLayout: "index",
