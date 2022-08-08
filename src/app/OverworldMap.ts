@@ -1,8 +1,9 @@
 import { Utils } from "./Utils.js";
 import { GameObject } from "./GameObject.js";
 import { Player } from "./Player.js";
+import { } from './Types.js'
 
-export class OverworldMap {
+class OverworldMap {
     gameObjects: any;
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
@@ -36,8 +37,8 @@ window.OverworldMaps = {
         gameObjects: {
             player01: new Player({
                 isPlayerControlled: true,
-                posX: Utils.withGrid(6),
-                posY: Utils.withGrid(6),
+                x: Utils.withGrid(6),
+                y: Utils.withGrid(6),
                 src: "/images/characters/players/erio.png",
                 direction: 'down'
             }),
@@ -56,12 +57,12 @@ window.OverworldMaps = {
         gameObjects: {
             hero: new Player({
                 isPlayerControlled: true,
-                posX: 5,
-                posY: 5,
+                x: 5,
+                y: 5,
             }),
-            npcHero: new Player({
-                posX: 10,
-                posY: 4,
+            npcHero: new GameObject({
+                x: 10,
+                y: 4,
                 src: "/images/characters/players/witch-girl.png"
             })
         }
@@ -69,4 +70,7 @@ window.OverworldMaps = {
     giantTree: {
 
     }
-}
+};
+
+
+export {  OverworldMap }

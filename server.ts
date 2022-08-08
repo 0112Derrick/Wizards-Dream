@@ -3,10 +3,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import * as express from 'express';
 import * as socketio from 'socket.io';
-import { Overworld } from '/Overworld.js';
 import * as http from 'http';
 import exp from 'constants';
 import { nextTick } from 'process';
+
+
+
+
+//import { createGameState } from './src/app/game.js';
 
 (function start_server() {
     const app = express.default();
@@ -26,11 +30,14 @@ import { nextTick } from 'process';
     const server = http.createServer(app);
     const io = new socketio.Server(server);
 
-    io.on('connection', sock => {
+    io.on('connection', client => {
+        // const state = createGameState();
+
         console.log('someone connected');
-        sock.emit('message', 'You are connected');
-        sock.on('message', (text) => { io.emit('message',text) });
-    })
+        client.emit('message', 'You are connected');
+        client.on('message', (text) => { io.emit('message', text) });
+        //client.emit('init', { client, state });
+    });
 
     server.on('error', (err) => {
         console.error(err);
@@ -49,6 +56,8 @@ function registerStaticPaths(app) {
 
     //Register static paths for loading modules
     app.use('/src/app', express.static(path.join(__dirname, './src/app')));
+    app.use('/src/constants', express.static(path.join(__dirname, './src/constants')));
+    app.use('/src/players', express.static(path.join(__dirname, './src/players')));
     app.use('/src/html', express.static(path.join(__dirname, './src/html')));
     app.use('/favicon', express.static(path.join(__dirname, './favicon/')));
     app.use('/css', express.static(path.join(__dirname, './css/')));
@@ -67,3 +76,5 @@ function configurePaths(app) {
     })
 
 }
+
+

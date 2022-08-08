@@ -112,8 +112,8 @@ export class Sprite {
     }
 
     draw(ctx): void {
-        const posX = this.gameObject.posX - 8;
-        const posY = this.gameObject.posY - 18;
+        const posX = this.gameObject.x - 8;
+        const posY = this.gameObject.y - 18;
         this.isShadowLoaded && ctx.drawImage(this.shadow, posX, posY
         );
 

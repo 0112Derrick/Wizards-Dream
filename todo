@@ -1,0 +1,84 @@
+Create player signup []
+    - assign ID []
+    - user creates: userID & password []
+        -use crypto / salts to encrypt passwords []
+        - use regex to make sure email is valid []
+    - user selects: character sprite  []
+    - user selects: character type : mage, warrior, priest []
+    - -save user to database []
+
+Create login screen []
+    - user inputs login & password []
+        - compare user input password with password encryption in db
+        - validate user email
+    - redirect user to landing page aka character screen []
+
+Character Types []
+    - Mage {hp = med, atk = low, mAtk = high, def = low, mDef= med } []
+    - Warrior {hp = high, atk = high, mAtk = low, def = med, mDef = low} []
+    - Priest {hp = med, atk = low, mAtk = med, def = med, mDef = med} []
+ 
+Multiplayer []
+    - Open connection between server and client []
+    - Send game state to client []
+    - Receive players state after action []
+    - Update all players states []
+    - Create different servers to prevent map crowding []
+
+Collision []
+    - Track Game Objects locations []
+        - Track player attacks []
+        - Track npc attacks []
+        - Track players locations []
+        - Track enemy locations []
+
+    - Set boundaries on game maps []
+
+Create character select screen []
+    -Create an array of character slots for a user to select from after logging in []
+
+Player HUD []
+    - Create player's heathbar , mana bar, skills []
+    - Design chat bar []
+        - Create global messaging [√]
+        - Create private messaging []
+        - Create party messaging []
+        - Create guild messaging []
+
+
+Player attack animations []
+    - Switch between animations on key presses []
+
+Create npcs []
+    - Display npc on map []
+    - Design npcs movement [] 
+    - Design npc dialogue []
+    - Design npc attack []
+
+Create items []
+- Create display (IMG) []
+- Create item id  []
+- name []
+- effect []
+
+Create inventory []
+- Create display for inventory []
+- Update database when user gets a new item or gets more of a previous item []
+
+Create quests []
+- Design quest interface {HUD} []
+- Allow players to accept quest and abandon quests []
+- Track player progression through quest []
+- Add rewards to inventory []
+
+Add a party system []
+- Create party screen HUD []
+    - Display all players in party HP []
+    - Display all players in party Mana []
+- Load all Players onto the same Map []
+- Priest class auto targets party members [] 
+
+Add a guild system []
+
+Add boss npc []
+

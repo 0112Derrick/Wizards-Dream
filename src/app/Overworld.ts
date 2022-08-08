@@ -3,6 +3,7 @@ import { GameObject } from "./GameObject.js"
 import { Sprite } from "./Sprite.js";
 import { DirectionInput } from "./DirectionInput.js";
 
+
 import { runInThisContext } from "vm";
 
 export class Overworld<T> {
@@ -24,6 +25,7 @@ export class Overworld<T> {
         this.numbOfPlayers = 1;
         this.map = null;
     }
+
 
     startGameLoop() {
 
@@ -64,9 +66,42 @@ export class Overworld<T> {
         this.map = new OverworldMap(window.OverworldMaps.grassyField);
         this.directionInput = new DirectionInput();
         this.directionInput.init();
-
         this.startGameLoop();
-
     }
 
 }
+export function drawGame(gameState) {
+
+    //Clear off canvas
+    const canvas: HTMLCanvasElement = document.querySelector(".game-canvas")!;
+    let ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
+    let directionInput = new DirectionInput();
+    directionInput.init();
+    let map = new OverworldMap(gameState.grassyField);
+
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+
+    //draw lower layer
+    map.drawLowerImage(ctx);
+
+
+    //draw gameObjects
+    Object.values(map.gameObjects).forEach(o => {
+        if (o instanceof GameObject) {
+            if (ctx) {
+
+                o.update({
+                    arrow: directionInput.direction
+                });
+
+                o.sprite.draw(ctx);
+            }
+        }
+    });
+    //draw upper layer
+    //this.map.drawUpperImage(this.ctx);
+}
+
+
+
