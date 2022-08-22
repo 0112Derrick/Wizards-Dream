@@ -1,6 +1,6 @@
 import { Utils } from "./Utils.js";
 import { GameObject } from "./GameObject.js";
-import { Player } from "./Player.js";
+import { Character } from "./Character.js";
 import { } from './Types.js'
 
 class OverworldMap {
@@ -35,7 +35,7 @@ window.OverworldMaps = {
         lowerSrc: "/images/maps/Battleground1.png",
         upperSrc: "/images/maps/Battleground1.png",
         gameObjects: {
-            player01: new Player({
+            player01: new Character({
                 isPlayerControlled: true,
                 x: Utils.withGrid(6),
                 y: Utils.withGrid(6),
@@ -47,15 +47,13 @@ window.OverworldMaps = {
             //     posX: Utils.withGrid(5),
             //     posY: Utils.withGrid(6),
             // }),
-
-
         }
     },
     hallway: {
         lowerSrc: "/images/maps/Battleground2.png",
         upperSrc: "/images/maps/Battleground2.png",
         gameObjects: {
-            hero: new Player({
+            hero: new Character({
                 isPlayerControlled: true,
                 x: 5,
                 y: 5,
@@ -73,4 +71,4 @@ window.OverworldMaps = {
 };
 
 
-export {  OverworldMap }
+export { OverworldMap }

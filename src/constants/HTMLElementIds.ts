@@ -17,8 +17,9 @@ let HTML_IDS = {
     GAME_CHAT_INPUT: 'say',
     GAME_CHAT_FORM: 'chat-form',
     GAME_CHAT_BOARD: 'events'
-
 }
+
+
 
 for (let prop in HTML_IDS) {
     Object.defineProperty(HTML_IDS, prop, { configurable: false, writable: false })

@@ -1,6 +1,6 @@
 
 //import { io } from 'socket.io-client';
-import DOMPurify from 'dompurify';
+//import DOMPurify from 'dompurify';
 
 
 const log = (text) => {
@@ -27,8 +27,8 @@ const onChatSubmitted = (sock) => (e) => {
     const input = document.querySelector('#chat');
     const text = input.value;
     input.value = '';
-    const cleanText = DOMPurify.sanitize(text);
-    sock.emit('message', cleanText);
+    // const cleanText = DOMPurify.sanitize(text);
+    sock.emit('message', text);
 };
 
 function handleInit(msg) {

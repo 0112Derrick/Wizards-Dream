@@ -1,13 +1,20 @@
 import { idText } from "typescript";
+import { IcharacterDocument } from "../players/PlayerDataInterface.js";
 import { GameObject } from "./GameObject.js";
 
-export class Player extends GameObject {
+export class Character extends GameObject implements IcharacterDocument {
     movingProgressRemaining: number;
     directionUpdate: {};
     isPlayerControlled: any;
+    id: string;
+    level: number;
+    class: string;
+    guild: string;
+    items: string[];
 
     constructor(config) {
         super(config);
+
         this.movingProgressRemaining = 0;
         this.isPlayerControlled = config.isPlayerControlled || false;
 
@@ -16,9 +23,17 @@ export class Player extends GameObject {
             "down": ["y", 0.5],
             "left": ["x", -0.7],
             "right": ["x", 0.7],
-            "jump": ["posY", 0],
+            "jump": ["y", 0],
         }
+        this.id = config.id || '00001';
+        this.level = config.level || 1;
+        this.class = config.class || 'mage';
+        this.guild = config.guild || 'none';
+        this.items = config.items || [];
     }
+
+
+
 
     update(state): void {
         this.updatePosition();
