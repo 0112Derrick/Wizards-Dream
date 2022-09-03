@@ -26,7 +26,7 @@ import runDBTest from './src/db-test.js';
 //import { createGameState } from './src/app/game.js';
 
 import fsModule from 'fs';
-import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
+//import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
 
 declare global {
     namespace Express {
@@ -41,33 +41,33 @@ const fs = fsModule.promises;
 (function start_server() {
     const app = express.default();
 
-    connectDB();
+    //connectDB();
 
     app.use(express.static('static'));
 
 
     //Setup session MW
-    const session = expressSession({
-        secret: COOKIE_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: connectMongo.create({
-            mongoUrl: MONGO_URI,
-            collectionName: 'sessions',
-        }),
-        cookie: {
-            maxAge: 60000 * 1440
-        }
-    });
+    // const session = expressSession({
+    //     secret: COOKIE_SECRET,
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     store: connectMongo.create({
+    //         mongoUrl: MONGO_URI,
+    //         collectionName: 'sessions',
+    //     }),
+    //     cookie: {
+    //         maxAge: 60000 * 1440
+    //     }
+    // });
 
-    // express session({..}) initialization
-    app.use(session);
+    // // express session({..}) initialization
+    // app.use(session);
 
-    //init passport on every route call
-    app.use(passport.initialize());
+    // //init passport on every route call
+    // app.use(passport.initialize());
 
-    // allow passport to use 'express-session'
-    app.use(passport.session());
+    // // allow passport to use 'express-session'
+    // app.use(passport.session());
 
     initLocalStrategy(passport);
 
@@ -138,21 +138,21 @@ function configurePaths(app) {
 
     app.get("/", (req, res, next) => {
 
-        if (req.isAuthenticated()) {
+        // if (req.isAuthenticated()) {
             //Already logged in, so display main app
-            res.redirect("/main");
-        } else {
+            //res.redirect("/main");
+        // } else {
             res.render("signup", { layout: 'landing' });
-        }
+        // }
     });
 
     app.get('/main', (req, res) => {
-        if (req.isAuthenticated()) {
+        // if (req.isAuthenticated()) {
             res.render('index', { layout: 'index' });
-        }
-        else {
-            res.redirect('/');
-        }
+        // }
+        // else {
+            //res.redirect('/');
+        // }
     });
 
     app.get('/signup', (req, res) => {

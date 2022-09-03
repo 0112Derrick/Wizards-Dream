@@ -77,13 +77,15 @@ class PlayerSignUpController extends $Observer {
     async playerLogIn(route: string, event) {
         const entries = event.detail.entries();
 
-        const [[, email], [, password]] = Array.from(entries); //Use array destructuring to extract data from form.
+        //const [[, email], [, password]] = Array.from(entries); //Use array destructuring to extract data from form.
+        const email = entries.email;
+        const password = entries.password;
         const result = await this.networkProxy.postJSON(route, { email: email, password: password })
 
         //Log the user in or report the appropriate error message.
         console.log('result: ', result);
 
-        if (result.ok) {
+        if (result.status == $statusConstants.OK) {
             window.location.assign('/');
         }
         if (result.status == $statusConstants.CLIENT_ERROR_BASE) {
