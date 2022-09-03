@@ -1,6 +1,6 @@
 import { Character } from '../app/Character.js';
 
-interface playerSignupDataInterface {
+export interface playerSignupDataInterface {
     username: string,
     email: string,
     password: string,

@@ -107,3 +107,12 @@ body {
 .game-canvas canvas {
     image-rendering: pixelated;
 }
+
+#logout {
+    cursor: pointer;
+    color: white;
+    outline: gold;
+    width: 15px;
+    height: 15px;
+    border-radius: 5%;
+}

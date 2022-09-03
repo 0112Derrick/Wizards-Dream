@@ -32,7 +32,7 @@ playerRouter.post('/signup', express.json(), async function (req, res, next) {
             .catch((err) => { console.log("Failed to add player") })
             .finally(() => res.redirect('/'));
     } else {
-        res.status(StatusConstants.CLIENT_ERROR_BASE);
+        res.status($StatusConstants.CLIENT_ERROR_BASE);
         res.redirect('/');
         console.log('Cannot validate user');
     }
@@ -44,23 +44,31 @@ playerRouter.post('/login', express.json(), function (req, res, next) {
     passport.authenticate('local', function (err, user, info, status) {
         if (err) {
             console.log('Invalid password');
-            return res.status(StatusConstants.INVALID_PASSWORD);
+            return res.sendStatus($StatusConstants.INVALID_PASSWORD);
         }
         if (!user) {
             console.log('Failed to find user');
-            return res.sendStatus(StatusConstants.USER_NOT_FOUND);
+            return res.sendStatus($StatusConstants.USER_NOT_FOUND);
         }
         req.logIn(user, function (err) {
             if (err) { return next(err) }
-            return res.sendStatus(StatusConstants.OK);
+            console.log($StatusConstants.OK);
+            return res.sendStatus($StatusConstants.OK);
         });
 
         return;
     })(req, res, next);
 });
 
+playerRouter.post('/logout', (req, res) => {
+    req.session.destroy(function (err) {
+        if (err) return res.sendStatus($StatusConstants.SERVER_ERROR_BASE);
+        return res.sendStatus($StatusConstants.OK);
+    })
+})
+
 playerRouter.post('/*', (req, res) => {
-    res.sendStatus(StatusConstants.RESOURCE_NOT_FOUND);
+    return res.sendStatus($StatusConstants.RESOURCE_NOT_FOUND);
 })
 
 playerRouter.use((error, req, res, next) => {

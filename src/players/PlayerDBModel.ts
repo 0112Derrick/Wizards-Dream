@@ -4,6 +4,8 @@ import playerDataInterface from './PlayerDataInterface.js';
 import { IplayerDocument } from './interfaces/IPlayerDocument.js';
 import IcharacterDocument from './PlayerDataInterface.js';
 import { Player } from './Player.js';
+import $player from './Player.js'
+import Observer from '../framework/Observer.js';
 
 
 const { Schema, model } = pkg;
@@ -39,6 +41,22 @@ const characterSchema = new Schema<IcharacterDocument>({
 
 })
 
+class DbModelController extends Observer {
+    private player: Player;
+    private playerModel: IplayerModel;
+
+    constructor() {
+        super();
+        this.player = $player;
+        this.playerModel = PlayerModel;
+    }
+
+    updatePlayer() {
+
+    }
+
+}
+
 export const playerSchema = new Schema<IPlayerDoc, IplayerModel>({
     username: { type: String },
     email: { type: String, index: { unique: true }, required: true },
@@ -51,7 +69,7 @@ export const playerSchema = new Schema<IPlayerDoc, IplayerModel>({
 playerSchema.method('validPassword', function (password: string): boolean {
 
 
-    const reaclHash = pbkdf2Sync(password, this.salt, 1000, 64, 'sha512')
+    const reaclHash = pbkdf2Sync(password, this.salt, 1000, 64, 'sha512').toString();
 
     return this.hash === reaclHash;
 

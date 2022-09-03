@@ -1,7 +1,7 @@
 
 
 import connectMongo from 'connect-mongo';
-import HTML_IDS from './src/constants/HTMLElementIds.js';
+import { LANDING_HTML_IDS, HTML_IDS } from './src/constants/HTMLElementIds.js';
 import * as express from 'express';
 import expressSession from 'express-session';
 import exhbs from 'express-handlebars';
@@ -41,14 +41,10 @@ const fs = fsModule.promises;
 (function start_server() {
     const app = express.default();
 
-    app.use((req, res, next) => {
-        res.locals.HTML_IDS = HTML_IDS;
-        next();
-    });
-
     connectDB();
 
     app.use(express.static('static'));
+
 
     //Setup session MW
     const session = expressSession({
@@ -59,7 +55,9 @@ const fs = fsModule.promises;
             mongoUrl: MONGO_URI,
             collectionName: 'sessions',
         }),
-        //cookie: {}
+        cookie: {
+            maxAge: 60000 * 1440
+        }
     });
 
     // express session({..}) initialization
@@ -74,6 +72,13 @@ const fs = fsModule.promises;
     initLocalStrategy(passport);
 
     registerStaticPaths(app);
+
+    app.use((req, res, next) => {
+        res.locals.LANDING_HTML_IDS = LANDING_HTML_IDS;
+        res.locals.LOGIN_IDS = HTML_IDS;
+
+        next();
+    });
 
     configurePaths(app);
 
@@ -119,6 +124,8 @@ function registerStaticPaths(app) {
     app.use('/src/players', express.static(path.join(__dirname, './src/players')));
     app.use('/src/html', express.static(path.join(__dirname, './src/html')));
     app.use('/src/', express.static(path.join(__dirname, './src/')));
+    app.use('/src/framework', express.static(path.join(__dirname, './src/framework')));
+    app.use('/src/network', express.static(path.join(__dirname, './src/network')));
     app.use('/favicon', express.static(path.join(__dirname, './favicon/')));
     app.use('/css', express.static(path.join(__dirname, './css/')));
     app.use('/images', express.static(path.join(__dirname, './images/')));
@@ -135,13 +142,13 @@ function configurePaths(app) {
             //Already logged in, so display main app
             res.redirect("/main");
         } else {
-            res.render("login");
+            res.render("signup", { layout: 'landing' });
         }
     });
 
     app.get('/main', (req, res) => {
         if (req.isAuthenticated()) {
-            res.render('index');
+            res.render('index', { layout: 'index' });
         }
         else {
             res.redirect('/');
@@ -149,7 +156,7 @@ function configurePaths(app) {
     });
 
     app.get('/signup', (req, res) => {
-        res.render('signup');
+        res.render('signup', { layout: 'landing' });
     });
 
     app.get("/character", (req, res) => {
