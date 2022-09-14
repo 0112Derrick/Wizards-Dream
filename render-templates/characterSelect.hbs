@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta http-equiv="Content-Type" />
+    <meta lang="en" charset="UTF-8" content="text/html" />
+    <meta name="description" content="An rpg game" />
+    <title>Wizards-dreams</title>
+    <link rel="SHORTCUT ICON" href="/images/characters/players/witch-girl.png" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+</head>
+
+<body>
+    <div class="characterMenuContainer">
+        <div class="characterSelectContainer">
+            <ul id="characterList">
+                <li>
+                    <div>
+                        <ul>
+                            <li>{{Name}}</li>
+                            <li>ID:{{ID}}</li>
+                            <li>
+                                <div>LV:{{Level}}</div>
+                                <div>{{Class}}</div>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <button id="characterScreen-createCharacterBtn">Create Character</button>
+                </li>
+                <li>
+                    <div>
+                        <img src="https://cdn-icons-png.flaticon.com/512/61/61457.png" alt="" srcset="" height="10px"
+                            width="10px">
+                        <button id="characterScreen-unlockCharacter">Unlock Character</button>
+                    </div>
+                </li>
+            </ul>
+
+            <button id="characterScreen-selectCharacter">Select Character</button>
+        </div>
+
+        <div id="characterScreen-characterImageContainer">
+            <button id="characterScreen-deleteCharacter">Delete Character</button>
+            <img src="{{CharacterIMG}}" alt="" height="15px" width="15px">
+        </div>
+    </div>
+
+    <div class="footer">
+        <button id="characterScreen-logout">Logout</button>
+    </div>
+
+    <div id="characterScreen-moduleCharachterCreateContainer">
+        <div>
+            <img src="{{img}}" alt="">
+        </div>
+        <div id="characterScreen-OptiontsContainer">
+            <div class="flex">
+                <div>Gender:</div>
+                <div>
+                    <button id="characterScreen-genderPrev"> ⬅️ </button>
+                    <div id="characterScreen-classText">{{GenderText}}</div>
+                    <button id="characterScreen-genderNext"> ➡️</button>
+                </div>
+            </div>
+            <div class="flex">
+                <div>Class:</div>
+                <div>
+                    <button id="characterScreen-classPrev"> ⬅️ </button>
+                    <div id="characterScreen-classText">{{ClassText}}</div>
+                    <button id="characterScreen-classNext"> ➡️</button>
+                </div>
+            </div>
+        </div>
+        <button id="characterScreen-CreateCharacterBtn">Create</button>
+    </div>
+
+</body>
+
+
+</html>

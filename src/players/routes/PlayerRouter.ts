@@ -4,7 +4,7 @@ import { StatusConstants as $StatusConstants } from '../../constants/StatusConst
 import { Player as $player } from '../Player.js';
 import passportStrategies from "../../authentication/passport-strategies.js";
 import passport from 'passport';
-import { StatusConstants } from '../../constants/StatusConstants.js';
+
 import { equal } from 'assert';
 
 const playerRouter: Router = express.Router();

@@ -20,17 +20,33 @@ export interface playerProfileDataInterface extends commonDataInterface {
     email: string,
 
 }
-
-export default interface playerDataInterface extends playerProfileDataInterface {
-    characters: IcharacterDocument[];
+interface commonCharacterDataInterface {
+    username: string,
 }
+export interface characterDataInterface extends commonCharacterDataInterface {
+    characterID: number,
+    attributes: {
+        level: number,
+        experience: number,
+        experienceCap: number,
+        statPoints: number,
+        hp: number,// Determines how many times a player can take damage before dying & hp regen amount
+        sp: number, // Determines how many times a magic atk can be used and regen amount
+        Def: number,// Determines how much damage is taken from phyiscal hits
+        Mdef: number,// Determines how much damage is taken from Magic hits
+        Crit: number,// Determines wheter or not a hit does increased damgage & increased damage amount
 
-export interface IcharacterDocument {
-    name: string,
-    id: string,
-    level: number,
+        //stats directly controlled by the player when using levelinh points
+        Atk: number,// Determines Physical atk damage and gives a minor boost to hp total
+        Matk: number,// Determines Magic atk damage and gives a minor boost to sp total
+        Vit: number,// Increases hp and def
+        Men: number,//Increases sp & mdef
+        Dex: number,//Increases Crit  
+    },
     class: string,
     guild: string,
     items: string[],
 }
-
+export default interface playerDataInterface extends playerProfileDataInterface {
+    characters: characterDataInterface[];
+}

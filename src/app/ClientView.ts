@@ -25,12 +25,20 @@ class ClientView extends $ClientSyntheticEventEmitter {
                 throw new MissingElementError(`Element id: ${$id}: ${$id[elem_id]} .`);
             }
         }
-        this.DOM[$id.LOGOUT].addEventListener('click', () => { this.logoutCallback() })
+        this.DOM[$id.LOGOUT].addEventListener('click', () => { this.logoutAccountCallback() })
 
-        document.getElementById('logout')!.addEventListener('click', () => { this.logoutCallback() });
+        document.getElementById('logout')!.addEventListener('click', () => { this.logoutAccountCallback() });
+        const characterCreate = document.getElementById('characterScreen-CreateCharacterBtn');
+        characterCreate?.addEventListener('click', () => { this.createCharacter() })
+    }
+    createCharacter() {
+        //check GenderText
+
+        //check ClassText
 
     }
-    logoutCallback() {
+
+    logoutAccountCallback() {
         this.dispatchEventLocal($events.LOGOUT, null);
     }
 

@@ -8,7 +8,7 @@ import $HTMLProxy from '../network/HTML-Proxy.js';
 import { response } from 'express';
 import { playerSignupDataInterface as $playerSignupDataInterface } from '../players/PlayerDataInterface.js'
 import $Player from './Player.js';
-import NetworkProxy from '../network/NetworkProxy.js';
+
 
 class PlayerSignUpController extends $Observer {
     private networkProxy: $NetworkProxy;
@@ -29,9 +29,9 @@ class PlayerSignUpController extends $Observer {
      * @description
      * Callback triggered by the View playerSignUp event.
      * Create a new Player Model using the sign up info
-     * 
-     * @param {CustomEvent} event - Custom event object which includes player's details 
-     * 
+     *
+     * @param {CustomEvent} event - Custom event object which includes player's details
+     *
      */
     async savePlayerSignUpInfoCallback(route: string, data: any): Promise<boolean> {
         try {
@@ -75,11 +75,14 @@ class PlayerSignUpController extends $Observer {
     }
 
     async playerLogIn(route: string, event) {
-        const entries = event.detail.entries();
+        // const entries = event.detail.entries();
 
         //const [[, email], [, password]] = Array.from(entries); //Use array destructuring to extract data from form.
-        const email = entries.email;
-        const password = entries.password;
+        // const email = entries.email;
+        // const password = entries.password;
+        const email = event.detail.email;
+        const password = event.detail.password;
+
         const result = await this.networkProxy.postJSON(route, { email: email, password: password })
 
         //Log the user in or report the appropriate error message.
@@ -92,7 +95,7 @@ class PlayerSignUpController extends $Observer {
             window.location.assign('/player/landing');
 
         }
-        else if ( result.status < $statusConstants.SERVER_ERROR_BASE) {
+        else if (result.status < $statusConstants.SERVER_ERROR_BASE) {
             switch (result.status) {
                 case $statusConstants.USER_NOT_FOUND:
                     alert('User not found');

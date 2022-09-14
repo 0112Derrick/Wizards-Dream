@@ -13,13 +13,13 @@ class MissingElementError extends Error {
 
 /**
  * @class PlayerSignUpView
- * 
+ *
  * @extends SyntheticEventEmitter
- * 
+ *
  * @description
  * Handles everything related to displaying and emetting onscreen interactions in the form of events
- * 
- * 
+ *
+ *
  */
 
 class PlayerSignUpView extends $ClientSyntheticEventEmitter {
@@ -101,9 +101,13 @@ class PlayerSignUpView extends $ClientSyntheticEventEmitter {
 
         //{ email: (<HTMLInputElement>this.emailLogin).value, password: (<HTMLInputElement>this.passwordLogin).value }
         const [[, email], [, password]] = Array.from(formData.entries());
+        let formDataPlayer = {
+            email: email,
+            password: password,
+        }
 
         if (email && password) {
-            this.dispatchEventLocal($event.SIGN_IN, formData);
+            this.dispatchEventLocal($event.SIGN_IN, formDataPlayer);
         }
     };
 
