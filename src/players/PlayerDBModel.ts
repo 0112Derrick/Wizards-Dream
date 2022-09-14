@@ -1,9 +1,8 @@
 import { Model } from 'mongoose';
 import pkg from 'mongoose';
 import playerDataInterface from './PlayerDataInterface.js';
-import { IplayerDocument } from './interfaces/IPlayerDocument.js';
+import { IplayerDocument, IcharacterDocument } from './interfaces/IPlayerDocument.js';
 import { characterDataInterface } from './PlayerDataInterface.js';
-import { IcharacterDocument } from './interfaces/IPlayerDocument.js';
 import { Player } from './Player.js';
 import $player from './Player.js'
 import Observer from '../framework/Observer.js';
