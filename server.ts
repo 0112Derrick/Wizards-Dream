@@ -21,12 +21,12 @@ import { Player } from './src/players/Player.js';
 import connectDB from './src/db/db-init.js';
 import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
-
+import { GameRouter } from './src/players/GameRouter';
 
 //import { createGameState } from './src/app/game.js';
 
 import fsModule from 'fs';
-//import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
+import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
 
 declare global {
     namespace Express {
@@ -46,28 +46,28 @@ const fs = fsModule.promises;
     app.use(express.static('static'));
 
 
-    //Setup session MW
-    // const session = expressSession({
-    //     secret: COOKIE_SECRET,
-    //     resave: false,
-    //     saveUninitialized: false,
-    //     store: connectMongo.create({
-    //         mongoUrl: MONGO_URI,
-    //         collectionName: 'sessions',
-    //     }),
-    //     cookie: {
-    //         maxAge: 60000 * 1440
-    //     }
-    // });
+    // Setup session MW
+    const session = expressSession({
+        secret: COOKIE_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        store: connectMongo.create({
+            mongoUrl: MONGO_URI,
+            collectionName: 'sessions',
+        }),
+        cookie: {
+            maxAge: 60000 * 1440
+        }
+    });
 
-    // // express session({..}) initialization
-    // app.use(session);
+    //express session({..}) initialization
+    app.use(session);
 
     // //init passport on every route call
-    // app.use(passport.initialize());
+    app.use(passport.initialize());
 
     // // allow passport to use 'express-session'
-    // app.use(passport.session());
+    app.use(passport.session());
 
     initLocalStrategy(passport);
 
@@ -96,11 +96,15 @@ const fs = fsModule.promises;
 
     const io = new socketio.Server(server);
 
+    let gameRouter: GameRouter;
+
     io.on('connection', client => {
+        gameRouter = new GameRouter(io, client);
+        gameRouter.initGame();
         // const state = createGameState();
-        console.log('someone connected');
-        client.emit('message', 'You are connected');
-        client.on('message', (text) => { io.emit('message', text) });
+        //console.log('someone connected');
+        //client.emit('message', 'You are connected');
+        //client.on('message', (text) => { io.emit('message', text) });
         //client.emit('init', { client, state });
     });
 
@@ -138,21 +142,21 @@ function configurePaths(app) {
 
     app.get("/", (req, res, next) => {
 
-        // if (req.isAuthenticated()) {
+        if (req.isAuthenticated()) {
             //Already logged in, so display main app
-            //res.redirect("/main");
-        // } else {
+            res.redirect("/main");
+        } else {
             res.render("signup", { layout: 'landing' });
-        // }
+        }
     });
 
     app.get('/main', (req, res) => {
-        // if (req.isAuthenticated()) {
+        if (req.isAuthenticated()) {
             res.render('index', { layout: 'index' });
-        // }
-        // else {
-            //res.redirect('/');
-        // }
+        }
+        else {
+            res.redirect('/');
+        }
     });
 
     app.get('/signup', (req, res) => {
