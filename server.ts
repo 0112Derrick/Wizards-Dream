@@ -5,6 +5,11 @@ import * as express from 'express';
 import * as socketio from 'socket.io';
 import { Overworld } from '/Overworld.js';
 import * as http from 'http';
+<<<<<<< Updated upstream
+=======
+import { GameRouter } from './src/players/gameRouter.js';
+
+>>>>>>> Stashed changes
 import exp from 'constants';
 import { nextTick } from 'process';
 
@@ -26,11 +31,29 @@ import { nextTick } from 'process';
     const server = http.createServer(app);
     const io = new socketio.Server(server);
 
+<<<<<<< Updated upstream
     io.on('connection', sock => {
         console.log('someone connected');
         sock.emit('message', 'You are connected');
         sock.on('message', (text) => { io.emit('message',text) });
     })
+=======
+    let gameRouter: GameRouter;
+
+
+    io.on('connection', client => {
+        // console.log('someone connected');
+        gameRouter = new GameRouter(io, client);
+        gameRouter.initGame();
+        // const state = createGameState();
+
+        // client.emit('message', 'You are connected');
+        // client.on('message', (text) => { io.emit('message', text) });
+        //client.emit('init', { client, state });
+    });
+>>>>>>> Stashed changes
+
+
 
     server.on('error', (err) => {
         console.error(err);
