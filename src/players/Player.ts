@@ -39,7 +39,7 @@ export class Player {
         this.data = Object.assign(this.data, playerData);
         // Push contact onto the server and save the contact to the db
         //Implement
-        
+
     }
 
     // async fetchPlayer(): Promise<$playerDataInterface> {

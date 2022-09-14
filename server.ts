@@ -21,7 +21,7 @@ import { Player } from './src/players/Player.js';
 import connectDB from './src/db/db-init.js';
 import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
-import { GameRouter } from './src/players/GameRouter';
+import { GameRouter } from './src/players/GameRouter.js';
 
 //import { createGameState } from './src/app/game.js';
 
