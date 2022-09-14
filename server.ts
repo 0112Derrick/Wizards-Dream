@@ -41,7 +41,7 @@ const fs = fsModule.promises;
 (function start_server() {
     const app = express.default();
 
-    //connectDB();
+    connectDB();
 
     app.use(express.static('static'));
 
