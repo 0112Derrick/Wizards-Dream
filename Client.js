@@ -42,7 +42,7 @@ function handleGameState(gameState) {
     })
 }
 
-const sock = io('localhost/8080');
+//const sock = io('localhost/8080');
 
 (() => {
     //const canvas = document.querySelector('.game-canvas');

@@ -4,7 +4,7 @@ import NetworkProxy from "../network/NetworkProxy.js";
 import $HTMLNetwork from "../network/HTML-Proxy.js";
 import { EventConstants as $events } from '../constants/EventConstants.js';
 import { StatusConstants as $StatusConstants } from "../constants//StatusConstants.js";
-
+//import { io, Socket } from "../../node_modules/socket.io-client";
 //import io from '../../node_modules/socket.io-client';
 
 
@@ -12,11 +12,11 @@ import { StatusConstants as $StatusConstants } from "../constants//StatusConstan
 class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
-    // private socket: SocketIOClient.Socket;
+    // private socket: Socket<DefaultEventsMap, DefaultEventsMap>;
     constructor(networkProxy: NetworkProxy) {
         super();
         this.networkProxy = networkProxy;
-        //this.socket = io();
+        // this.socket = io();
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
         }, this.view);

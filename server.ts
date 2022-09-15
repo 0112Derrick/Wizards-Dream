@@ -36,6 +36,25 @@ declare global {
     }
 }
 
+interface ServerToClientEvents {
+    noArg: () => void;
+    basicEmit: (a: number, b: string, c: Buffer) => void;
+    withAck: (d: string, callback: (e: number) => void) => void;
+}
+
+interface ClientToServerEvents {
+    hello: () => void;
+}
+
+interface InterServerEvents {
+    ping: () => void;
+}
+
+interface SocketData {
+    name: string;
+    age: number;
+}
+
 const fs = fsModule.promises;
 
 (function start_server() {
@@ -99,12 +118,13 @@ const fs = fsModule.promises;
     let gameRouter: GameRouter;
 
     io.on('connection', client => {
-        gameRouter = new GameRouter(io, client);
-        gameRouter.initGame();
+        console.log('connected');
+        //gameRouter = new GameRouter(io, client);
+        //gameRouter.initGame();
         // const state = createGameState();
         //console.log('someone connected');
-        //client.emit('message', 'You are connected');
-        //client.on('message', (text) => { io.emit('message', text) });
+        client.emit('message', 'You are connected');
+        client.on('message', (text) => { io.emit('message', text) });
         //client.emit('init', { client, state });
     });
 

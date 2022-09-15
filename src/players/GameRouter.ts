@@ -1,5 +1,5 @@
 import { ServerSizeConstants as $serverSize } from "../constants/ServerSizeConstants.js";
-import { io } from 'socket.io-client';
+//import { io } from 'socket.io-client';
 
 export class GameRouter {
     private io: any;
@@ -37,10 +37,12 @@ export class GameRouter {
         let server: Map<number, Array<Map<string, boolean>>> = new Map([[_serverId, playerList]]);
         this.serverRooms!.push(server);
         let sock = this.io();
+
         this.startServer(_serverId);
     }
 
     startServer(serverId) {
+        console.log('starting server');
         let world = this.createOverworld();
         this.io.sockets.in(serverId).emit('newServerWorld', world);
     }
