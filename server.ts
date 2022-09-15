@@ -135,6 +135,7 @@ function registerStaticPaths(app) {
     app.use('/images', express.static(path.join(__dirname, './images/')));
     app.use('/', express.static(path.join(__dirname, '/')));
     app.use('/src/constants', express.static(path.join(__dirname, './src/constants')));
+    app.use('/', express.static('./node_modules/socket.io-client'));
 }
 
 function configurePaths(app) {
