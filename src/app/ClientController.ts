@@ -5,22 +5,30 @@ import $HTMLNetwork from "../network/HTML-Proxy.js";
 import { EventConstants as $events } from '../constants/EventConstants.js';
 import { StatusConstants as $StatusConstants } from "../constants//StatusConstants.js";
 
-//import io from '../../node_modules/socket.io-client';
+import {io, Socket} from '/socket.io-client/dist/socket.io.esm.min.js';
 
 
-
+interface ClientToServerEvents {
+    playerJoinedServer: (data:number) => void;
+    basicEmit: (a: number, b: string, c: number[]) => void;
+  }
+  
+interface ServerToClientEvents {
+    withAck: (d: string, cb: (e: number) => void) => void;
+  }
+  
 class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
-    // private socket: SocketIOClient.Socket;
+   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
     constructor(networkProxy: NetworkProxy) {
         super();
         this.networkProxy = networkProxy;
-        //this.socket = io();
+        this.socket = io();
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
         }, this.view);
-        // socket.emit('playerJoinedServer', this.playerJoinedServer);
+        this.socket.emit('playerJoinedServer',123);
     }
 
     playerJoinedServer(data) {

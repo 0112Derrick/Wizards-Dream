@@ -56,7 +56,7 @@ playerRouter.post('/login', express.json(), function (req, res, next) {
             return res.sendStatus($StatusConstants.OK);
         });
 
-        return;
+        return 0;
     })(req, res, next);
 });
 
