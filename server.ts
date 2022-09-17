@@ -60,35 +60,35 @@ const fs = fsModule.promises;
 (function start_server() {
     const app = express.default();
 
-    connectDB();
+    // connectDB();
 
     app.use(express.static('static'));
 
 
-    // Setup session MW
-    const session = expressSession({
-        secret: COOKIE_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: connectMongo.create({
-            mongoUrl: MONGO_URI,
-            collectionName: 'sessions',
-        }),
-        cookie: {
-            maxAge: 60000 * 1440
-        }
-    });
+    // // Setup session MW
+    // const session = expressSession({
+    //     secret: COOKIE_SECRET,
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     store: connectMongo.create({
+    //         mongoUrl: MONGO_URI,
+    //         collectionName: 'sessions',
+    //     }),
+    //     cookie: {
+    //         maxAge: 60000 * 1440
+    //     }
+    // });
 
     //express session({..}) initialization
-    app.use(session);
+    // app.use(session);
 
     // //init passport on every route call
-    app.use(passport.initialize());
+    // app.use(passport.initialize());
 
     // // allow passport to use 'express-session'
-    app.use(passport.session());
+    // app.use(passport.session());
 
-    initLocalStrategy(passport);
+    // initLocalStrategy(passport);
 
     registerStaticPaths(app);
 
@@ -155,7 +155,8 @@ function registerStaticPaths(app) {
     app.use('/images', express.static(path.join(__dirname, './images/')));
     app.use('/', express.static(path.join(__dirname, '/')));
     app.use('/src/constants', express.static(path.join(__dirname, './src/constants')));
-    app.use('/', express.static('./node_modules/socket.io-client'));
+    app.use('socket-io-client', express.static(path.join(__dirname, './socket.io-client')));
+
 }
 
 function configurePaths(app) {
@@ -163,21 +164,21 @@ function configurePaths(app) {
 
     app.get("/", (req, res, next) => {
 
-        if (req.isAuthenticated()) {
-            //Already logged in, so display main app
+       // if (req.isAuthenticated()) {
+        //    //Already logged in, so display main app
             res.redirect("/main");
-        } else {
-            res.render("signup", { layout: 'landing' });
-        }
+       // } else {
+         //   res.render("signup", { layout: 'landing' });
+        //}
     });
 
     app.get('/main', (req, res) => {
-        if (req.isAuthenticated()) {
+        // if (req.isAuthenticated()) {
             res.render('index', { layout: 'index' });
-        }
-        else {
-            res.redirect('/');
-        }
+        // }
+        // else {
+        //     res.redirect('/');
+        // }
     });
 
     app.get('/signup', (req, res) => {
