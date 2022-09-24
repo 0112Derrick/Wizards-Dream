@@ -21,7 +21,7 @@ import { Player } from './src/players/Player.js';
 import connectDB from './src/db/db-init.js';
 import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
-import { GameRouter } from './src/players/GameRouter.js';
+import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
 
 //import { createGameState } from './src/app/game.js';
 
@@ -115,18 +115,20 @@ const fs = fsModule.promises;
 
     const io = new socketio.Server(server);
 
-    let gameRouter: GameRouter;
+    let gameRouter = $gameRouter.GameRouterInstance;
 
     io.on('connection', client => {
-        console.log('connected');
-        //gameRouter = new GameRouter(io, client);
-        //gameRouter.initGame();
-        // const state = createGameState();
-        //console.log('someone connected');
-        client.emit('message', 'You are connected');
-        client.on('message', (text) => { io.emit('message', text) });
+        gameRouter.initGame(io, client);
+        client.send(client.id);
+        console.log(client.id);
+        //client.emit('message', 'You are connected');
+        //client.on('message', (text) => { io.emit('message', text) });
         //client.emit('init', { client, state });
     });
+
+    io.on('disconnect', client => {
+        gameRouter.playerDisconnect(client.id);
+    })
 
     server.on('error', (err) => {
         console.error(err);
@@ -144,6 +146,7 @@ function registerStaticPaths(app) {
 
     //Register static paths for loading modules
     app.use('/src/app', express.static(path.join(__dirname, './src/app')));
+    app.use('/src/socketIO', express.static(path.join(__dirname, './src/socketIO')));
     app.use('/src/constants', express.static(path.join(__dirname, './src/constants')));
     app.use('/src/players', express.static(path.join(__dirname, './src/players')));
     app.use('/src/html', express.static(path.join(__dirname, './src/html')));
@@ -155,7 +158,7 @@ function registerStaticPaths(app) {
     app.use('/images', express.static(path.join(__dirname, './images/')));
     app.use('/', express.static(path.join(__dirname, '/')));
     app.use('/src/constants', express.static(path.join(__dirname, './src/constants')));
-    app.use('/', express.static('./node_modules/socket.io-client'));
+
 }
 
 function configurePaths(app) {
@@ -165,6 +168,7 @@ function configurePaths(app) {
 
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
+            console.log('player: ' + req.player)
             res.redirect("/main");
         } else {
             res.render("signup", { layout: 'landing' });

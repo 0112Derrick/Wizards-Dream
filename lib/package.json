@@ -8,13 +8,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "tsc --project tsconfig.json",
     "package": "cp -r package.json ./lib",
+    "socket-io": "cp -r ./node_modules/socket.io-client/ ./lib/",
     "css": "mkdirp ./lib/css && cp -r ./css/* ./lib/css",
     "favicon": "mkdirp ./lib/favicon && cp -r ./favicon/* ./lib/favicon",
     "start": "node ./lib/server.js",
     "views": "mkdirp ./lib/render-templates && cp -r ./render-templates/* ./lib/render-templates",
     "delete": "rm -rf lib",
     "images": "mkdirp ./lib/images && cp -r ./images/* ./lib/images",
-    "build": "npm run delete && npm run css && npm run images && npm run views && npm run compile && npm run client && npm run package && npm start"
+    "build": "npm run delete && npm run css && npm run images && npm run views && npm run socket-io && npm run compile && npm run client && npm run package && npm start"
   },
   "author": "",
   "license": "ISC",

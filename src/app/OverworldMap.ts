@@ -30,6 +30,7 @@ class OverworldMap {
 
 }
 
+
 window.OverworldMaps = {
     grassyField: {
         lowerSrc: "/images/maps/Battleground1.png",

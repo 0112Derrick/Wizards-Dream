@@ -65,11 +65,11 @@ playerRouter.post('/logout', (req, res) => {
         if (err) return res.sendStatus($StatusConstants.SERVER_ERROR_BASE);
         return res.sendStatus($StatusConstants.OK);
     })
-})
+});
 
 playerRouter.post('/*', (req, res) => {
     return res.sendStatus($StatusConstants.RESOURCE_NOT_FOUND);
-})
+});
 
 playerRouter.use((error, req, res, next) => {
     console.log("Error: ", error);

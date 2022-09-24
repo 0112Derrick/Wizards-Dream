@@ -75,7 +75,8 @@
         "src/app/*",
         "src/network/*",
         "src/framework/*",
-        "src/constants/*"
+        "src/constants/*",
+        "node_modules/*"
       ],
       "include": [
         "./src/*",
