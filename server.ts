@@ -60,35 +60,35 @@ const fs = fsModule.promises;
 (function start_server() {
     const app = express.default();
 
-    connectDB();
+    // connectDB();
 
     app.use(express.static('static'));
 
 
-    // Setup session MW
-    const session = expressSession({
-        secret: COOKIE_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: connectMongo.create({
-            mongoUrl: MONGO_URI,
-            collectionName: 'sessions',
-        }),
-        cookie: {
-            maxAge: 60000 * 1440
-        }
-    });
+    // // Setup session MW
+    // const session = expressSession({
+    //     secret: COOKIE_SECRET,
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     store: connectMongo.create({
+    //         mongoUrl: MONGO_URI,
+    //         collectionName: 'sessions',
+    //     }),
+    //     cookie: {
+    //         maxAge: 60000 * 1440
+    //     }
+    // });
 
     //express session({..}) initialization
-    app.use(session);
+    // app.use(session);
 
     // //init passport on every route call
-    app.use(passport.initialize());
+    // app.use(passport.initialize());
 
     // // allow passport to use 'express-session'
-    app.use(passport.session());
+    // app.use(passport.session());
 
-    initLocalStrategy(passport);
+    // initLocalStrategy(passport);
 
     registerStaticPaths(app);
 
@@ -174,6 +174,9 @@ function configurePaths(app) {
             res.render("signup", { layout: 'landing' });
         }
     });
+
+
+
 
     app.get('/main', (req, res) => {
         if (req.isAuthenticated()) {

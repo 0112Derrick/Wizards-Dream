@@ -12,7 +12,7 @@
     "css": "mkdirp ./lib/css && cp -r ./css/* ./lib/css",
     "favicon": "mkdirp ./lib/favicon && cp -r ./favicon/* ./lib/favicon",
     "start": "node ./lib/server.js",
-    "views": "mkdirp ./lib/render-templates && cp -r ./render-templates/* ./lib/render-templates",
+    "views": "cp -r ./render-templates ./lib/",
     "delete": "rm -rf lib",
     "images": "mkdirp ./lib/images && cp -r ./images/* ./lib/images",
     "build": "npm run delete && npm run css && npm run images && npm run views && npm run socket-io && npm run compile && npm run client && npm run package && npm start"
@@ -54,7 +54,6 @@
     "@types/express": "4.17.13",
     "@types/express-handlebars": "^5.3.1",
     "@types/express-session": "^1.17.5",
-    "@types/node": "18.0.0",
-    "@types/socket.io-client": "^3.0.0"
+    "@types/node": "18.0.0"
   }
 }

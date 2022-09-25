@@ -11,6 +11,15 @@ import { appendFile } from "fs";
 
 
 
+interface ClientToServerEvents {
+    playerJoinedServer: (data:number) => void;
+    basicEmit: (a: number, b: string, c: number[]) => void;
+  }
+  
+interface ServerToClientEvents {
+    withAck: (d: string, cb: (e: number) => void) => void;
+  }
+  
 class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
