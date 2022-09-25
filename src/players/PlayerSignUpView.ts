@@ -13,6 +13,7 @@ class MissingElementError extends Error {
 
 /**
  * @class PlayerSignUpView
+<<<<<<< HEAD
  * 
  * @extends SyntheticEventEmitter
  * 
@@ -20,6 +21,15 @@ class MissingElementError extends Error {
  * Handles everything related to displaying and emetting onscreen interactions in the form of events
  * 
  * 
+=======
+ *
+ * @extends SyntheticEventEmitter
+ *
+ * @description
+ * Handles everything related to displaying and emetting onscreen interactions in the form of events
+ *
+ *
+>>>>>>> multiplayer
  */
 
 class PlayerSignUpView extends $ClientSyntheticEventEmitter {
@@ -114,4 +124,8 @@ class PlayerSignUpView extends $ClientSyntheticEventEmitter {
 }
 
 let playerSignupView = new PlayerSignUpView();
+<<<<<<< HEAD
 export default playerSignupView;
+=======
+export default playerSignupView;
+>>>>>>> multiplayer

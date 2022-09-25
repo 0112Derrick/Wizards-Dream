@@ -39,8 +39,13 @@ export interface characterDataInterface extends commonCharacterDataInterface {
         //stats directly controlled by the player when using levelinh points
         Atk: number,// Determines Physical atk damage and gives a minor boost to hp total
         Matk: number,// Determines Magic atk damage and gives a minor boost to sp total
+<<<<<<< HEAD
         Vit: number,// Increases hp and def 
         Men: number,//Increases sp & mdef 
+=======
+        Vit: number,// Increases hp and def
+        Men: number,//Increases sp & mdef
+>>>>>>> multiplayer
         Dex: number,//Increases Crit  
     },
     class: string,
@@ -50,6 +55,9 @@ export interface characterDataInterface extends commonCharacterDataInterface {
 export default interface playerDataInterface extends playerProfileDataInterface {
     characters: characterDataInterface[];
 }
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> multiplayer

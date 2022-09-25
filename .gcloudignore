@@ -1,0 +1,13 @@
+.gcloudignore
+.git
+.gitignore
+node_modules/
+lib/
+images/
+scripts
+dist
+watch-html.ts
+Footer
+© 2022 GitHub, Inc.
+Footer navigation
+Term

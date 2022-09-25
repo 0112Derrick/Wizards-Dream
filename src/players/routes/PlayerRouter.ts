@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import express, { request, Router } from 'express'
 import * as db_api from '../../db/db-api.js';
 import { StatusConstants as $StatusConstants } from '../../constants/StatusConstants.js';
@@ -5,6 +6,15 @@ import Player, { Player as $player } from '../Player.js';
 import passportStrategies from "../../authentication/passport-strategies.js";
 import passport from 'passport';
 import { StatusConstants } from '../../constants/StatusConstants.js';
+=======
+import express, { Router } from 'express'
+import * as db_api from '../../db/db-api.js';
+import { StatusConstants as $StatusConstants } from '../../constants/StatusConstants.js';
+import { Player as $player } from '../Player.js';
+import passportStrategies from "../../authentication/passport-strategies.js";
+import passport from 'passport';
+
+>>>>>>> multiplayer
 import { equal } from 'assert';
 
 const playerRouter: Router = express.Router();
@@ -23,12 +33,20 @@ const playerRouter: Router = express.Router();
 
 playerRouter.post('/signup', express.json(), async function (req, res, next) {
     if (req.body.email && req.body.password && req.body.username) {
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> multiplayer
         const player = await db_api.addPlayer({
             username: req.body.username,
             email: req.body.email,
             password: req.body.password,
+<<<<<<< HEAD
         }).then((player) => { console.log("Added player", player); })
+=======
+        }).then((player) => { console.log("Added player", player) })
+>>>>>>> multiplayer
             .catch((err) => { console.log("Failed to add player") })
             .finally(() => res.redirect('/'));
     } else {
@@ -53,6 +71,7 @@ playerRouter.post('/login', express.json(), function (req, res, next) {
         req.logIn(user, function (err) {
             if (err) { return next(err) }
             console.log($StatusConstants.OK);
+<<<<<<< HEAD
             req.player = new $player();
             //console.log(user);
             let userData = {
@@ -65,6 +84,12 @@ playerRouter.post('/login', express.json(), function (req, res, next) {
         });
 
         return;
+=======
+            return res.sendStatus($StatusConstants.OK);
+        });
+
+        return 0;
+>>>>>>> multiplayer
     })(req, res, next);
 });
 
@@ -73,11 +98,19 @@ playerRouter.post('/logout', (req, res) => {
         if (err) return res.sendStatus($StatusConstants.SERVER_ERROR_BASE);
         return res.sendStatus($StatusConstants.OK);
     })
+<<<<<<< HEAD
 })
 
 playerRouter.post('/*', (req, res) => {
     return res.sendStatus($StatusConstants.RESOURCE_NOT_FOUND);
 })
+=======
+});
+
+playerRouter.post('/*', (req, res) => {
+    return res.sendStatus($StatusConstants.RESOURCE_NOT_FOUND);
+});
+>>>>>>> multiplayer
 
 playerRouter.use((error, req, res, next) => {
     console.log("Error: ", error);

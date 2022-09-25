@@ -1,9 +1,14 @@
 import { Model } from 'mongoose';
 import pkg from 'mongoose';
 import playerDataInterface from './PlayerDataInterface.js';
+<<<<<<< HEAD
 import { IplayerDocument } from './interfaces/IPlayerDocument.js';
 import { characterDataInterface } from './PlayerDataInterface.js';
 import { IcharacterDocument } from './interfaces/IPlayerDocument.js';
+=======
+import { IplayerDocument, IcharacterDocument } from './interfaces/IPlayerDocument.js';
+import { characterDataInterface } from './PlayerDataInterface.js';
+>>>>>>> multiplayer
 import { Player } from './Player.js';
 import $player from './Player.js'
 import Observer from '../framework/Observer.js';
@@ -40,7 +45,11 @@ export interface IcharacterModel extends Model<IcharacterDoc> { }
 export interface IplayerModel extends Model<IPlayerDoc> { }
 
 // Create a character schema for whatever data a player will have
+<<<<<<< HEAD
 // reference the character schema in 
+=======
+// reference the character schema in
+>>>>>>> multiplayer
 
 export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
     username: { type: String },
@@ -99,7 +108,11 @@ playerSchema.method('validPassword', function (password: string): boolean {
     return this.hash === reaclHash;
 });
 
+<<<<<<< HEAD
 //Add method to hash password 
+=======
+//Add method to hash password
+>>>>>>> multiplayer
 playerSchema.method('hashPassword', function (password: string): void {
     let arrayBufferView = new Int16Array(16);
     this.salt = crypto.getRandomValues(arrayBufferView);
@@ -127,4 +140,8 @@ playerSchema.method('hashPassword', function (password: string): void {
 });
 
 const PlayerModel = model<IPlayerDoc, IplayerModel>('Players', playerSchema);
+<<<<<<< HEAD
 export default PlayerModel;
+=======
+export default PlayerModel;
+>>>>>>> multiplayer

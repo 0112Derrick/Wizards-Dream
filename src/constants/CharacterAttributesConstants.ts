@@ -20,4 +20,8 @@ export enum StatNames {
     VIT = 3,
     MEN = 4,
     DEX = 5,
+<<<<<<< HEAD
 }   
+=======
+}  
+>>>>>>> multiplayer

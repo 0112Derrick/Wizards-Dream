@@ -1,0 +1,49 @@
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta http-equiv="Content-Type" />
+    <meta lang="en" charset="UTF-8" content="text/html" />
+    <meta name="description" content="An rpg game" />
+    <title>Wizards-dreams</title>
+    <link rel="SHORTCUT ICON" href="/images/characters/players/witch-girl.png" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+</head>
+
+
+<div class="container-signup">
+    <h1 class="title-signup" id="{{LANDING_HTML_IDS.SIGNUP_TITLE}}">Sign-up</h1>
+    <form action="" id="{{LANDING_HTML_IDS.SIGNUP_FORM}}">
+        <label for="{{LANDING_HTML_IDS.SIGNUP_USERNAME}}">Username:</label>
+        <input id="{{LANDING_HTML_IDS.SIGNUP_USERNAME}}" type="text" placeholder="Username" autocomplete="off"
+            tabindex="0" />
+
+        <label for="{{LANDING_HTML_IDS.SIGNUP_EMAIL_INPUT}}">Email</label>
+        <input id="{{LANDING_HTML_IDS.SIGNUP_EMAIL_INPUT}}" type="email" autocomplete="off" autofocus
+            placeholder="Your email" title="signup-email" tabindex="0" />
+
+        <label for="{{LANDING_HTML_IDS.SIGNUP_PASSWORD_INPUT}}">Password</label>
+        <input id="{{LANDING_HTML_IDS.SIGNUP_PASSWORD_INPUT}}" placeholder="Must be 8 characters long" type="password"
+            autocomplete="off" title="signup-password" tabindex="0" minlength="2" />
+
+        <button type="submit" id="{{LANDING_HTML_IDS.SIGNUP_FORM_SUBMIT}}">Submit</button>
+        <button type="button" id="{{LANDING_HTML_IDS.SIGNUP_FORM_LOGIN}}">Log-in</button>
+    </form>
+</div>
+
+<div class="div" id="container-login">
+    <div class="container-login">
+        <h1 class="login-title" id="{{LANDING_HTML_IDS.LOGIN_TITLE}}">Login</h1>
+
+        <form action="" id="{{LANDING_HTML_IDS.LOGIN_FORM}}">
+            <label for="{{LANDING_HTML_IDS.LOGIN_EMAIL_INPUT}}">Email</label>
+            <input id="{{LANDING_HTML_IDS.LOGIN_EMAIL_INPUT}}" type="email" autocomplete="off" autofocus
+                placeholder="Your email" title="login-email" tabindex="0" />
+
+            <label for="{{LANDING_HTML_IDS.LOGIN_PASSWORD_INPUT}}">Password</label>
+            <input id="{{LANDING_HTML_IDS.LOGIN_PASSWORD_INPUT}}" type="password" autocomplete="off"
+                placeholder="Your password" title="login-password" tabindex="0" />
+
+            <button type="submit" id="{{LANDING_HTML_IDS.LOGIN_FORM_SUBMIT}}">login</button>
+            <button type="button" id="{{LANDING_HTML_IDS.LOGIN_FORM_SIGNUP}}">sign-up</button>
+        </form>
+    </div>
+</div>

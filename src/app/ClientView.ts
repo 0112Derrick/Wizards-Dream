@@ -29,12 +29,21 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
         document.getElementById('logout')!.addEventListener('click', () => { this.logoutAccountCallback() });
         const characterCreate = document.getElementById('characterScreen-CreateCharacterBtn');
+<<<<<<< HEAD
         characterCreate?.addEventListener('click', () => { this.createCharacter()})
     }
     createCharacter() {
         //check GenderText
         
         //check ClassText 
+=======
+        characterCreate?.addEventListener('click', () => { this.createCharacter() })
+    }
+    createCharacter() {
+        //check GenderText
+
+        //check ClassText
+>>>>>>> multiplayer
 
     }
 
@@ -44,4 +53,8 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
 
 }
+<<<<<<< HEAD
 export let View = new ClientView();
+=======
+export let View = new ClientView();
+>>>>>>> multiplayer

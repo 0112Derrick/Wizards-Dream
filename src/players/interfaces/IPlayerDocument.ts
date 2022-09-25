@@ -9,4 +9,8 @@ export interface IplayerDocument extends Document, playerDataInterface {
 
 export interface IcharacterDocument extends Document, characterDataInterface {
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> multiplayer

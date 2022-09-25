@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import $playerDataInterface, { characterDataInterface as $characterDataI } from "./PlayerDataInterface.js";
+=======
+import $playerDataInterface from "./PlayerDataInterface.js";
+>>>>>>> multiplayer
 import IcharacterDocument from './PlayerDataInterface.js';
 import $SyntheticEventEmitter from '../framework/SyntheticEventEmitter.js';
 import { EventConstants as $EventConstants } from '../constants/EventConstants.js';
@@ -17,7 +21,10 @@ export class Player {
             email: 'email@fakeEmail.com',
             characters: [],
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> multiplayer
         this.eventEmitter = null;
         this.callback = null;
     }
@@ -26,8 +33,13 @@ export class Player {
         this.eventEmitter = eventEmitter;
     }
 
+<<<<<<< HEAD
     addCharacter(character: $characterDataI) {
         this.data.characters.push(character);
+=======
+    addCharacter(character: IcharacterDocument) {
+        //   this.data.characters.push(character);
+>>>>>>> multiplayer
     }
 
     getData(this: Player) { return this.data };

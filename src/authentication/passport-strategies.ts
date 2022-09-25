@@ -14,7 +14,11 @@ export default function (passport) {
             async function (email, password, done) {
                 PlayerModel.findOne({ email: email }, function (err, user) { // check db for this email
                     let info;
+<<<<<<< HEAD
                     // console.log('email:', email, ' password: ', password);
+=======
+                    console.log('email:', email, ' password: ', password);
+>>>>>>> multiplayer
                     if (!user) {
                         console.log("User not found", email);
                         info = { messge: 'User not found' };

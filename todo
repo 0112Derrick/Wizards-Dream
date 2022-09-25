@@ -1,6 +1,7 @@
 // Learn curl
 // create abstract class for network... implement 
 
+<<<<<<< HEAD
 CharacterAttributes = {
         level: 1,
         hp: 1,// Determines how many times a player can take damage before dying & hp regen amount
@@ -16,6 +17,8 @@ CharacterAttributes = {
         Men: 1,//Increases sp & mdef 
         Dex: 1,//Increases Crit  
     };
+=======
+>>>>>>> multiplayer
 
 Create player signup []
     - assign ID []

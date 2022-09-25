@@ -1,22 +1,19 @@
 
-<<<<<<< Updated upstream
-=======
 import { io } from 'socket.io-client';
 //import DOMPurify from 'dompurify';
 //const sock = io('localhost/8080');
 
 
->>>>>>> Stashed changes
 const log = (text) => {
     const chat = document.querySelector('#events');
     let li = document.createElement('li');
     li.innerHTML = text;
     chat.appendChild(li);
+    updateScroll(chat);
 
-    chat.scrollTop = parent.scrollHeight;
 };
-<<<<<<< Updated upstream
-=======
+
+
 
 function updateScroll(chat) {
     chat.scrollTop = chat.scrollHeight;
@@ -27,7 +24,9 @@ function updateScroll(chat) {
     // }, 1000);
 }
 
->>>>>>> Stashed changes
+
+
+
 
 const onChatSubmitted = (sock) => (e) => {
     e.preventDefault();
@@ -38,8 +37,8 @@ const onChatSubmitted = (sock) => (e) => {
     sock.emit('message', text);
 };
 
-<<<<<<< Updated upstream
-=======
+
+
 function handleInit(msg) {
     console.log(msg);
 };
@@ -52,20 +51,25 @@ function handleGameState(gameState) {
 }
 
 
->>>>>>> Stashed changes
+
+
+//const sock = io('localhost/8080');
+
 (() => {
-    const canvas = document.querySelector('.game-canvas');
-    const ctx = canvas.getContext('2d');
+    //const canvas = document.querySelector('.game-canvas');
+    //const ctx = canvas.getContext('2d');
 
     const sock = io();
     sock.on('message', (text) => log(text));
-<<<<<<< Updated upstream
 
-=======
     
     //sock.on('init', (client, state) => handleGameState(state));
->>>>>>> Stashed changes
+
+    //sock.on('init', (client, state) => handleGameState(state));
+
 
     document.querySelector('#chat-form').addEventListener('submit', onChatSubmitted(sock));
 
 })();
+
+

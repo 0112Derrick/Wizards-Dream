@@ -8,7 +8,11 @@ import $HTMLProxy from '../network/HTML-Proxy.js';
 import { response } from 'express';
 import { playerSignupDataInterface as $playerSignupDataInterface } from '../players/PlayerDataInterface.js'
 import $Player from './Player.js';
+<<<<<<< HEAD
 import NetworkProxy from '../network/NetworkProxy.js';
+=======
+
+>>>>>>> multiplayer
 
 class PlayerSignUpController extends $Observer {
     private networkProxy: $NetworkProxy;
@@ -29,9 +33,15 @@ class PlayerSignUpController extends $Observer {
      * @description
      * Callback triggered by the View playerSignUp event.
      * Create a new Player Model using the sign up info
+<<<<<<< HEAD
      * 
      * @param {CustomEvent} event - Custom event object which includes player's details 
      * 
+=======
+     *
+     * @param {CustomEvent} event - Custom event object which includes player's details
+     *
+>>>>>>> multiplayer
      */
     async savePlayerSignUpInfoCallback(route: string, data: any): Promise<boolean> {
         try {
@@ -75,7 +85,15 @@ class PlayerSignUpController extends $Observer {
     }
 
     async playerLogIn(route: string, event) {
+<<<<<<< HEAD
         
+=======
+        // const entries = event.detail.entries();
+
+        //const [[, email], [, password]] = Array.from(entries); //Use array destructuring to extract data from form.
+        // const email = entries.email;
+        // const password = entries.password;
+>>>>>>> multiplayer
         const email = event.detail.email;
         const password = event.detail.password;
 
@@ -89,8 +107,13 @@ class PlayerSignUpController extends $Observer {
         }
         if (result.status == $statusConstants.CLIENT_ERROR_BASE) {
             window.location.assign('/player/landing');
+<<<<<<< HEAD
         }
         
+=======
+
+        }
+>>>>>>> multiplayer
         else if (result.status < $statusConstants.SERVER_ERROR_BASE) {
             switch (result.status) {
                 case $statusConstants.USER_NOT_FOUND:
@@ -100,9 +123,12 @@ class PlayerSignUpController extends $Observer {
                 case $statusConstants.INVALID_PASSWORD:
                     alert("Invalid Password");
                     break;
+<<<<<<< HEAD
                 case $statusConstants.SUCCESS_BASE:
                     alert("Logged in");
                     break;
+=======
+>>>>>>> multiplayer
                 default:
                     alert("Unknown Client error");
             }
@@ -119,4 +145,8 @@ class PlayerSignUpController extends $Observer {
 
 }
 
+<<<<<<< HEAD
 const playerSignUpController = new PlayerSignUpController(new $HTMLProxy());
+=======
+const playerSignUpController = new PlayerSignUpController(new $HTMLProxy());
+>>>>>>> multiplayer
