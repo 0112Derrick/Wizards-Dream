@@ -1,26 +1,17 @@
 
 
 import connectMongo from 'connect-mongo';
-<<<<<<< HEAD
-//import { LANDING_HTML_IDS, HTML_IDS } from './src/constants/HTMLElementIds.js';
-import expressSession from 'express-session';
-import exhbs, { ExpressHandlebars } from 'express-handlebars';
-=======
 import { LANDING_HTML_IDS, HTML_IDS } from './src/constants/HTMLElementIds.js';
 import * as express from 'express';
 import expressSession from 'express-session';
 import exhbs from 'express-handlebars';
->>>>>>> multiplayer
 import passport from 'passport'
 import initLocalStrategy from './src/authentication/passport-strategies.js'
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as socketio from 'socket.io';
 import * as http from 'http';
-<<<<<<< HEAD
-import { GameRouter as $gameRouter } from './src/players/gameRouter.js';
-=======
->>>>>>> multiplayer
+import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
 
 import exp from 'constants';
 import { nextTick } from 'process';
@@ -31,7 +22,7 @@ import { Player } from './src/players/Player.js';
 import connectDB from './src/db/db-init.js';
 import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
-import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
+
 
 //import { createGameState } from './src/app/game.js';
 
@@ -101,8 +92,6 @@ const fs = fsModule.promises;
     // initLocalStrategy(passport);
 
     registerStaticPaths(app);
-<<<<<<< HEAD
-=======
 
     app.use((req, res, next) => {
         res.locals.LANDING_HTML_IDS = LANDING_HTML_IDS;
@@ -110,9 +99,6 @@ const fs = fsModule.promises;
 
         next();
     });
-
-    configurePaths(app);
->>>>>>> multiplayer
 
     // runDBTest();
 
@@ -139,7 +125,6 @@ const fs = fsModule.promises;
 
     const io = new socketio.Server(server);
 
-<<<<<<< HEAD
 
     io.on('connection', sock => {
         console.log('someone connected');
@@ -162,29 +147,11 @@ const fs = fsModule.promises;
         client.send(client.id);
         gameRouter.initGame(io, client);
 
-=======
-    let gameRouter = $gameRouter.GameRouterInstance;
-
-    io.on('connection', client => {
-        gameRouter.initGame(io, client);
-        client.send(client.id);
-        console.log(client.id);
->>>>>>> multiplayer
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
         //client.emit('init', { client, state });
     });
 
-<<<<<<< HEAD
-
-
-    app.use((req, res, next) => {
-
-        next();
-    });
-
-=======
->>>>>>> multiplayer
     io.on('disconnect', client => {
         gameRouter.playerDisconnect(client.id);
     })
@@ -224,36 +191,21 @@ function configureRoutes(app) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
     app.get("/", (req, res, next) => {
-<<<<<<< HEAD
-        res.render("index");
-
-        if (req.isAuthenticated()) {
-            //Already logged in, so display main app
-=======
 
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
             console.log('player: ' + req.player)
->>>>>>> multiplayer
             res.redirect("/main");
         } else {
             res.render("signup", { layout: 'landing' });
         }
     });
 
-<<<<<<< HEAD
-    app.get('/main', (req, res) => {
-        if (req.isAuthenticated()) {
-            // let gameRouter = $gameRouter.GameRouterInstance;
-            // gameRouter.setReqUser(req.user);
-
-=======
 
 
 
     app.get('/main', (req, res) => {
         if (req.isAuthenticated()) {
->>>>>>> multiplayer
             res.render('index', { layout: 'index' });
         }
         else {
