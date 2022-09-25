@@ -1,7 +1,7 @@
-import express, { Router } from 'express'
+import express, { request, Router } from 'express'
 import * as db_api from '../../db/db-api.js';
 import { StatusConstants as $StatusConstants } from '../../constants/StatusConstants.js';
-import { Player as $player } from '../Player.js';
+import Player, { Player as $player } from '../Player.js';
 import passportStrategies from "../../authentication/passport-strategies.js";
 import passport from 'passport';
 import { StatusConstants } from '../../constants/StatusConstants.js';
@@ -28,7 +28,7 @@ playerRouter.post('/signup', express.json(), async function (req, res, next) {
             username: req.body.username,
             email: req.body.email,
             password: req.body.password,
-        }).then((player) => { console.log("Added player", player) })
+        }).then((player) => { console.log("Added player", player); })
             .catch((err) => { console.log("Failed to add player") })
             .finally(() => res.redirect('/'));
     } else {
@@ -53,6 +53,14 @@ playerRouter.post('/login', express.json(), function (req, res, next) {
         req.logIn(user, function (err) {
             if (err) { return next(err) }
             console.log($StatusConstants.OK);
+            req.player = new $player();
+            //console.log(user);
+            let userData = {
+                username: user.username,
+                email: user.email,
+                characters: user.characters,
+            };
+            req.player.setData(userData);
             return res.sendStatus($StatusConstants.OK);
         });
 

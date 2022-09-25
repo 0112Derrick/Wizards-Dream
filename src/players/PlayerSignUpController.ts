@@ -75,11 +75,7 @@ class PlayerSignUpController extends $Observer {
     }
 
     async playerLogIn(route: string, event) {
-        // const entries = event.detail.entries();
-
-        //const [[, email], [, password]] = Array.from(entries); //Use array destructuring to extract data from form.
-        // const email = entries.email;
-        // const password = entries.password;
+        
         const email = event.detail.email;
         const password = event.detail.password;
 
@@ -93,8 +89,8 @@ class PlayerSignUpController extends $Observer {
         }
         if (result.status == $statusConstants.CLIENT_ERROR_BASE) {
             window.location.assign('/player/landing');
-
         }
+        
         else if (result.status < $statusConstants.SERVER_ERROR_BASE) {
             switch (result.status) {
                 case $statusConstants.USER_NOT_FOUND:
@@ -103,6 +99,9 @@ class PlayerSignUpController extends $Observer {
 
                 case $statusConstants.INVALID_PASSWORD:
                     alert("Invalid Password");
+                    break;
+                case $statusConstants.SUCCESS_BASE:
+                    alert("Logged in");
                     break;
                 default:
                     alert("Unknown Client error");

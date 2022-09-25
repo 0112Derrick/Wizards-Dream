@@ -1,4 +1,4 @@
-import $playerDataInterface from "./PlayerDataInterface.js";
+import $playerDataInterface, { characterDataInterface as $characterDataI } from "./PlayerDataInterface.js";
 import IcharacterDocument from './PlayerDataInterface.js';
 import $SyntheticEventEmitter from '../framework/SyntheticEventEmitter.js';
 import { EventConstants as $EventConstants } from '../constants/EventConstants.js';
@@ -17,6 +17,7 @@ export class Player {
             email: 'email@fakeEmail.com',
             characters: [],
         }
+
         this.eventEmitter = null;
         this.callback = null;
     }
@@ -25,8 +26,8 @@ export class Player {
         this.eventEmitter = eventEmitter;
     }
 
-    addCharacter(character: IcharacterDocument) {
-        //   this.data.characters.push(character);
+    addCharacter(character: $characterDataI) {
+        this.data.characters.push(character);
     }
 
     getData(this: Player) { return this.data };
