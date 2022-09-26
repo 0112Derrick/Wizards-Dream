@@ -25,6 +25,7 @@ interface commonCharacterDataInterface {
 }
 export interface characterDataInterface extends commonCharacterDataInterface {
     characterID: number,
+    characterGender: string,
     attributes: {
         level: number,
         experience: number,

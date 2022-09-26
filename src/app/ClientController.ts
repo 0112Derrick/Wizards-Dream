@@ -12,14 +12,14 @@ import { appendFile } from "fs";
 
 
 interface ClientToServerEvents {
-    playerJoinedServer: (data:number) => void;
+    playerJoinedServer: (data: number) => void;
     basicEmit: (a: number, b: string, c: number[]) => void;
-  }
-  
+}
+
 interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
-  }
-  
+}
+
 class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
@@ -30,9 +30,10 @@ class ClientController extends $OBSERVER {
         super();
         this.networkProxy = networkProxy;
         this.socket = io();
+
         this.socket.on("connected", this.testConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
-        this.socket.on("online", this.connect);
+        this.socket.on("onlineClient", this.connect);
         this.socket.on("offline", this.disconnect);
 
         this.socket.emit('connection');
@@ -51,6 +52,8 @@ class ClientController extends $OBSERVER {
             this.socket.emit('playerJoinServer', data);
         })
     }
+
+    createCharacter() { }
 
     testConnection(id) {
         console.log('connected ' + id);

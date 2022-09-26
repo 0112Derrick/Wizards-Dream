@@ -11,6 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import * as socketio from 'socket.io';
 import * as http from 'http';
+import { ClientMapSlot } from './src/players/GameRouter.js';
 
 import exp from 'constants';
 import { nextTick } from 'process';
@@ -60,46 +61,46 @@ const fs = fsModule.promises;
 (function start_server() {
     const app = express.default();
 
-    // connectDB();
+    connectDB();
 
     app.use(express.static('static'));
 
 
-    // // Setup session MW
-    // const session = expressSession({
-    //     secret: COOKIE_SECRET,
-    //     resave: false,
-    //     saveUninitialized: false,
-    //     store: connectMongo.create({
-    //         mongoUrl: MONGO_URI,
-    //         collectionName: 'sessions',
-    //     }),
-    //     cookie: {
-    //         maxAge: 60000 * 1440
-    //     }
-    // });
+    // Setup session MW
+    const session = expressSession({
+        secret: COOKIE_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        store: connectMongo.create({
+            mongoUrl: MONGO_URI,
+            collectionName: 'sessions',
+        }),
+        cookie: {
+            maxAge: 60000 * 1440
+        }
+    });
 
-    //express session({..}) initialization
-    // app.use(session);
+    // express session({..}) initialization
+    app.use(session);
 
-    // //init passport on every route call
-    // app.use(passport.initialize());
+    //init passport on every route call
+    app.use(passport.initialize());
 
-    // // allow passport to use 'express-session'
-    // app.use(passport.session());
+    // allow passport to use 'express-session'
+    app.use(passport.session());
 
-    // initLocalStrategy(passport);
+    initLocalStrategy(passport);
 
     registerStaticPaths(app);
 
     app.use((req, res, next) => {
         res.locals.LANDING_HTML_IDS = LANDING_HTML_IDS;
-        res.locals.LOGIN_IDS = HTML_IDS;
+        res.locals.HTML_IDS = HTML_IDS;
 
         next();
     });
 
-    configurePaths(app);
+    configureRoutes(app);
 
     // runDBTest();
 
@@ -119,6 +120,23 @@ const fs = fsModule.promises;
 
     io.on('connection', client => {
         gameRouter.initGame(io, client);
+        if (gameRouter.userInfo) {
+            //needs either data or client socket data to update the client map &  the slot at which to save it at.
+            /**
+             * description: takes a data obj with 2 properties: id & arg or client socket & a slot to save them in the array
+             * requirement: 
+             * client socket is saved in slot 1
+             * user data is saved in slot 2
+             */
+
+            gameRouter.setClientMap({
+                id: client.id,
+                arg: gameRouter.userInfo
+            }, ClientMapSlot.Slot2);
+            //client.emit("online");
+            console.log("server sent client info: " + client.emit("onlineClient", gameRouter.ClientMap.get(gameRouter.ClientID)?.at(ClientMapSlot.Slot2).username));
+        }
+
         client.send(client.id);
         console.log(client.id);
         //client.emit('message', 'You are connected');
@@ -161,14 +179,15 @@ function registerStaticPaths(app) {
 
 }
 
-function configurePaths(app) {
+function configureRoutes(app) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
     app.get("/", (req, res, next) => {
 
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
-            console.log('player: ' + req.player)
+            // console.log('player: ' + req.user);
+            $gameRouter.GameRouterInstance.setUserInfo(req.user);
             res.redirect("/main");
         } else {
             res.render("signup", { layout: 'landing' });
@@ -176,10 +195,14 @@ function configurePaths(app) {
     });
 
 
-
-
     app.get('/main', (req, res) => {
+
         if (req.isAuthenticated()) {
+            //console.log('player: ' + req.user);
+            function requestUserInfo() {
+                $gameRouter.GameRouterInstance.setUserInfo(req.user);
+            }
+            requestUserInfo();
             res.render('index', { layout: 'index' });
         }
         else {
@@ -198,5 +221,4 @@ function configurePaths(app) {
     app.use('/player', playerRouter);
 
 }
-
 

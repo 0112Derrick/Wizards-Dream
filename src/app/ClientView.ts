@@ -1,6 +1,5 @@
 import { HTML_IDS as $id } from "../constants/HTMLElementIds.js";
 import $ClientSyntheticEventEmitter from '../framework/ClientSyntheticEventEmitter.js'
-import DOMPurify from 'dompurify';
 import { EventConstants as $events } from '../constants/EventConstants.js'
 
 class MissingElementError extends Error {
@@ -26,10 +25,10 @@ class ClientView extends $ClientSyntheticEventEmitter {
             }
         }
         this.DOM[$id.LOGOUT].addEventListener('click', () => { this.logoutAccountCallback() })
+        this.DOM[$id.CHARACTER_CREATE_FORM].addEventListener('submit', () => { this.characterCreateCallback() });
 
         document.getElementById('logout')!.addEventListener('click', () => { this.logoutAccountCallback() });
-        const characterCreate = document.getElementById('characterScreen-CreateCharacterBtn');
-        characterCreate?.addEventListener('click', () => { this.createCharacter() })
+        
     }
     createCharacter() {
         //check GenderText
@@ -37,6 +36,28 @@ class ClientView extends $ClientSyntheticEventEmitter {
         //check ClassText
 
     }
+
+    characterCreateCallback() {
+
+        let formData = {
+            name: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
+        }
+
+        console.log("Got new player account submission", formData);
+
+        if (formData.name) {
+            console.log('Submitting character creation form', formData);
+            this.dispatchEventLocal($events.CHARACTER_CREATE, formData);
+
+        } else {
+            alert("Please fill out all information correctly");
+            this.resetSignupForm();
+        }
+    }
+
+    resetSignupForm() {
+        <HTMLFormElement>this.DOM[$id.CHARACTER_CREATE_FORM].reset();
+    };
 
     logoutAccountCallback() {
         this.dispatchEventLocal($events.LOGOUT, null);

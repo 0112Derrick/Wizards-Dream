@@ -1,9 +1,9 @@
 import { idText } from "typescript";
 import { characterDataInterface } from "../players/PlayerDataInterface.js";
 import { CharacterAttributesConstants as $chAttr, StatNames as $stats } from '../constants/CharacterAttributesConstants.js'
-interface CharacterAttributes {
+// interface CharacterAttributes {
 
-}
+// }
 
 import { GameObject } from "./GameObject.js";
 
@@ -15,6 +15,7 @@ export class Character extends GameObject implements characterDataInterface {
     username: string;
     characterID: number;
     class: string;
+    characterGender: string;
     attributes: {
         level: number,//Determines players stat attributes
         experience: number, //Tracks player leveling progress
@@ -53,7 +54,8 @@ export class Character extends GameObject implements characterDataInterface {
         this.characterID = config.characterID || 1;
         this.username = config.username || 'newCharacter';
         this.attributes = config.atrributes || new CharacterAttributes();
-        this.class = config.class || 'mage';
+        this.characterGender = config.characterGender || 'male';
+        this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
 
@@ -95,7 +97,7 @@ export class Character extends GameObject implements characterDataInterface {
     }
 }
 
-class CharacterAttributes {
+export class CharacterAttributes {
     private level = 1;
     private experience = $chAttr.experience;
     private experienceCap = $chAttr.experienceCap;

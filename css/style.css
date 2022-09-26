@@ -116,3 +116,46 @@ body {
     height: 15px;
     border-radius: 5%;
 }
+
+.characterCreateModal {
+    display: none;
+    position: fixed;
+    z-index: 101;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: hsla(0, 0%, 0%, 0.3);
+}
+
+.close {
+    color: hsl(0, 0%, 67%);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: hsl(0, 0%, 0%);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.character-modal-content {
+    background-color: hsl(0, 0%, 100%);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 5px;
+    overflow-wrap: normal;
+    width: 80%;
+    height: 90%;
+    position: fixed;
+    overflow-y: scroll;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -75%);
+    text-align: left;
+}

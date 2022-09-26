@@ -3,6 +3,10 @@ const HTML_IDS = {
     GAME_CHAT_INPUT: 'say',
     GAME_CHAT_FORM: 'chat-form',
     GAME_CHAT_BOARD: 'events',
+    CHARACTER_NAME: 'character-name',
+    CHARACTER_GENDER_MALE_BTN: 'character-gender-male-btn',
+    CHARACTER_GENDER_FEMALE_BTN: 'character-gender-male-btn',
+    CHARACTER_CREATE_FORM: 'character-create-form',
     LOGOUT: 'logout',
 };
 
