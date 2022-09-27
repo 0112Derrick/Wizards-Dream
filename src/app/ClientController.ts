@@ -30,6 +30,7 @@ class ClientController extends $OBSERVER {
         super();
         this.networkProxy = networkProxy;
         this.socket = io();
+        const CharacterCreateRoute = '/player/savecharacter';
 
         this.socket.on("connected", this.testConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
@@ -38,12 +39,13 @@ class ClientController extends $OBSERVER {
 
         this.socket.emit('connection');
         this.socketId = '';
-
+        this.listenForEvent($events.SIGN_UP, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
         }, this.view);
 
         //this.socket.on('playerJoinServer', this.playerJoinServer);
+        //move to view
         document.querySelector('#joinServer')?.addEventListener('click', () => {
             let data = {
                 id: this.socket.id,
@@ -51,9 +53,20 @@ class ClientController extends $OBSERVER {
             }
             this.socket.emit('playerJoinServer', data);
         })
+
+
+
     }
 
-    createCharacter() { }
+    createCharacter(route: string, data: any): Promise<boolean> {
+        try {
+            console.log("sending data to server -ClientController");
+            return
+        } catch (error) {
+
+            return
+        }
+    }
 
     testConnection(id) {
         console.log('connected ' + id);

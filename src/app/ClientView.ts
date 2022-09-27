@@ -12,7 +12,7 @@ class MissingElementError extends Error {
 class ClientView extends $ClientSyntheticEventEmitter {
 
     private DOM: HTMLElement[] = [];
-
+    private characterMenuStatus = false;
 
     constructor() {
         super();
@@ -25,10 +25,23 @@ class ClientView extends $ClientSyntheticEventEmitter {
             }
         }
         this.DOM[$id.LOGOUT].addEventListener('click', () => { this.logoutAccountCallback() })
-        this.DOM[$id.CHARACTER_CREATE_FORM].addEventListener('submit', () => { this.characterCreateCallback() });
+        this.DOM[$id.CHARACTER_CREATE_FORM].addEventListener('submit', (event) => {
+            event.preventDefault();
+            this.characterCreateCallback();
+        });
 
         document.getElementById('logout')!.addEventListener('click', () => { this.logoutAccountCallback() });
-        
+
+        document.getElementById('character-modal-btn')!.addEventListener('click', () => {
+
+            if (!this.characterMenuStatus) {
+                document.querySelector<HTMLElement>(".characterCreateModal")!.style.display = 'block';
+                this.characterMenuStatus = true;
+            } else {
+                document.querySelector<HTMLElement>(".characterCreateModal")!.style.display = 'none';
+                this.characterMenuStatus = false;
+            }
+        })
     }
     createCharacter() {
         //check GenderText
@@ -41,6 +54,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
         let formData = {
             name: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
+            gender: (<HTMLInputElement>document.querySelector('input[name="character-gender"]:checked')).value,
         }
 
         console.log("Got new player account submission", formData);

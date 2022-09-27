@@ -129,6 +129,12 @@ body {
     background-color: hsla(0, 0%, 0%, 0.3);
 }
 
+#character-modal-btn {
+
+    width: fit-content;
+
+}
+
 .close {
     color: hsl(0, 0%, 67%);
     float: right;

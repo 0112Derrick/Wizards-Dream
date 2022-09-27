@@ -7,6 +7,7 @@ const HTML_IDS = {
     CHARACTER_GENDER_MALE_BTN: 'character-gender-male-btn',
     CHARACTER_GENDER_FEMALE_BTN: 'character-gender-male-btn',
     CHARACTER_CREATE_FORM: 'character-create-form',
+    CHARACTER_CREATE_FORM_SUBMIT_BTN: 'character-create-form-submit-btn',
     LOGOUT: 'logout',
 };
 
