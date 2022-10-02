@@ -104,6 +104,9 @@ class PlayerSignUpController extends $Observer {
                 case $statusConstants.INVALID_PASSWORD:
                     alert("Invalid Password");
                     break;
+                case $statusConstants.OK:
+                    alert("Logging in");
+                    break;
                 default:
                     alert("Unknown Client error");
             }

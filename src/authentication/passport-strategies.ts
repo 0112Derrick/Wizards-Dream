@@ -28,7 +28,7 @@ export default function (passport) {
                         console.log("Found user", email);
                     }
                     return done(err, user, info); // Call the internal passport done() method with the required params.
-                })
+                }).populate('Characters')
             }
         )
     );

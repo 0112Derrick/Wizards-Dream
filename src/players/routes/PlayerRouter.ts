@@ -38,6 +38,23 @@ playerRouter.post('/signup', express.json(), async function (req, res, next) {
     }
 });
 
+playerRouter.post('/savecharacter', express.json(), async function (req, res, next) {
+    if (req.body.username && req.body.characterGender) {
+        console.log(req.player)
+        const character = await db_api.addCharacter({
+            username: req.body.username,
+            characterGender: req.body.characterGender,
+            player: req.player!._id,
+        }).then((character) => { console.log("Added character ", character) })
+            .catch((err) => { console.log("Failed to save character") })
+            .finally(() => res.redirect('/'));
+    } else {
+        res.status($StatusConstants.CLIENT_ERROR_BASE);
+        res.redirect('/');
+        console.log("Cannot save character");
+    }
+});
+
 //Login request
 playerRouter.post('/login', express.json(), function (req, res, next) {
 

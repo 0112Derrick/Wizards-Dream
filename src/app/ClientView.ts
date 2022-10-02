@@ -1,7 +1,7 @@
 import { HTML_IDS as $id } from "../constants/HTMLElementIds.js";
 import $ClientSyntheticEventEmitter from '../framework/ClientSyntheticEventEmitter.js'
 import { EventConstants as $events } from '../constants/EventConstants.js'
-
+import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
 class MissingElementError extends Error {
     constructor(message: string) {
         super(message);
@@ -52,14 +52,15 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
     characterCreateCallback() {
 
-        let formData = {
-            name: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
-            gender: (<HTMLInputElement>document.querySelector('input[name="character-gender"]:checked')).value,
+        let formData: $characterSignup = {
+            username: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
+            characterGender: (<HTMLInputElement>document.querySelector('input[name="character-gender"]:checked')).value,
+            player: "",
         }
 
         console.log("Got new player account submission", formData);
 
-        if (formData.name) {
+        if (formData.username) {
             console.log('Submitting character creation form', formData);
             this.dispatchEventLocal($events.CHARACTER_CREATE, formData);
 

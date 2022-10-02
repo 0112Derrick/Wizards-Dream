@@ -32,7 +32,8 @@ import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
 declare global {
     namespace Express {
         interface Request {
-            player?: Player
+            player?: Player,
+            //player: any
         }
     }
 }
@@ -118,8 +119,10 @@ const fs = fsModule.promises;
 
     let gameRouter = $gameRouter.GameRouterInstance;
 
+
     io.on('connection', client => {
         gameRouter.initGame(io, client);
+
         if (gameRouter.userInfo) {
             //needs either data or client socket data to update the client map &  the slot at which to save it at.
             /**
@@ -130,22 +133,22 @@ const fs = fsModule.promises;
              */
 
             gameRouter.setClientMap({
-                id: client.id,
+                id: client.handshake.headers.host,
                 arg: gameRouter.userInfo
-            }, ClientMapSlot.Slot2);
+            }, ClientMapSlot.ClientOBJ);
             //client.emit("online");
-            console.log("server sent client info: " + client.emit("onlineClient", gameRouter.ClientMap.get(gameRouter.ClientID)?.at(ClientMapSlot.Slot2).username));
+            console.log("server sent client info: " + client.emit("onlineClient", gameRouter.ClientMap.get(gameRouter.ClientID)?.at(ClientMapSlot.ClientOBJ).username));
         }
 
-        client.send(client.id);
-        console.log(client.id);
+        client.send(client.handshake.headers.host);
+        console.log(client.handshake.headers.host);
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
         //client.emit('init', { client, state });
     });
 
     io.on('disconnect', client => {
-        gameRouter.playerDisconnect(client.id);
+        gameRouter.playerDisconnect(client.handshake.headers.host);
     })
 
     server.on('error', (err) => {
@@ -186,7 +189,8 @@ function configureRoutes(app) {
 
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
-            // console.log('player: ' + req.user);
+            console.log('player: ' + req.user);
+            req.user.email = "test@gmail.com"
             $gameRouter.GameRouterInstance.setUserInfo(req.user);
             res.redirect("/main");
         } else {

@@ -1,8 +1,8 @@
 import { ServerSizeConstants as $serverSize } from "../constants/ServerSizeConstants.js";
 
 export enum ClientMapSlot {
-    Slot1 = 0,
-    Slot2 = 1
+    ClientSocket = 0,
+    ClientOBJ = 1
 }
 
 export class GameRouter {
@@ -44,10 +44,10 @@ export class GameRouter {
     public setClientMap(_data, slot: ClientMapSlot) {
         if (this.clientMap.has(_data.id)) {
             switch (slot) {
-                case ClientMapSlot.Slot1:
+                case ClientMapSlot.ClientSocket:
                     this.clientMap.get(_data.id)?.splice(0, 1, _data.arg);
                     break;
-                case ClientMapSlot.Slot2:
+                case ClientMapSlot.ClientOBJ:
                     this.clientMap.get(_data.id)?.splice(1, 1, _data.arg);
                     break;
             }
@@ -63,17 +63,28 @@ export class GameRouter {
      *
      * @param _io The Socket.IO library
      * @param _gameSocket The socket object for the connected client.
+     * 
      */
     initGame(_io, _gameSocket) {
         let gameRouter = GameRouter.GameRouterInstance;
         gameRouter.io = _io;
         gameRouter.gameSocket = _gameSocket;
-        let mapArr: Array<any> = [_gameSocket];
-        gameRouter.clientMap.set(_gameSocket.id, mapArr);
-        this.clientID = _gameSocket.id;
-        //this.gameSocket
+        let clientIP = _gameSocket.handshake.headers.host;
+        console.log('ip: ', clientIP);
 
 
+
+        if (gameRouter.clientMap.has(clientIP)) {
+            this.clientID = clientIP;
+            this.gameSocket = gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientSocket);
+            if (gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientOBJ)) {
+                this.userInfo = gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientOBJ);
+            }
+        } else {
+            this.clientID = clientIP;
+            let mapArr: Array<any> = [_gameSocket];
+            gameRouter.clientMap.set(this.clientID, mapArr);
+        }
 
 
         //Server Events
@@ -127,7 +138,7 @@ export class GameRouter {
             return;
         }
 
-        gameRouter.gameSocket = gameRouter.clientMap.get(this.clientID);
+        gameRouter.gameSocket = gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientSocket);
 
         // Look up the room ID in the Socket.IO manager object.
         let room = gameRouter.gameSocket.rooms['/' + data.serverRoom];

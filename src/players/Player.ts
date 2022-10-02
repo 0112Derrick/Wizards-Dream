@@ -11,12 +11,15 @@ export class Player {
     private callback: (Function | null)
     target: any;
 
+
     constructor() {
         this.data = {
             username: 'username',
             email: 'email@fakeEmail.com',
             characters: [],
+            playerID: '',
         }
+
         this.eventEmitter = null;
         this.callback = null;
     }
@@ -25,8 +28,8 @@ export class Player {
         this.eventEmitter = eventEmitter;
     }
 
-    addCharacter(character: IcharacterDocument) {
-        //   this.data.characters.push(character);
+    addCharacter(character) {
+        this.data.characters.push(character);
     }
 
     getData(this: Player) { return this.data };
@@ -39,25 +42,7 @@ export class Player {
         this.data = Object.assign(this.data, playerData);
         // Push contact onto the server and save the contact to the db
         //Implement
-
     }
-
-    // async fetchPlayer(): Promise<$playerDataInterface> {
-    //     //Fetch this player from the db and store in the model
-    //     let data: $playerDataInterface | null = await this.fetchPlayerInfo();
-    //     let playerData: $playerDataInterface;
-    //     if (data) {
-    //         playerData = data;
-
-    //         //db fetch call
-    //         if (playerData) {
-    //             this.data = Object.assign(this.data, playerData);
-    //         }
-
-    //         return Promise.resolve(playerData);
-    //     }
-    // }
-
 
     validateEmail(email: string) {
         if (email && Player.emailRegEx.test(email)) {

@@ -25,7 +25,7 @@ try {
 export interface IPlayerDoc extends IplayerDocument {
     comparePassword(password: string): boolean;
     hashPassword(password: string): void;
-    syncPlayer()
+    syncPlayer();
 }
 
 export interface IcharacterDoc extends IcharacterDocument {
@@ -42,6 +42,7 @@ export interface IplayerModel extends Model<IPlayerDoc> { }
 // reference the character schema in
 
 export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
+    _id: Schema.Types.ObjectId,
     username: { type: String },
     characterID: { type: Number },
     characterGender: { type: String },
@@ -49,6 +50,7 @@ export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
     class: { type: String },
     guild: { type: String },
     items: { type: [String] },
+    player: { type: Schema.Types.ObjectId, ref: 'Players' }
 });
 
 //syncs character to data we have in db
@@ -56,6 +58,7 @@ characterSchema.method('syncCharacter', function (character): void {
     let docAsObject = this.toObject();
 
     let characterLocal: characterDataInterface = {
+
         username: docAsObject.username,
         characterID: docAsObject.characterID,
         characterGender: docAsObject.characterGender,
@@ -80,6 +83,7 @@ characterSchema.method('syncCharacter', function (character): void {
         class: docAsObject.class,
         guild: docAsObject.guild,
         items: docAsObject.items,
+        player: docAsObject.player
     }
 
     character.setData(characterLocal);
@@ -90,7 +94,7 @@ export const playerSchema = new Schema<IPlayerDoc, IplayerModel>({
     email: { type: String, index: { unique: true }, required: true },
     hash: { type: String },
     salt: { type: String },
-    characters: { type: [String] },
+    characters: [{ type: Schema.Types.ObjectId, ref: 'Characters' }],
 });
 
 //Add method to compare password
@@ -119,13 +123,14 @@ playerSchema.method('hashPassword', function (password: string): void {
             characters: docAsObject.characters,
             username: docAsObject.username,
             email: docAsObject.email,
+            playerID: docAsObject._id
         }
 
         player.setData(playerLocal);
     });
 
-
 });
 
+export const CharacterModel = model<IcharacterDoc, IcharacterModel>('Characters', characterSchema);
 const PlayerModel = model<IPlayerDoc, IplayerModel>('Players', playerSchema);
 export default PlayerModel;

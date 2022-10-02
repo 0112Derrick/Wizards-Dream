@@ -23,9 +23,12 @@ export interface playerProfileDataInterface extends commonDataInterface {
 interface commonCharacterDataInterface {
     username: string,
 }
-export interface characterDataInterface extends commonCharacterDataInterface {
+export interface CharacterCreationDataInterface extends commonDataInterface {
+    characterGender: string
+    player: any
+}
+export interface characterDataInterface extends CharacterCreationDataInterface {
     characterID: number,
-    characterGender: string,
     attributes: {
         level: number,
         experience: number,
@@ -50,4 +53,5 @@ export interface characterDataInterface extends commonCharacterDataInterface {
 }
 export default interface playerDataInterface extends playerProfileDataInterface {
     characters: characterDataInterface[];
+    playerID: string
 }

@@ -36,6 +36,7 @@ export class Character extends GameObject implements characterDataInterface {
     };
     guild: string;
     items: string[];
+    player: any;
 
 
     constructor(config) {
@@ -51,6 +52,7 @@ export class Character extends GameObject implements characterDataInterface {
             "right": ["x", 0.7],
             "jump": ["y", 0],
         }
+
         this.characterID = config.characterID || 1;
         this.username = config.username || 'newCharacter';
         this.attributes = config.atrributes || new CharacterAttributes();
@@ -58,7 +60,7 @@ export class Character extends GameObject implements characterDataInterface {
         this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
-
+        this.player = config.player
     }
 
 

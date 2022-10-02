@@ -6,9 +6,7 @@ import { EventConstants as $events, ServerNameConstants as $servers } from '../c
 import { StatusConstants as $StatusConstants } from "../constants/StatusConstants.js";
 import { io, Socket } from "/socket.io-client/dist/socket.io.esm.min.js";
 import { appendFile } from "fs";
-
-
-
+import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
 
 
 interface ClientToServerEvents {
@@ -39,7 +37,7 @@ class ClientController extends $OBSERVER {
 
         this.socket.emit('connection');
         this.socketId = '';
-        this.listenForEvent($events.SIGN_UP, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
+        this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
         }, this.view);
@@ -58,14 +56,33 @@ class ClientController extends $OBSERVER {
 
     }
 
-    createCharacter(route: string, data: any): Promise<boolean> {
+    async createCharacter(route: string, data: any): Promise<boolean> {
         try {
             console.log("sending data to server -ClientController");
-            return
-        } catch (error) {
+            let characterData: $characterSignup = {
+                username: "",
+                characterGender: "",
+                player: "",
+            }
 
-            return
+            console.log(data.detail);
+            characterData = Object.assign(characterData, data.detail);
+            let response = await this.networkProxy.postJSON(route, characterData);
+
+            if (response && response.ok) {
+                this.view.resetSignupForm();
+                return Promise.resolve(true)
+            }
+            else {
+                console.log("Something went wrong writing character, status: ", response?.status);
+                return Promise.reject(false);
+            }
+
+        } catch (e) {
+            console.log("Something went wrong writing character", e)
+            return Promise.reject(false);
         }
+
     }
 
     testConnection(id) {
