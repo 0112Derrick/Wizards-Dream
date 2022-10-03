@@ -26,6 +26,7 @@ export interface IPlayerDoc extends IplayerDocument {
     comparePassword(password: string): boolean;
     hashPassword(password: string): void;
     syncPlayer();
+    validPassword(password: string): boolean
 }
 
 export interface IcharacterDoc extends IcharacterDocument {
@@ -42,15 +43,14 @@ export interface IplayerModel extends Model<IPlayerDoc> { }
 // reference the character schema in
 
 export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
-    _id: Schema.Types.ObjectId,
-    username: { type: String },
-    characterID: { type: Number },
+    username: { type: String, index: { unique: true }, required: true },
+    characterID: { type: Number, index: { unique: true }, required: true },
     characterGender: { type: String },
     attributes: { type: Object },
     class: { type: String },
     guild: { type: String },
     items: { type: [String] },
-    player: { type: Schema.Types.ObjectId, ref: 'Players' }
+    player: { type: Schema.Types.ObjectId, ref: 'players' }
 });
 
 //syncs character to data we have in db
@@ -90,12 +90,13 @@ characterSchema.method('syncCharacter', function (character): void {
 });
 
 export const playerSchema = new Schema<IPlayerDoc, IplayerModel>({
-    username: { type: String },
+    username: { type: String, index: { unique: true }, required: true },
     email: { type: String, index: { unique: true }, required: true },
     hash: { type: String },
     salt: { type: String },
-    characters: [{ type: Schema.Types.ObjectId, ref: 'Characters' }],
+    characters: { type: Schema.Types.ObjectId, ref: 'characters' },
 });
+
 
 //Add method to compare password
 playerSchema.method('validPassword', function (password: string): boolean {

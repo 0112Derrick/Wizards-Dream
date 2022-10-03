@@ -6,13 +6,15 @@ export enum ClientMapSlot {
 }
 
 export class GameRouter {
-    private io: any;
     private static gameRouter: GameRouter;
-    private gameSocket: any;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
+    private io: any;
+
+    public client: any | null = null;
+    private clientSocket: any;
     private clientMap: Map<string, Array<any>> = new Map();
-    private clientID: any;
-    public userInfo: any | null = null;
+    private clientIP: string;
+
 
     private constructor() {
     }
@@ -29,16 +31,16 @@ export class GameRouter {
         this.io = _io
     }
 
-    public setUserInfo(_data) {
-        this.userInfo = _data;
+    public setClient(_client) {
+        this.client = _client;
     }
 
     public get ClientMap(): Map<string, Array<any>> {
         return this.clientMap;
     }
 
-    public get ClientID(): string {
-        return this.clientID;
+    public get ClientIP(): string {
+        return this.clientIP;
     }
 
     public setClientMap(_data, slot: ClientMapSlot) {
@@ -55,7 +57,11 @@ export class GameRouter {
     }
 
     public setClientSocket(_gameSocket) {
-        this.gameSocket = _gameSocket;
+        this.clientSocket = _gameSocket;
+    }
+
+    public setClientIP(ip: string) {
+        this.clientIP = ip;
     }
 
     /**
@@ -65,37 +71,36 @@ export class GameRouter {
      * @param _gameSocket The socket object for the connected client.
      * 
      */
-    initGame(_io, _gameSocket) {
+    initGame(_gameSocket) {
         let gameRouter = GameRouter.GameRouterInstance;
-        gameRouter.io = _io;
-        gameRouter.gameSocket = _gameSocket;
-        let clientIP = _gameSocket.handshake.headers.host;
-        console.log('ip: ', clientIP);
+        gameRouter.clientSocket = _gameSocket;
 
+        if (!this.clientIP == _gameSocket.handshake.headers.host)
+            this.setClientIP(_gameSocket.handshake.headers.host);
 
+        console.log('ip: ', this.clientIP);
 
-        if (gameRouter.clientMap.has(clientIP)) {
-            this.clientID = clientIP;
-            this.gameSocket = gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientSocket);
-            if (gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientOBJ)) {
-                this.userInfo = gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientOBJ);
+        if (gameRouter.clientMap.has(this.clientIP)) {
+            this.clientSocket = gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientSocket);
+            if (gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientOBJ)) {
+                this.client = gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientOBJ);
             }
         } else {
-            this.clientID = clientIP;
             let mapArr: Array<any> = [_gameSocket];
-            gameRouter.clientMap.set(this.clientID, mapArr);
+            gameRouter.clientMap.set(this.clientIP, mapArr);
         }
 
 
         //Server Events
-        gameRouter.gameSocket.on('createServerRoom', this.createServerRoom);
-        gameRouter.gameSocket.on('serverRoomFull', this.serverRoomFull);
-        gameRouter.gameSocket.emit('connected', gameRouter.clientID);
-        //gameRouter.gameSocket.on("online", this.playerConnected2);
+        gameRouter.clientSocket.on('createServerRoom', this.createServerRoom);
+        gameRouter.clientSocket.on('serverRoomFull', this.serverRoomFull);
+        gameRouter.clientSocket.emit('connected', gameRouter.clientIP);
+        gameRouter.clientSocket.on("online", this.playerConnected);
 
         //PlayerEvents
-        gameRouter.gameSocket.on('playerJoinServer', this.playerJoinServer);
-        gameRouter.gameSocket.on('playerLogout', this.playerLogout);
+        gameRouter.clientSocket.on('playerJoinServer', this.playerJoinServer);
+        gameRouter.clientSocket.on('playerLogout', this.playerLogout);
+
 
         if (this.serverRooms == null) {
             this.serverRooms = [];
@@ -131,32 +136,34 @@ export class GameRouter {
 
     playerJoinServer(data) {
         let gameRouter = GameRouter.GameRouterInstance;
-        this.clientID = data.id;
+        this.clientIP = data.id;
 
-        if (!(gameRouter.clientMap.has(this.clientID))) {
+        if (!(gameRouter.clientMap.has(this.clientIP))) {
             console.log("client does not exist - gameRouter");
             return;
         }
 
-        gameRouter.gameSocket = gameRouter.clientMap.get(this.clientID)?.at(ClientMapSlot.ClientSocket);
-
+        gameRouter.clientSocket = gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientSocket);
+        console.log('ip (gameRouter - join server): ', gameRouter.ClientIP);
         // Look up the room ID in the Socket.IO manager object.
-        let room = gameRouter.gameSocket.rooms['/' + data.serverRoom];
+        let room = gameRouter.clientSocket.rooms['/' + data.serverRoom];
         //if (room != undefined) {
         // attach the socket id to the data object.
         console.log(data.id + data.serverRoom);
-        gameRouter.gameSocket.join(data.serverRoom);
+        gameRouter.clientSocket.join(data.serverRoom);
         gameRouter.io.sockets.in(data.serverRoom).emit('playerJoinedServer', data);
     }
 
-    // playerConnected2() {
-    //     console.log("player connected called - gameRouter");
-    //     console.log("server: " + GameRouter.GameRouterInstance.gameSocket.emit("onlineClient", this.clientMap.get(this.clientID)?.at(ClientMapSlot.Slot2).username));
-    // }
+    playerConnected(id) {
+        console.log("player connected called - gameRouter");
+        let gameRouter = GameRouter.GameRouterInstance;
+        // let characterName = gameRouter.ClientMap.get(id).at(ClientMapSlot.ClientOBJ).characters.username;
+        //console.log(characterName);
+    }
 
     playerDisconnect(client) {
         let gameRouter = GameRouter.GameRouterInstance;
-        gameRouter.gameSocket.emit("offline");
+        gameRouter.clientSocket.emit("offline");
         gameRouter.clientMap.delete(client.id);
     }
 

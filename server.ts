@@ -33,7 +33,15 @@ declare global {
     namespace Express {
         interface Request {
             player?: Player,
-            //player: any
+
+        }
+        interface User {
+            id: String,
+            username: String,
+            characters: Array<any>,
+            email: String
+            save()
+            validPassword()
         }
     }
 }
@@ -121,9 +129,11 @@ const fs = fsModule.promises;
 
 
     io.on('connection', client => {
-        gameRouter.initGame(io, client);
+        gameRouter.setIO(io);
+        gameRouter.setClientIP(client.handshake.headers.host)
+        gameRouter.initGame(client);
 
-        if (gameRouter.userInfo) {
+        if (gameRouter.client) {
             //needs either data or client socket data to update the client map &  the slot at which to save it at.
             /**
              * description: takes a data obj with 2 properties: id & arg or client socket & a slot to save them in the array
@@ -134,14 +144,16 @@ const fs = fsModule.promises;
 
             gameRouter.setClientMap({
                 id: client.handshake.headers.host,
-                arg: gameRouter.userInfo
+                arg: gameRouter.client
             }, ClientMapSlot.ClientOBJ);
-            //client.emit("online");
-            console.log("server sent client info: " + client.emit("onlineClient", gameRouter.ClientMap.get(gameRouter.ClientID)?.at(ClientMapSlot.ClientOBJ).username));
+
+            // client.emit("online", client);
+            console.log("server sent client info: " + client.emit("onlineClient", gameRouter.ClientMap.get(gameRouter.ClientIP)?.at(ClientMapSlot.ClientOBJ)));
+            // console.log(gameRouter.client.characters.at(0).username)
         }
 
-        client.send(client.handshake.headers.host);
-        console.log(client.handshake.headers.host);
+        client.emit('clientID', client.handshake.headers.host);
+        console.log('server ', client.handshake.headers.host);
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
         //client.emit('init', { client, state });
@@ -190,8 +202,8 @@ function configureRoutes(app) {
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
             console.log('player: ' + req.user);
-            req.user.email = "test@gmail.com"
-            $gameRouter.GameRouterInstance.setUserInfo(req.user);
+
+            $gameRouter.GameRouterInstance.setClient(req.user);
             res.redirect("/main");
         } else {
             res.render("signup", { layout: 'landing' });
@@ -202,9 +214,9 @@ function configureRoutes(app) {
     app.get('/main', (req, res) => {
 
         if (req.isAuthenticated()) {
-            //console.log('player: ' + req.user);
+            // console.log('player: ' + req.user);
             function requestUserInfo() {
-                $gameRouter.GameRouterInstance.setUserInfo(req.user);
+                $gameRouter.GameRouterInstance.setClient(req.user);
             }
             requestUserInfo();
             res.render('index', { layout: 'index' });

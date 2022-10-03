@@ -1,4 +1,4 @@
-import $playerDataInterface from "./PlayerDataInterface.js";
+import $playerDataInterface, { characterDataInterface } from "./PlayerDataInterface.js";
 import IcharacterDocument from './PlayerDataInterface.js';
 import $SyntheticEventEmitter from '../framework/SyntheticEventEmitter.js';
 import { EventConstants as $EventConstants } from '../constants/EventConstants.js';
@@ -14,9 +14,35 @@ export class Player {
 
     constructor() {
         this.data = {
-            username: 'username',
             email: 'email@fakeEmail.com',
-            characters: [],
+            username: 'username',
+            characters: {
+                username: 'username',
+                characterGender: '',
+                player: '',
+                characterID: 0,
+                attributes: {
+                    level: 0,
+                    experience: 0,
+                    experienceCap: 0,
+                    statPoints: 0,
+                    hp: 0,// Determines how many times a player can take damage before dying & hp regen amount
+                    sp: 0, // Determines how many times a magic atk can be used and regen amount
+                    Def: 0,// Determines how much damage is taken from phyiscal hits
+                    Mdef: 0,// Determines how much damage is taken from Magic hits
+                    Crit: 0,// Determines wheter or not a hit does increased damgage & increased damage amount
+
+                    //stats directly controlled by the player when using levelinh points
+                    Atk: 0,// Determines Physical atk damage and gives a minor boost to hp total
+                    Matk: 0,// Determines Magic atk damage and gives a minor boost to sp total
+                    Vit: 0,// Increases hp and def
+                    Men: 0,//Increases sp & mdef
+                    Dex: 0,//Increases Crit  
+                },
+                class: '',
+                guild: '',
+                items: [],
+            },
             playerID: '',
         }
 
@@ -28,8 +54,8 @@ export class Player {
         this.eventEmitter = eventEmitter;
     }
 
-    addCharacter(character) {
-        this.data.characters.push(character);
+    addCharacter(character: characterDataInterface) {
+        this.data.characters = character;
     }
 
     getData(this: Player) { return this.data };

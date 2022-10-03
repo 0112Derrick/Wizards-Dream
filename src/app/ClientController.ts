@@ -22,7 +22,8 @@ class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
     private socket: any;
-    private socketId: string | null;
+    private clientID: string = "";
+    private client: any;
 
     constructor(networkProxy: NetworkProxy) {
         super();
@@ -34,9 +35,12 @@ class ClientController extends $OBSERVER {
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
         this.socket.on("onlineClient", this.connect);
         this.socket.on("offline", this.disconnect);
+        this.socket.on("clientID", this.setID);
 
         this.socket.emit('connection');
-        this.socketId = '';
+        this.socket.emit("online", this.clientID);
+
+
         this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
@@ -46,7 +50,7 @@ class ClientController extends $OBSERVER {
         //move to view
         document.querySelector('#joinServer')?.addEventListener('click', () => {
             let data = {
-                id: this.socket.id,
+                id: this.clientID,
                 serverRoom: $servers.ROOM1
             }
             this.socket.emit('playerJoinServer', data);
@@ -54,6 +58,9 @@ class ClientController extends $OBSERVER {
 
 
 
+    }
+    public setID(id: string): void {
+        this.clientID = id;
     }
 
     async createCharacter(route: string, data: any): Promise<boolean> {
@@ -89,13 +96,14 @@ class ClientController extends $OBSERVER {
         console.log('connected ' + id);
     }
 
-    connect(id) {
-        this.socketId = id;
-        console.log(`User: ${this.socketId} is online.`)
+    connect(_client) {
+        this.client = _client;
+        console.log(`User: ${this.client.username} is online. \n`);
+        console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).id}`)
     }
 
     disconnect() {
-        console.log(`User: ${this.socketId} is offline.`)
+        console.log(`User: ${this.clientID} is offline.`)
     }
 
 
