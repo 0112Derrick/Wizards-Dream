@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import pkg from 'mongoose';
 import playerDataInterface from './PlayerDataInterface.js';
 import { IplayerDocument, IcharacterDocument } from './interfaces/IPlayerDocument.js';
@@ -29,6 +29,7 @@ export interface IPlayerDoc extends IplayerDocument {
     validPassword(password: string): boolean
 }
 
+
 export interface IcharacterDoc extends IcharacterDocument {
     syncCharacter();
 }
@@ -50,7 +51,7 @@ export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
     class: { type: String },
     guild: { type: String },
     items: { type: [String] },
-    player: { type: Schema.Types.ObjectId, ref: 'players' }
+    player: { type: Schema.Types.ObjectId, ref: 'Players' }
 });
 
 //syncs character to data we have in db
@@ -89,12 +90,14 @@ characterSchema.method('syncCharacter', function (character): void {
     character.setData(characterLocal);
 });
 
+
+
 export const playerSchema = new Schema<IPlayerDoc, IplayerModel>({
     username: { type: String, index: { unique: true }, required: true },
     email: { type: String, index: { unique: true }, required: true },
     hash: { type: String },
     salt: { type: String },
-    characters: { type: Schema.Types.ObjectId, ref: 'characters' },
+    characters: [{ type: Schema.Types.ObjectId, ref: 'Characters' }],
 });
 
 

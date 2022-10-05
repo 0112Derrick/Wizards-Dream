@@ -17,6 +17,7 @@ export default function (passport) {
                 PlayerModel.findOne({ email: email }).populate('characters').exec(function (err, user) {
                     let info;
                     console.log('email:', email, ' password: ', password);
+
                     if (!user) {
                         console.log("User not found", email);
                         info = { messge: 'User not found' };
@@ -25,31 +26,12 @@ export default function (passport) {
                         console.log('Invalid Password', password);
                         info = { message: 'Invalid Password' };
                     }
+                        
                     else {
-                        // user.populate('characters').catch((err) => { console.log(err) });
                         console.log("Found user", email);
                     }
                     return done(err, user, info); // Call the internal passport done() method with the required params.
                 })
-
-                /*     PlayerModel.findOne({ email: email }, function (err, user) { // check db for this email
-                        let info;
-                        console.log('email:', email, ' password: ', password);
-                        if (!user) {
-                            console.log("User not found", email);
-                            info = { messge: 'User not found' };
-    
-                        } else if (!user.validPassword(password)) {
-                            console.log('Invalid Password', password);
-                            info = { message: 'Invalid Password' };
-                            err = true;
-                        }
-                        else {
-                            user.populate('characters').catch((err) => { console.log(err) });
-                            console.log("Found user", email);
-                        }
-                        return done(err, user, info); // Call the internal passport done() method with the required params.
-                    }) */
             }
         )
     );

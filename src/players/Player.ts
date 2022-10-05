@@ -16,7 +16,7 @@ export class Player {
         this.data = {
             email: 'email@fakeEmail.com',
             username: 'username',
-            characters: {
+            characters: [{
                 username: 'username',
                 characterGender: '',
                 player: '',
@@ -42,7 +42,7 @@ export class Player {
                 class: '',
                 guild: '',
                 items: [],
-            },
+            }],
             playerID: '',
         }
 
@@ -55,7 +55,7 @@ export class Player {
     }
 
     addCharacter(character: characterDataInterface) {
-        this.data.characters = character;
+        this.data.characters.push(character);
     }
 
     getData(this: Player) { return this.data };

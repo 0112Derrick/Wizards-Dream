@@ -52,6 +52,6 @@ export interface characterDataInterface extends CharacterCreationDataInterface {
     items: string[],
 }
 export default interface playerDataInterface extends playerProfileDataInterface {
-    characters: characterDataInterface;
+    characters: [characterDataInterface];
     playerID: string
 }

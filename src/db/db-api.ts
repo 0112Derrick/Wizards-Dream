@@ -58,5 +58,4 @@ async function addCharacter(characterInfo: $characterSignup) {
 }
 
 
-
 export { addPlayer, addCharacter };
