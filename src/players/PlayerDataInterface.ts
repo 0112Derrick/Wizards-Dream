@@ -23,7 +23,13 @@ export interface playerProfileDataInterface extends commonDataInterface {
 interface commonCharacterDataInterface {
     username: string,
 }
-export interface CharacterCreationDataInterface extends commonDataInterface {
+interface commonGameDataInterface extends commonDataInterface {
+    x: number,
+    y: number,
+    sprite: any,
+    direction: string,
+}
+export interface CharacterCreationDataInterface extends commonGameDataInterface {
     characterGender: string
     player: any
 }
@@ -36,9 +42,9 @@ export interface characterDataInterface extends CharacterCreationDataInterface {
         statPoints: number,
         hp: number,// Determines how many times a player can take damage before dying & hp regen amount
         sp: number, // Determines how many times a magic atk can be used and regen amount
-        Def: number,// Determines how much damage is taken from phyiscal hits
-        Mdef: number,// Determines how much damage is taken from Magic hits
-        Crit: number,// Determines wheter or not a hit does increased damgage & increased damage amount
+        def: number,// Determines how much damage is taken from phyiscal hits
+        mdef: number,// Determines how much damage is taken from Magic hits
+        crit: number,// Determines wheter or not a hit does increased damgage & increased damage amount
 
         //stats directly controlled by the player when using levelinh points
         Atk: number,// Determines Physical atk damage and gives a minor boost to hp total
@@ -49,7 +55,14 @@ export interface characterDataInterface extends CharacterCreationDataInterface {
     },
     class: string,
     guild: string,
+    friends: string[],
     items: string[],
+    equipment: {
+        head: number[] | null,
+        chest: number[] | null,
+        legs: number[] | null,
+        weapon: number[] | null,
+    }
 }
 export default interface playerDataInterface extends playerProfileDataInterface {
     characters: [characterDataInterface];

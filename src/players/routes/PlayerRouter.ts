@@ -47,7 +47,10 @@ playerRouter.post('/savecharacter', express.json(), async function (req, res, ne
             username: req.body.username,
             characterGender: req.body.characterGender,
             player: req.user.id,
-
+            x: 0,
+            y: 0,
+            sprite: undefined,
+            direction: '',
         }).then((character) => {
             console.log("Added character ", character);
             req.user.characters.push(character.id);// character.id;

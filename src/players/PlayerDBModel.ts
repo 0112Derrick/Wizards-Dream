@@ -59,7 +59,6 @@ characterSchema.method('syncCharacter', function (character): void {
     let docAsObject = this.toObject();
 
     let characterLocal: characterDataInterface = {
-
         username: docAsObject.username,
         characterID: docAsObject.characterID,
         characterGender: docAsObject.characterGender,
@@ -70,9 +69,9 @@ characterSchema.method('syncCharacter', function (character): void {
             statPoints: docAsObject.statPoints,
             hp: docAsObject.hp,
             sp: docAsObject.sp,
-            Def: docAsObject.Def,
-            Mdef: docAsObject.Mdef,
-            Crit: docAsObject.Crit,
+            def: docAsObject.Def,
+            mdef: docAsObject.Mdef,
+            crit: docAsObject.Crit,
 
 
             Atk: docAsObject.atk,
@@ -84,7 +83,13 @@ characterSchema.method('syncCharacter', function (character): void {
         class: docAsObject.class,
         guild: docAsObject.guild,
         items: docAsObject.items,
-        player: docAsObject.player
+        player: docAsObject.player,
+        friends: docAsObject.friends,
+        equipment: docAsObject.equipment,
+        x: docAsObject.x,
+        y: docAsObject.y,
+        sprite: docAsObject.sprite,
+        direction: docAsObject.direction
     }
 
     character.setData(characterLocal);

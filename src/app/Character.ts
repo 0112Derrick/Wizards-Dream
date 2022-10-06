@@ -23,9 +23,9 @@ export class Character extends GameObject implements characterDataInterface {
         statPoints: number,
         hp: number,// Determines how many times a player can take damage before dying & hp regen amount
         sp: number, // Determines how many times a magic atk can be used and regen amount
-        Def: number,// Determines how much damage is taken from phyiscal hits
-        Mdef: number,// Determines how much damage is taken from Magic hits
-        Crit: number,// Determines wheter or not a hit does increased damgage & increased damage amount
+        def: number,// Determines how much damage is taken from phyiscal hits
+        mdef: number,// Determines how much damage is taken from Magic hits
+        crit: number,// Determines wheter or not a hit does increased damgage & increased damage amount
 
         //stats directly controlled by the player when using levelinh points
         Atk: number,// Determines Physical atk damage and gives a minor boost to hp total
@@ -37,7 +37,8 @@ export class Character extends GameObject implements characterDataInterface {
     guild: string;
     items: string[];
     player: any;
-
+    friends: string[];
+    equipment: { head: number[]; chest: number[]; legs: number[]; weapon: number[]; };
 
     constructor(config) {
         super(config);
@@ -62,8 +63,6 @@ export class Character extends GameObject implements characterDataInterface {
         this.items = config.items || [];
         this.player = config.player
     }
-
-
 
 
     update(state): void {
@@ -101,6 +100,7 @@ export class Character extends GameObject implements characterDataInterface {
 
 export class CharacterAttributes {
     private level = 1;
+
     private experience = $chAttr.experience;
     private experienceCap = $chAttr.experienceCap;
     private statPoints = $chAttr.statPoints;

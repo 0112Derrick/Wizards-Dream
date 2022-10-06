@@ -4,8 +4,9 @@ import PlayerModel from "../players/PlayerDBModel.js";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
 import { CharacterModel as $CharacterModel } from '../players/PlayerDBModel.js'
 import { CharacterAttributes } from '../app/Character.js'
-
-
+import { CharacterAttributesConstants as $chAttr } from '../constants/CharacterAttributesConstants.js'
+import { characterDataInterface } from '../players/PlayerDataInterface.js'
+import { Sprite } from '../app/Sprite.js';
 
 async function addPlayer(playerInfo) {
 
@@ -32,12 +33,49 @@ async function addPlayer(playerInfo) {
 //Add the new character to the DB.
 let id = 1;
 async function addCharacter(characterInfo: $characterSignup) {
-    let configCharacter = {
+    let png;
+    if (characterInfo.characterGender == 'male') {
+        png = "/images/characters/players/erio.png";
+    } else {
+        png = "/images/characters/players/erio.png";
+    }
+
+    let configCharacter: characterDataInterface = {
         characterID: id,
         username: characterInfo.username,
-        atrributes: new CharacterAttributes(),
         characterGender: characterInfo.characterGender,
+        x: 5,
+        y: 5,
+        sprite: new Sprite({
+            gameObject: this,
+            src: png || "/images/characters/players/erio.png"
+        }),
+        direction: 'right',
+        attributes: {
+            level: 1,
+            experience: $chAttr.experience,
+            experienceCap: $chAttr.experienceCap,
+            statPoints: $chAttr.statPoints,
+            hp: $chAttr.hp,
+            sp: $chAttr.sp,
+            def: $chAttr.def,
+            mdef: $chAttr.mdef,
+            crit: $chAttr.crit,
+
+            Atk: $chAttr.Atk,
+            Matk: $chAttr.Matk,
+            Vit: $chAttr.Vit,
+            Men: $chAttr.Men,
+            Dex: $chAttr.Dex,
+        },
+        equipment: {
+            head: null,
+            chest: null,
+            legs: null,
+            weapon: null,
+        },
         class: 'none',
+        friends: [''],
         guild: 'none',
         items: [''],
         player: characterInfo.player
