@@ -115,8 +115,7 @@ const fs = fsModule.promises;
     configureRoutes(app);
 
     // runDBTest();
-    //b();
-    //a();
+
 
     app.engine('hbs', exhbs({
         defaultLayout: "index",
@@ -161,7 +160,7 @@ const fs = fsModule.promises;
         console.log('server ', client.handshake.headers.host);
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
-        //client.emit('init', { client, state });
+
     });
 
     io.on('disconnect', client => {

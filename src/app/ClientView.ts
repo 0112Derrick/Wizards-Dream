@@ -56,6 +56,10 @@ class ClientView extends $ClientSyntheticEventEmitter {
             username: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
             characterGender: (<HTMLInputElement>document.querySelector('input[name="character-gender"]:checked')).value,
             player: "",
+            x: 0,
+            y: 0,
+            sprite: undefined,
+            direction: ""
         }
 
         console.log("Got new player account submission", formData);

@@ -75,6 +75,7 @@ export class GameRouter {
         let gameRouter = GameRouter.GameRouterInstance;
         gameRouter.clientSocket = _gameSocket;
 
+
         if (!this.clientIP == _gameSocket.handshake.headers.host)
             this.setClientIP(_gameSocket.handshake.headers.host);
 

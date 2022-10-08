@@ -94,7 +94,6 @@ export class Character extends GameObject implements characterDataInterface {
             this.sprite.setAnimation('walk-' + this.direction);
         }
 
-
     }
 }
 

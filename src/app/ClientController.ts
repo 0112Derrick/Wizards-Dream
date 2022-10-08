@@ -39,7 +39,7 @@ class ClientController extends $OBSERVER {
 
         this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
-
+        
 
         this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
@@ -70,6 +70,10 @@ class ClientController extends $OBSERVER {
                 username: "",
                 characterGender: "",
                 player: "",
+                x: 5,
+                y: 5,
+                direction: "right",
+                sprite: "",
             }
 
             console.log(data.detail);
