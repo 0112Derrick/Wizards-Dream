@@ -5,14 +5,25 @@ export enum ClientMapSlot {
     ClientOBJ = 1
 }
 
+export interface ClientDATA {
+    id: string,
+    arg: any
+}
+
 export class GameRouter {
+
     private static gameRouter: GameRouter;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
     private io: any;
+    private clientInitMap: Map<string, Object> = new Map()
 
+    // passed from req object when page is loaded
     public client: any | null = null;
+    //passed from server on connection
     private clientSocket: any;
+    //Set by server once a client connects
     private clientMap: Map<string, Array<any>> = new Map();
+    //Set by req obj 
     private clientIP: string;
 
 
@@ -31,19 +42,36 @@ export class GameRouter {
         this.io = _io
     }
 
-    public setClient(_client) {
-        this.client = _client;
+    /**
+     * 
+     * @param _client 
+     * @param ip 
+     * @param description Sets a temporary client variable so we can verify the user when they connect with sockets
+     */
+
+    public setClient(_client, ip) {
+        let gameRouter = GameRouter.GameRouterInstance;
+        if (!gameRouter.clientInitMap.has(ip)) {
+            gameRouter.clientInitMap.set(ip, _client);
+        }
     }
 
-    public get ClientMap(): Map<string, Array<any>> {
-        return this.clientMap;
+    public getClient(ip) {
+        let gameRouter = GameRouter.GameRouterInstance;
+        if (gameRouter.clientInitMap.has(ip)) {
+            return gameRouter.clientInitMap.get(ip);
+        }
+        return null;
     }
+
+
 
     public get ClientIP(): string {
         return this.clientIP;
     }
 
-    public setClientMap(_data, slot: ClientMapSlot) {
+    public setClientMap(_data: ClientDATA, slot: ClientMapSlot) {
+
         if (this.clientMap.has(_data.id)) {
             switch (slot) {
                 case ClientMapSlot.ClientSocket:
@@ -56,12 +84,19 @@ export class GameRouter {
         }
     }
 
+    getClientMap() {
+        return this.clientMap;
+    }
+
     public setClientSocket(_gameSocket) {
         this.clientSocket = _gameSocket;
     }
 
     public setClientIP(ip: string) {
         this.clientIP = ip;
+    }
+    public getClientIP() {
+        return this.clientIP;
     }
 
     /**
@@ -71,29 +106,11 @@ export class GameRouter {
      * @param _gameSocket The socket object for the connected client.
      * 
      */
-    initGame(_gameSocket) {
+    initGame() {
         let gameRouter = GameRouter.GameRouterInstance;
-        gameRouter.clientSocket = _gameSocket;
-
-
-        if (!this.clientIP == _gameSocket.handshake.headers.host)
-            this.setClientIP(_gameSocket.handshake.headers.host);
-
-        console.log('ip: ', this.clientIP);
-
-        if (gameRouter.clientMap.has(this.clientIP)) {
-            this.clientSocket = gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientSocket);
-            if (gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientOBJ)) {
-                this.client = gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientOBJ);
-            }
-        } else {
-            let mapArr: Array<any> = [_gameSocket];
-            gameRouter.clientMap.set(this.clientIP, mapArr);
-        }
 
 
         //Server Events
-        gameRouter.clientSocket.on('createServerRoom', this.createServerRoom);
         gameRouter.clientSocket.on('serverRoomFull', this.serverRoomFull);
         gameRouter.clientSocket.emit('connected', gameRouter.clientIP);
         gameRouter.clientSocket.on("online", this.playerConnected);
