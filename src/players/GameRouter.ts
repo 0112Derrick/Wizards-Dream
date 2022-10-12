@@ -1,4 +1,7 @@
 import { ServerSizeConstants as $serverSize } from "../constants/ServerSizeConstants.js";
+import { OverworldMap } from "../app/OverworldMap.js";
+import { Character } from "../app/Character.js";
+import { Overworld } from "Overworld.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -10,12 +13,28 @@ export interface ClientDATA {
     arg: any
 }
 
+export class TestPlayer {
+    private id: number;
+    public x: number = 0;
+    public y: number = 0;
+
+    public constructor(_id) {
+        this.id = _id;
+    }
+
+}
+
+interface coordniate {
+    x: number,
+    y: number
+}
+
 export class GameRouter {
 
     private static gameRouter: GameRouter;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
     private io: any;
-    private clientInitMap: Map<string, Object> = new Map()
+    private clientInitMap: Map<string, Object> = new Map();
 
     // passed from req object when page is loaded
     public client: any | null = null;
@@ -42,6 +61,31 @@ export class GameRouter {
         this.io = _io
     }
 
+
+    private player: TestPlayer;
+    private playerMap: Map<string, TestPlayer> = new Map();
+
+
+
+    testInitGame(_socket, _ip, player: TestPlayer) {
+        if (!this.playerMap.has(_ip)) {
+            this.playerMap.set(_ip, player);
+        } else {
+            this.player = this.playerMap.get(_ip);
+        }
+
+        _socket.on('move', this.movePlayer);
+    }
+
+    movePlayer(coords: coordniate, ip: string) {
+        if (GameRouter.GameRouterInstance.playerMap.has(ip)) {
+            let player = GameRouter.GameRouterInstance.playerMap.get(ip);
+            player.x = coords.x;
+            player.y = coords.y;
+            GameRouter.GameRouterInstance.io.emit('movePlayer', player);
+        }
+    }
+
     /**
      * 
      * @param _client 
@@ -56,7 +100,7 @@ export class GameRouter {
         }
     }
 
-    public getClient(ip) {
+    public getClient(ip: string) {
         let gameRouter = GameRouter.GameRouterInstance;
         if (gameRouter.clientInitMap.has(ip)) {
             return gameRouter.clientInitMap.get(ip);
@@ -95,36 +139,40 @@ export class GameRouter {
     public setClientIP(ip: string) {
         this.clientIP = ip;
     }
+
     public getClientIP() {
         return this.clientIP;
     }
+
+
+
+
 
     /**
      * This function is called by server.js to initialize a new game instance.
      *
      * @param _io The Socket.IO library
-     * @param _gameSocket The socket object for the connected client.
+     * @param clientSocket The socket object for the connected client.
      * 
      */
-    initGame() {
+    initGame(_socket, _ip) {
         let gameRouter = GameRouter.GameRouterInstance;
 
-
         //Server Events
-        gameRouter.clientSocket.on('serverRoomFull', this.serverRoomFull);
-        gameRouter.clientSocket.emit('connected', gameRouter.clientIP);
-        gameRouter.clientSocket.on("online", this.playerConnected);
+        _socket.on('serverRoomFull', this.serverRoomFull);
+        _socket.emit('connected', _ip);
+        _socket.on("online", this.playerConnected);
 
         //PlayerEvents
-        gameRouter.clientSocket.on('playerJoinServer', this.playerJoinServer);
-        gameRouter.clientSocket.on('playerLogout', this.playerLogout);
-
+        _socket.on('playerJoinServer', this.playerJoinServer);
+        _socket.on('playerLogout', this.playerLogout);
 
         if (this.serverRooms == null) {
             this.serverRooms = [];
             this.createServerRoom();
         }
     }
+
 
     createServerRoom(customId = 0) {
         let gameRouter = GameRouter.GameRouterInstance
@@ -139,11 +187,12 @@ export class GameRouter {
         gameRouter.startServer(_serverId);
     }
 
+
     startServer(serverId) {
         let gameRouter = GameRouter.GameRouterInstance;
         console.log('starting server');
         let players: Array<Map<string, Object>> = this.serverRooms?.at(0)?.get(0)!;
-        let world = this.createOverworld([...players]);
+        let world = this.createOverworld();
         gameRouter.io.sockets.in(serverId).emit('newServerWorld', world);
     }
 
@@ -190,8 +239,9 @@ export class GameRouter {
         // this.gameSocket.close();
     }
 
-    createOverworld(playerList) {
+    createOverworld() {
         console.log('Create overworld not implemented - gameRouter');
+        // GameRouter.GameRouterInstance.clientMap(ip)
 
         // throw new Error("Method not implemented.");
     }

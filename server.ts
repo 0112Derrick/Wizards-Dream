@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import { ClientMapSlot, GameRouter } from './src/players/GameRouter.js';
+import { TestPlayer } from './src/players/GameRouter.js';
 
 import exp from 'constants';
 import { nextTick } from 'process';
@@ -134,54 +135,67 @@ const fs = fsModule.promises;
     let gameRouter = $gameRouter.GameRouterInstance;
     gameRouter.setIO(io);
 
-    io.on('connection', client => {
-        console.log("server: " + client.handshake.address);
-        if (gameRouter.getClientIP() == client.handshake.address) {
-            if (gameRouter.getClient(client.handshake.address)) {
-                /*
-                * Check to see if client exist in our client map
-                * If client does not exist in client map then add them to the map
-                */
-                if (!gameRouter.getClientMap().has(client.handshake.address)) {
-                    let mapArr: Array<any> = [];
-                    console.log('new Client Added: ', client.handshake.address);
-                    gameRouter.getClientMap().set(client.handshake.address, mapArr);
-                }
+    let id = 0;
 
-                /*
-                * Check to see if client socket data is set in our map
-                * If client socket data does not exist in client map then add the data to the map
-                */
-                if (!gameRouter.getClientMap().get(client.handshake.address).at(ClientMapSlot.ClientSocket)) {
-                    let clientSocket = {
-                        id: client.handshake.address,
-                        arg: client
-                    }
-                    console.log("Client socket set", client.handshake.address)
-                    gameRouter.setClientMap(clientSocket, ClientMapSlot.ClientSocket);
+    io.on('connection', clientSocket => {
+        console.log("connecting client: " + clientSocket.handshake.address);
+
+        //set by express via req obj temporarily until the data is saved in the ClientMap 
+        if (gameRouter.getClient(clientSocket.handshake.address)) {
+
+            /*
+            * Check to see if client exist in our client map
+            * If client does not exist in client map then add them to the map
+            */
+
+            if (!gameRouter.getClientMap().has(clientSocket.handshake.address)) {
+                let mapArr: Array<any> = [];
+                console.log('new Client Added: ', clientSocket.handshake.address);
+                gameRouter.getClientMap().set(clientSocket.handshake.address, mapArr);
+            }
+
+            /*
+            * Check to see if client socket data is set in our map
+            * If client socket data does not exist in client map then add the data to the map
+            */
+            if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientSocket)) {
+                let clientSocketOBJ = {
+                    id: clientSocket.handshake.address,
+                    arg: clientSocket
                 }
-                /*
-                * Check to see if client Obj (character data) is set in our map
-                * If client Obj does not exist in client map then add the data to the map
-                */
-                if (!gameRouter.getClientMap().get(client.handshake.address).at(ClientMapSlot.ClientOBJ)) {
-                    let clientOBJ = {
-                        id: client.handshake.address,
-                        arg: gameRouter.getClient(client.handshake.address)
-                    }
-                    gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
+                console.log("Client socket set", clientSocket.handshake.address)
+                gameRouter.setClientMap(clientSocketOBJ, ClientMapSlot.ClientSocket);
+            }
+
+            /*
+            * Check to see if client Obj (character data) is set in our map
+            * If client Obj does not exist in client map then add the data to the map
+            */
+            if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientOBJ)) {
+
+                let clientOBJ = {
+                    id: clientSocket.handshake.address,
+                    arg: gameRouter.getClient(clientSocket.handshake.address)
                 }
+                
+                gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
             }
         }
+        clientSocket.emit('clientID', clientSocket.handshake.address);
 
-        gameRouter.initGame();
+        let player = new TestPlayer(id);
+        id++;
 
+        gameRouter.testInitGame(clientSocket, clientSocket.handshake.address, player);
 
-        console.log("server sent client info: " + client.emit("onlineClient", gameRouter.getClientMap().get(gameRouter.ClientIP)?.at(ClientMapSlot.ClientOBJ)));
+        gameRouter.initGame(clientSocket, clientSocket.handshake.address,);
+
+        console.log("server sent client info: " + clientSocket.emit("onlineClient", gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
+
         // console.log(gameRouter.client.characters.at(0).username)
 
 
-        // client.emit('clientID', client.handshake.headers.host);
+
         // console.log('server ', client.handshake.headers.host);
 
         //client.emit('message', 'You are connected');
@@ -232,10 +246,14 @@ function configureRoutes(app) {
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
             //console.log('player: ' + req.user);
+
             async function requestUserInfo() {
-                let client = await req.user.populate('characters');
-                $gameRouter.GameRouterInstance.setClient(client, req.ip);
+                let clientOBJ = await req.user.populate('characters');
+                console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
+                $gameRouter.GameRouterInstance.setClientIP(req.ip);
+                $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
             }
+
             requestUserInfo();
             res.redirect("/main");
         } else {
@@ -277,8 +295,5 @@ function configureRoutes(app) {
     });
 
     app.use('/player', playerRouter);
-
-
-
 }
 

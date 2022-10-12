@@ -39,7 +39,9 @@ class ClientController extends $OBSERVER {
 
         this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
-        
+
+
+        this.socket.on('movePlayer', this.updatePlayer);
 
         this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
@@ -56,9 +58,26 @@ class ClientController extends $OBSERVER {
             this.socket.emit('playerJoinServer', data);
         })
 
+        let xz = { x: 1, y: 1 }
 
-
+        setInterval(async () => {
+            let coord = await this.movePlayer(xz);
+            xz.x++;
+            xz.y++;
+            //  this.socket.emit("move", coord, this.clientID);
+        }, 5000);
     }
+
+    async movePlayer(coordniate = { x: 1, y: 1 }) {
+        this.socket.emit("move", coordniate, this.socket.clientID);
+        return coordniate;
+    }
+
+
+    updatePlayer(player) {
+        console.log("player:", player.id, "moved to x: ", player.x, ', y: ', player.y)
+    }
+
     public setID(id: string): void {
         this.clientID = id;
     }
@@ -103,7 +122,7 @@ class ClientController extends $OBSERVER {
     connect(_client) {
         this.client = _client;
         console.log(`User: ${this.client.username} is online. \n`);
-        console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).id}`)
+        //console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).id}`)
     }
 
     disconnect() {

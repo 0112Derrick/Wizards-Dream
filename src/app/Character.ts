@@ -61,7 +61,7 @@ export class Character extends GameObject implements characterDataInterface {
         this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
-        this.player = config.player
+        this.player = config.player;
     }
 
 
