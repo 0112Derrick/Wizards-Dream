@@ -46,10 +46,7 @@ async function addCharacter(characterInfo: $characterSignup) {
         characterGender: characterInfo.characterGender,
         x: 5,
         y: 5,
-        sprite: new Sprite({
-            gameObject: this,
-            src: png || "/images/characters/players/erio.png"
-        }),
+        sprite: png || -1,
         direction: 'right',
         attributes: {
             level: 1,

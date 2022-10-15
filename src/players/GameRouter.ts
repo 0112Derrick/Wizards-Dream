@@ -1,7 +1,9 @@
 import { ServerSizeConstants as $serverSize } from "../constants/ServerSizeConstants.js";
 import { OverworldMap } from "../app/OverworldMap.js";
 import { Character } from "../app/Character.js";
-import { Overworld } from "Overworld.js";
+import { Overworld } from "../app/Overworld.js";
+import { GameObject } from "../app/GameObject.js"
+import { Utils } from "../app/Utils.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -28,12 +30,95 @@ interface coordniate {
     x: number,
     y: number
 }
+// player01: new Character({
+//     isPlayerControlled: true,
+//     x: Utils.withGrid(6),
+//     y: Utils.withGrid(6),
+//     src: "/images/characters/players/erio.png",
+//     direction: 'down'
+// })
+let OverworldMaps = {
+    grassyField: {
+        lowerSrc: "/images/maps/Battleground1.png",
+        upperSrc: "/images/maps/Battleground1.png",
+        gameObjects: [],
+    }
+}
+/**
+ * 
+ * @param obj 
+ *     this.characterID = config.characterID || 1;
+        this.username = config.username || 'newCharacter';
+        this.attributes = config.atrributes || new CharacterAttributes();
+        this.characterGender = config.characterGender || 'male';
+        this.class = config.class || 'none';
+        this.guild = config.guild || 'none';
+        this.items = config.items || [];
+        this.player = config.player;
+ * 
+ */
+
+let fakeUser = {
+
+    characterID: 1,
+    characters: {
+        username: "me",
+        attributes: {
+            level:
+                1,
+            experience:
+                1,
+            experienceCap:
+                200,
+            statPoints:
+                5,
+            hp:
+                15,
+            sp:
+                10,
+            def:
+                1,
+            mdef:
+                1,
+            crit:
+                1,
+            Atk:
+                1,
+            Matk:
+                1,
+            Vit:
+                1,
+            Men:
+                1,
+            Dex:
+                1,
+        },
+        class: "none",
+        guild: "none",
+        items: [],
+    },
+    player: "him",
+}
+
+
+
+function addCharacterToOverworld(obj) {
+    if (obj instanceof GameObject) {
+        OverworldMaps.grassyField.gameObjects.push(obj);
+        console.log(obj.name + " added to the overworld");
+        return;
+    }
+    console.log("obj is not a GameObject");
+    return;
+}
+
 
 export class GameRouter {
 
     private static gameRouter: GameRouter;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
     private io: any;
+    // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
 
     // passed from req object when page is loaded
@@ -166,6 +251,11 @@ export class GameRouter {
         //PlayerEvents
         _socket.on('playerJoinServer', this.playerJoinServer);
         _socket.on('playerLogout', this.playerLogout);
+
+        //test events
+        _socket.emit('syncUser', fakeUser);
+        _socket.on("characterCreated", addCharacterToOverworld);
+        // end
 
         if (this.serverRooms == null) {
             this.serverRooms = [];

@@ -7,7 +7,8 @@ import { StatusConstants as $StatusConstants } from "../constants/StatusConstant
 import { io, Socket } from "/socket.io-client/dist/socket.io.esm.min.js";
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
-
+import { Character } from "../app/Character.js"
+import { Utils } from "../app/Utils.js"
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -16,6 +17,24 @@ interface ClientToServerEvents {
 
 interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
+}
+
+function syncUsertoCharacter(obj): Character {
+    let char = new Character({
+        isPlayerControlled: true,
+        x: Utils.withGrid(6),
+        y: Utils.withGrid(6),
+        src: "/images/characters/players/erio.png",
+        direction: 'right',
+        characterID: obj._id,
+        username: obj.characters.username,
+        attributes: obj.characters.attributes,
+        class: obj.characters.class,
+        guild: obj.characters.guild,
+        items: obj.characters.items,
+        player: obj.characters.player,
+    })
+    return char;
 }
 
 class ClientController extends $OBSERVER {
@@ -28,8 +47,32 @@ class ClientController extends $OBSERVER {
     constructor(networkProxy: NetworkProxy) {
         super();
         this.networkProxy = networkProxy;
-        this.socket = io();
         const CharacterCreateRoute = '/player/savecharacter';
+        this.init();
+        //this.socket = io();
+
+
+        this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
+        this.listenForEvent($events.LOGOUT, (e) => {
+            this.playerLogout();
+        }, this.view);
+
+        //this.socket.on('playerJoinServer', this.playerJoinServer);
+        //move to view
+
+
+        //     let xz = { x: 1, y: 1 }
+
+        //     setInterval(async () => {
+        //         let coord = await this.movePlayer(xz);
+        //         xz.x++;
+        //         xz.y++;
+        //         //  this.socket.emit("move", coord, this.clientID);
+        //     }, 5000);
+    }
+
+    async init() {
+        this.socket = await io();
 
         this.socket.on("connected", this.testConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
@@ -40,16 +83,13 @@ class ClientController extends $OBSERVER {
         this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
 
-
+        //proof of concept events
         this.socket.on('movePlayer', this.updatePlayer);
+        this.socket.on('syncUser', this.sync);
 
-        this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
-        this.listenForEvent($events.LOGOUT, (e) => {
-            this.playerLogout();
-        }, this.view);
+        //end concepts
 
-        //this.socket.on('playerJoinServer', this.playerJoinServer);
-        //move to view
+
         document.querySelector('#joinServer')?.addEventListener('click', () => {
             let data = {
                 id: this.clientID,
@@ -57,16 +97,31 @@ class ClientController extends $OBSERVER {
             }
             this.socket.emit('playerJoinServer', data);
         })
-
-        let xz = { x: 1, y: 1 }
-
-        setInterval(async () => {
-            let coord = await this.movePlayer(xz);
-            xz.x++;
-            xz.y++;
-            //  this.socket.emit("move", coord, this.clientID);
-        }, 5000);
     }
+
+    static syncUsertoCharacter1(obj) {
+        let char = new Character({
+            isPlayerControlled: true,
+            x: Utils.withGrid(6),
+            y: Utils.withGrid(6),
+            src: "/images/characters/players/erio.png",
+            direction: 'right',
+            characterID: obj._id,
+            username: obj.characters.username,
+            attributes: obj.characters.attributes,
+            class: obj.characters.class,
+            guild: obj.characters.guild,
+            items: obj.characters.items,
+            player: obj.characters.player,
+        })
+        return char;
+    }
+
+    sync(obj) {
+        let o = ClientController.syncUsertoCharacter1(obj);
+        this.socket.emit("characterCreated", o);
+    }
+
 
     async movePlayer(coordniate = { x: 1, y: 1 }) {
         this.socket.emit("move", coordniate, this.socket.clientID);

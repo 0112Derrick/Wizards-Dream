@@ -177,20 +177,21 @@ const fs = fsModule.promises;
                     id: clientSocket.handshake.address,
                     arg: gameRouter.getClient(clientSocket.handshake.address)
                 }
-                
+
                 gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
             }
         }
         clientSocket.emit('clientID', clientSocket.handshake.address);
 
-        let player = new TestPlayer(id);
-        id++;
+        // let player = new TestPlayer(id);
+        // id++;
 
-        gameRouter.testInitGame(clientSocket, clientSocket.handshake.address, player);
-
-        gameRouter.initGame(clientSocket, clientSocket.handshake.address,);
+        //gameRouter.testInitGame(clientSocket, clientSocket.handshake.address, player);
 
         console.log("server sent client info: " + clientSocket.emit("onlineClient", gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
+        gameRouter.initGame(clientSocket, clientSocket.handshake.address,);
+
+
 
         // console.log(gameRouter.client.characters.at(0).username)
 

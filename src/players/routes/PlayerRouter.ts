@@ -4,6 +4,7 @@ import { StatusConstants as $StatusConstants } from '../../constants/StatusConst
 import { Player as $player } from '../Player.js';
 import passportStrategies from "../../authentication/passport-strategies.js";
 import passport from 'passport';
+import { Sprite } from "../../app/Sprite.js"
 
 import { equal } from 'assert';
 
@@ -42,22 +43,23 @@ playerRouter.post('/signup', express.json(), async function (req, res, next) {
 
 playerRouter.post('/savecharacter', express.json(), async function (req, res, next) {
     if (req.body.username && req.body.characterGender) {
-
-        const character = await db_api.addCharacter({
-            username: req.body.username,
-            characterGender: req.body.characterGender,
-            player: req.user.id,
-            x: 0,
-            y: 0,
-            sprite: undefined,
-            direction: '',
-        }).then((character) => {
+        try {
+            const character = await db_api.addCharacter({
+                username: req.body.username,
+                characterGender: req.body.characterGender,
+                player: req.user.id,
+                x: 0,
+                y: 0,
+                sprite: 0,
+                direction: 'right',
+            })
             console.log("Added character ", character);
             req.user.characters.push(character.id);// character.id;
             req.user.save();
-        })
-            .catch((err) => { console.log("Failed to save character") })
-            .finally(() => res.redirect('/'));
+            res.redirect('/');
+        }
+        catch (err) { console.log("Failed to save character"); res.redirect('/') }
+
     } else {
         res.status($StatusConstants.CLIENT_ERROR_BASE);
         res.redirect('/');

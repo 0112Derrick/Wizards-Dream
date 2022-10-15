@@ -11,7 +11,7 @@ export class Overworld<T> {
     element: HTMLElement | undefined;
     ctx!: CanvasRenderingContext2D | null;
     numbOfPlayers: number;
-    map: any;
+    gameWorld: any;
     image!: HTMLImageElement;
     directionInput!: DirectionInput;
 
@@ -23,7 +23,7 @@ export class Overworld<T> {
         if (this.canvas)
             this.ctx = this.canvas.getContext("2d");
         this.numbOfPlayers = config.numbOfPlayers || 1;
-        this.map = null;
+        this.gameWorld = null;
     }
 
 
@@ -34,11 +34,11 @@ export class Overworld<T> {
             //Clear off canvas
             this.ctx?.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             //draw lower layer
-            this.map.drawLowerImage(this.ctx);
+            this.gameWorld.drawLowerImage(this.ctx);
 
 
             //draw gameObjects
-            Object.values(this.map.gameObjects).forEach(o => {
+            Object.values(this.gameWorld.gameObjects).forEach(o => {
                 if (o instanceof GameObject) {
                     if (this.ctx) {
 
@@ -63,7 +63,7 @@ export class Overworld<T> {
 
     init() {
         // console.log("Overworld ", this);
-        this.map = new OverworldMap(window.OverworldMaps.grassyField);
+        this.gameWorld = new OverworldMap(window.OverworldMaps.grassyField);
         this.directionInput = new DirectionInput();
         this.directionInput.init();
         this.startGameLoop();
