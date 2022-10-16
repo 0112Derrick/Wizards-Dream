@@ -24,14 +24,14 @@ import connectDB from './src/db/db-init.js';
 import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
 import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
-import authorRouter from './testDB.js'
+//import authorRouter from './testDB.js'
 
 //import { createGameState } from './src/app/game.js';
 
 import fsModule from 'fs';
 import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
 
-import { a, b } from './testDB.js';
+//import { a, b } from './testDB.js';
 
 declare global {
     namespace Express {

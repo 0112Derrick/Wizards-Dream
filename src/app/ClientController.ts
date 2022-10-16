@@ -4,7 +4,7 @@ import NetworkProxy from "../network/NetworkProxy.js";
 import $HTMLNetwork from "../network/HTML-Proxy.js";
 import { EventConstants as $events, ServerNameConstants as $servers } from '../constants/EventConstants.js';
 import { StatusConstants as $StatusConstants } from "../constants/StatusConstants.js";
-import { io, Socket } from "/socket.io-client/dist/socket.io.esm.min.js";
+//import { io, Socket } from "/socket.io-client/dist/socket.io.esm.min.js";
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
 import { Character } from "../app/Character.js"
@@ -72,20 +72,22 @@ class ClientController extends $OBSERVER {
     }
 
     async init() {
+        // @ts-ignore
+
         this.socket = await io();
 
         this.socket.on("connected", this.testConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
-        this.socket.on("onlineClient", this.connect);
+        this.socket.on("onlineClient", (client)=>{this.connect(client)});
         this.socket.on("offline", this.disconnect);
-        this.socket.on("clientID", this.setID);
+        this.socket.on("clientID", (id)=>{this.setID(id)});
 
         this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
 
         //proof of concept events
-        this.socket.on('movePlayer', this.updatePlayer);
-        this.socket.on('syncUser', this.sync);
+        this.socket.on('movePlayer', ()=>{this.updatePlayer});
+        this.socket.on('syncUser', (obj)=>{this.sync(obj)});
 
         //end concepts
 
@@ -119,7 +121,7 @@ class ClientController extends $OBSERVER {
 
     sync(obj) {
         let o = ClientController.syncUsertoCharacter1(obj);
-        this.socket.emit("characterCreated", o);
+        this.socket.emit("characterCreated",o);
     }
 
 
