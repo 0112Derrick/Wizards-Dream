@@ -65,6 +65,12 @@ export class Character extends GameObject implements characterDataInterface {
     }
 
 
+    toJSON() {
+        return {username: this.username,
+                name:this.name,
+                characterID: this.characterID}
+    }
+
     update(state): void {
         this.updatePosition();
         //console.log(state);

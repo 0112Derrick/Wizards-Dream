@@ -103,12 +103,12 @@ let fakeUser = {
 
 
 function addCharacterToOverworld(obj) {
-    if (obj instanceof GameObject) {
+    //if (obj instanceof GameObject) {
         OverworldMaps.grassyField.gameObjects.push(obj);
         console.log(obj.name + " added to the overworld");
         return;
-    }
-    console.log("obj is not a GameObject");
+   // }
+    //console.log("obj is not a GameObject");
     return;
 }
 
