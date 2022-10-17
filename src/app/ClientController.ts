@@ -121,7 +121,7 @@ class ClientController extends $OBSERVER {
 
     sync(obj) {
         let o = ClientController.syncUsertoCharacter1(obj);
-        this.socket.emit("characterCreated", o);
+        this.socket.emit("characterCreated",o);
     }
 
 
