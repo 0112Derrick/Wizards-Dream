@@ -62,18 +62,22 @@ export class Character extends GameObject implements characterDataInterface {
         this.guild = config.guild || 'none';
         this.items = config.items || [];
         this.player = config.player;
+        this.name = config.username;
     }
 
 
     toJSON() {
         return {
             username: this.username,
-            name: this.name,
+            player: this.player,
             characterID: this.characterID,
             attributes: this.attributes,
+            gender: this.characterGender,
             class: this.class,
             guild: this.guild,
             items: this.items,
+            x: this.x,
+            y: this.y
         }
     }
 

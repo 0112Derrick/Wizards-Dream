@@ -15,16 +15,7 @@ export interface ClientDATA {
     arg: any
 }
 
-export class TestPlayer {
-    private id: number;
-    public x: number = 0;
-    public y: number = 0;
 
-    public constructor(_id) {
-        this.id = _id;
-    }
-
-}
 
 interface coordniate {
     x: number,
@@ -37,13 +28,8 @@ interface coordniate {
 //     src: "/images/characters/players/erio.png",
 //     direction: 'down'
 // })
-let OverworldMaps = {
-    grassyField: {
-        lowerSrc: "/images/maps/Battleground1.png",
-        upperSrc: "/images/maps/Battleground1.png",
-        gameObjects: [],
-    }
-}
+
+
 /**
  * 
  * @param obj 
@@ -58,59 +44,8 @@ let OverworldMaps = {
  * 
  */
 
-let fakeUser = {
-
-    characterID: 1,
-    characters: {
-        username: "me",
-        attributes: {
-            level:
-                1,
-            experience:
-                1,
-            experienceCap:
-                200,
-            statPoints:
-                5,
-            hp:
-                15,
-            sp:
-                10,
-            def:
-                1,
-            mdef:
-                1,
-            crit:
-                1,
-            Atk:
-                1,
-            Matk:
-                1,
-            Vit:
-                1,
-            Men:
-                1,
-            Dex:
-                1,
-        },
-        class: "none",
-        guild: "none",
-        items: [],
-    },
-    player: "him",
-}
 
 
-
-function addCharacterToOverworld(obj) {
-    //if (obj instanceof GameObject) {
-        OverworldMaps.grassyField.gameObjects.push(obj);
-        console.log(obj.name + " added to the overworld");
-        return;
-   // }
-    //console.log("obj is not a GameObject");
-    return;
-}
 
 
 export class GameRouter {
@@ -129,6 +64,14 @@ export class GameRouter {
     private clientMap: Map<string, Array<any>> = new Map();
     //Set by req obj 
     private clientIP: string;
+    private OverworldMaps = {
+        grassyField: {
+            lowerSrc: "/images/maps/Battleground1.png",
+            upperSrc: "/images/maps/Battleground1.png",
+            gameObjects: [],
+            borders: [],
+        }
+    };
 
 
     private constructor() {
@@ -144,31 +87,6 @@ export class GameRouter {
 
     public setIO(_io) {
         this.io = _io
-    }
-
-
-    private player: TestPlayer;
-    private playerMap: Map<string, TestPlayer> = new Map();
-
-
-
-    testInitGame(_socket, _ip, player: TestPlayer) {
-        if (!this.playerMap.has(_ip)) {
-            this.playerMap.set(_ip, player);
-        } else {
-            this.player = this.playerMap.get(_ip);
-        }
-
-        _socket.on('move', this.movePlayer);
-    }
-
-    movePlayer(coords: coordniate, ip: string) {
-        if (GameRouter.GameRouterInstance.playerMap.has(ip)) {
-            let player = GameRouter.GameRouterInstance.playerMap.get(ip);
-            player.x = coords.x;
-            player.y = coords.y;
-            GameRouter.GameRouterInstance.io.emit('movePlayer', player);
-        }
     }
 
     /**
@@ -253,8 +171,12 @@ export class GameRouter {
         _socket.on('playerLogout', this.playerLogout);
 
         //test events
-        _socket.emit('syncUser', fakeUser);
-        _socket.on("characterCreated", addCharacterToOverworld);
+        if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ)) {
+            if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0))
+                _socket.emit('syncPlayer', gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0));
+        }
+
+        _socket.on("characterCreated", gameRouter.addCharacterToOverworld);
         // end
 
         if (this.serverRooms == null) {
@@ -263,6 +185,38 @@ export class GameRouter {
         }
     }
 
+    /**
+     * 
+     * @param character 
+     * @param description takes in a json object of a character and adds it to the overworld,
+     * Takes the character objects passes them to a method to sync the client side version of the overworld with the characterJSON 
+     * @returns none
+     */
+    addCharacterToOverworld(character): void {
+        GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects.push(character);
+        console.log(character.username + " added to the overworld");
+        GameRouter.GameRouterInstance.syncOverworld();
+        return;
+    }
+
+    /**
+     * 
+     * @param characterJSON 
+     * @param description
+     * syncs the server client side overworld with the data from the server side overworld
+     * 
+     */
+    syncOverworld(): void {
+        let gameRouter = GameRouter.GameRouterInstance;
+        let overworld = gameRouter.copyOverworld();
+        gameRouter.io.emit("syncOverworld", overworld);
+        return;
+    }
+
+    copyOverworld(): Object {
+        let clientOverworld = Object.assign({}, GameRouter.GameRouterInstance.OverworldMaps)
+        return clientOverworld;
+    }
 
     createServerRoom(customId = 0) {
         let gameRouter = GameRouter.GameRouterInstance

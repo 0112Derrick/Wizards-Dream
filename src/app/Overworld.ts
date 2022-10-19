@@ -38,24 +38,31 @@ export class Overworld<T> {
 
 
             //draw gameObjects
-            Object.values(this.gameWorld.gameObjects).forEach(o => {
-                if (o instanceof GameObject) {
+            //Object.values(this.gameWorld.gameObjects).forEach(o => {
+            this.gameWorld.gameObjects.forEach(gameOBJ => {
+                if (gameOBJ instanceof GameObject) {
                     if (this.ctx) {
 
-                        o.update({
+                        gameOBJ.update({
+                            //arrow:  movementReq(this.directionInput.direction)
                             arrow: this.directionInput.direction
                         });
 
-                        o.sprite.draw(this.ctx);
+                        gameOBJ.sprite.draw(this.ctx);
                     }
                 }
-            });
 
+            });
+            
+            let updateMap = (_map = window.OverworldMaps.grassyField) => {
+                this.gameWorld.gameObjects = _map.gameObjects;
+            };
             //draw upper layer
             //this.map.drawUpperImage(this.ctx);
             //    }, 1000 / 60); // sets Frame rate
             requestAnimationFrame(() => {
                 step();
+                updateMap();
             });
         }
         step();
@@ -70,38 +77,5 @@ export class Overworld<T> {
     }
 
 }
-export function drawGame(gameState) {
-
-    //Clear off canvas
-    const canvas: HTMLCanvasElement = document.querySelector(".game-canvas")!;
-    let ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-    let directionInput = new DirectionInput();
-    directionInput.init();
-    let map = new OverworldMap(gameState.grassyField);
-
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-
-    //draw lower layer
-    map.drawLowerImage(ctx);
-
-
-    //draw gameObjects
-    Object.values(map.gameObjects).forEach(o => {
-        if (o instanceof GameObject) {
-            if (ctx) {
-
-                o.update({
-                    arrow: directionInput.direction
-                });
-
-                o.sprite.draw(ctx);
-            }
-        }
-    });
-    //draw upper layer
-    //this.map.drawUpperImage(this.ctx);
-}
-
 
 

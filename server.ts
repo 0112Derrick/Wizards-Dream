@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import { ClientMapSlot, GameRouter } from './src/players/GameRouter.js';
-import { TestPlayer } from './src/players/GameRouter.js';
+
 
 import exp from 'constants';
 import { nextTick } from 'process';
@@ -180,24 +180,18 @@ const fs = fsModule.promises;
 
                 gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
             }
+
+            clientSocket.emit('clientID', clientSocket.handshake.address);
+
+            console.log("server sent client info: " + clientSocket.emit("onlineClient", gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
+            gameRouter.setIO(io);
+            gameRouter.initGame(clientSocket, clientSocket.handshake.address);
+        } else {
+            clientSocket.emit("reconnect")
         }
-        clientSocket.emit('clientID', clientSocket.handshake.address);
-
-        // let player = new TestPlayer(id);
-        // id++;
-
-        //gameRouter.testInitGame(clientSocket, clientSocket.handshake.address, player);
-
-        console.log("server sent client info: " + clientSocket.emit("onlineClient", gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
-        gameRouter.initGame(clientSocket, clientSocket.handshake.address,);
-
-
 
         // console.log(gameRouter.client.characters.at(0).username)
 
-
-
-        // console.log('server ', client.handshake.headers.host);
 
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
@@ -279,6 +273,7 @@ function configureRoutes(app) {
                 $gameRouter.GameRouterInstance.setClientIP(req.ip);
                 $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
             }
+
             requestUserInfo();
             res.render('index', { layout: 'index' });
         }

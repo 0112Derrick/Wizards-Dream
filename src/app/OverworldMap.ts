@@ -35,20 +35,20 @@ window.OverworldMaps = {
     grassyField: {
         lowerSrc: "/images/maps/Battleground1.png",
         upperSrc: "/images/maps/Battleground1.png",
-        gameObjects: {
-            player01: new Character({
-                isPlayerControlled: true,
-                x: Utils.withGrid(6),
-                y: Utils.withGrid(6),
-                src: "/images/characters/players/erio.png",
-                direction: 'down'
-            }),
-            // hero: new Player({
-            //     isPlayerControlled: false,
-            //     posX: Utils.withGrid(5),
-            //     posY: Utils.withGrid(6),
-            // }),
-        }
+        gameObjects: []
+        // player01: new Character({
+        //     isPlayerControlled: true,
+        //     x: Utils.withGrid(6),
+        //     y: Utils.withGrid(6),
+        //     src: "/images/characters/players/erio.png",
+        //     direction: 'down'
+        // }),
+        // hero: new Player({
+        //     isPlayerControlled: false,
+        //     posX: Utils.withGrid(5),
+        //     posY: Utils.withGrid(6),
+        // }),
+
     },
     hallway: {
         lowerSrc: "/images/maps/Battleground2.png",
