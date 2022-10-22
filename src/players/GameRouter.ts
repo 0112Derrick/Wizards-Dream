@@ -175,7 +175,7 @@ export class GameRouter {
             if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0))
                 _socket.emit('syncPlayer', gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0));
         }
-
+        _socket.on("moveReq", gameRouter.moveCharacter);
         _socket.on("characterCreated", gameRouter.addCharacterToOverworld);
         // end
 
@@ -193,11 +193,38 @@ export class GameRouter {
      * @returns none
      */
     addCharacterToOverworld(character): void {
+        for () { if ()}
         GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects.push(character);
         console.log(character.username + " added to the overworld");
         GameRouter.GameRouterInstance.syncOverworld();
         return;
     }
+
+
+    moveCharacter(direction, obj) {
+        let delta = { x: obj.x, y: obj.y }
+        switch (direction) {
+            case "up":
+                delta.y -= 0.5;
+                break;
+            case "down":
+                delta.y += 0.5;
+                break;
+
+            case "left":
+                delta.x -= 0.5;
+                break;
+
+            case "right":
+                delta.x += 0.5;
+                break;
+            default:
+                delta;
+                break;
+        }
+        this.io.emit("moveReqAction", delta, obj);
+    }
+
 
     /**
      * 

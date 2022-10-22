@@ -97,6 +97,7 @@ class ClientController extends $OBSERVER {
         this.socket.on('movePlayer', () => { this.updatePlayer });
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
+        this.socket.on("moveReqResult", (delta, obj) => { this.moveCharacterResullt(delta, obj) })
         //end concepts
 
 
@@ -151,12 +152,15 @@ class ClientController extends $OBSERVER {
         window.OverworldMaps = this.OverworldMaps;
         this.OVERWORLD.init();
     }
+
     public get Character() {
         return this.character;
     }
+
     public set SETCharacter(char) {
         this.character = char;
     }
+    
     static syncUsertoCharacter(obj) {
         let char = new Character({
             isPlayerControlled: true,
@@ -176,7 +180,21 @@ class ClientController extends $OBSERVER {
         return char;
     }
 
+    public async reqMove(obj, direction) {
+        if (obj.characterID == this.client.characters.at(0)._id) {
+            console.log("movement req")
+            this.OVERWORLD.move(this.moveCharacter, direction, obj)
+        }
+    }
 
+    public moveCharacter(direction: string, gameOBJ) {
+        this.socket.emit("moveReq", direction, gameOBJ.toJSON())
+    }
+
+    moveCharacterResullt(delta, obj) {
+        this.OVERWORLD.pos = delta;
+        this.OVERWORLD.movingObj = obj;
+    }
 
     syncPlayer(obj) {
         let charJSON = ClientController.syncUsertoCharacter(obj).toJSON();
@@ -246,7 +264,8 @@ class ClientController extends $OBSERVER {
     connect(_client) {
         this.client = _client;
         console.log(`User: ${this.client.username} is online. \n`);
-        //console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).id}`)
+        if (this.client.characters.at(0))
+            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).id}`)
     }
 
     disconnect() {
@@ -268,4 +287,4 @@ class ClientController extends $OBSERVER {
     }
 
 }
-const clientController = new ClientController(new $HTMLNetwork());
+export const clientController = new ClientController(new $HTMLNetwork());

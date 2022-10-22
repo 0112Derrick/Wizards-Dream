@@ -2,9 +2,10 @@ import { OverworldMap } from "./OverworldMap.js";
 import { GameObject } from "./GameObject.js"
 import { Sprite } from "./Sprite.js";
 import { DirectionInput } from "./DirectionInput.js";
-
+import { clientController } from "./ClientController.js";
 
 import { runInThisContext } from "vm";
+import { Character } from "./Character.js";
 
 export class Overworld<T> {
     canvas!: HTMLCanvasElement | null;
@@ -14,6 +15,8 @@ export class Overworld<T> {
     gameWorld: any;
     image!: HTMLImageElement;
     directionInput!: DirectionInput;
+    pos: any = { x: 0, y: 0 };
+    movingObj: any;
 
     constructor(config) {
 
@@ -24,6 +27,9 @@ export class Overworld<T> {
             this.ctx = this.canvas.getContext("2d");
         this.numbOfPlayers = config.numbOfPlayers || 1;
         this.gameWorld = null;
+    }
+    async move(callback, direction, obj: GameObject) {
+        callback(direction, obj);
     }
 
 
@@ -43,20 +49,33 @@ export class Overworld<T> {
                 if (gameOBJ instanceof GameObject) {
                     if (this.ctx) {
 
-                        gameOBJ.update({
-                            //arrow:  movementReq(this.directionInput.direction)
-                            arrow: this.directionInput.direction
-                        });
+                        // gameOBJ.update({
+                        //     //arrow:  movementReq(this.directionInput.direction)
+                        //     arrow: this.directionInput.direction
+                        // });
+
+                        clientController.reqMove(gameOBJ, this.directionInput.direction)
+
+                        const moveCharacter = (obj, delta) => {
+                            if (gameOBJ instanceof Character) {
+                                if (gameOBJ.name == obj.name) {
+                                    gameOBJ.x = delta.x;
+                                    gameOBJ.y = delta.y
+                                }
+                            }
+                        }
+
+                        moveCharacter(this.movingObj, this.pos)
 
                         gameOBJ.sprite.draw(this.ctx);
                     }
                 }
-
             });
-            
+
             let updateMap = (_map = window.OverworldMaps.grassyField) => {
                 this.gameWorld.gameObjects = _map.gameObjects;
             };
+
             //draw upper layer
             //this.map.drawUpperImage(this.ctx);
             //    }, 1000 / 60); // sets Frame rate
@@ -68,6 +87,7 @@ export class Overworld<T> {
         step();
     }
 
+
     init() {
         // console.log("Overworld ", this);
         this.gameWorld = new OverworldMap(window.OverworldMaps.grassyField);
@@ -77,5 +97,7 @@ export class Overworld<T> {
     }
 
 }
+
+
 
 
