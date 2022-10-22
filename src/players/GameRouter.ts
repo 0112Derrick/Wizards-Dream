@@ -175,6 +175,7 @@ export class GameRouter {
             if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0))
                 _socket.emit('syncPlayer', gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0));
         }
+
         _socket.on("moveReq", gameRouter.moveCharacter);
         _socket.on("characterCreated", gameRouter.addCharacterToOverworld);
         // end
@@ -193,7 +194,13 @@ export class GameRouter {
      * @returns none
      */
     addCharacterToOverworld(character): void {
-        for () { if ()}
+        let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i].username == character.username) {
+                GameRouter.GameRouterInstance.syncOverworld();
+                return
+            }
+        }
         GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects.push(character);
         console.log(character.username + " added to the overworld");
         GameRouter.GameRouterInstance.syncOverworld();
@@ -222,7 +229,17 @@ export class GameRouter {
                 delta;
                 break;
         }
-        this.io.emit("moveReqAction", delta, obj);
+        let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
+
+        arr.forEach(char => {
+            if (char.username == obj.username) {
+                char.x = delta.x;
+                char.y = delta.y
+            }
+
+            GameRouter.GameRouterInstance.syncOverworld();
+        })
+        //this.io.emit("moveReqAction", delta, obj);
     }
 
 
@@ -234,9 +251,7 @@ export class GameRouter {
      * 
      */
     syncOverworld(): void {
-        let gameRouter = GameRouter.GameRouterInstance;
-        let overworld = gameRouter.copyOverworld();
-        gameRouter.io.emit("syncOverworld", overworld);
+        GameRouter.GameRouterInstance.io.emit("syncOverworld", GameRouter.GameRouterInstance.copyOverworld());
         return;
     }
 

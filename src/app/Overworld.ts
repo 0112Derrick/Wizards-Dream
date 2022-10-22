@@ -15,8 +15,7 @@ export class Overworld<T> {
     gameWorld: any;
     image!: HTMLImageElement;
     directionInput!: DirectionInput;
-    pos: any = { x: 0, y: 0 };
-    movingObj: any;
+
 
     constructor(config) {
 
@@ -28,11 +27,7 @@ export class Overworld<T> {
         this.numbOfPlayers = config.numbOfPlayers || 1;
         this.gameWorld = null;
     }
-    async move(callback, direction, obj: GameObject) {
-        callback(direction, obj);
-    }
-
-
+    
     startGameLoop() {
 
         const step = () => {
@@ -55,17 +50,6 @@ export class Overworld<T> {
                         // });
 
                         clientController.reqMove(gameOBJ, this.directionInput.direction)
-
-                        const moveCharacter = (obj, delta) => {
-                            if (gameOBJ instanceof Character) {
-                                if (gameOBJ.name == obj.name) {
-                                    gameOBJ.x = delta.x;
-                                    gameOBJ.y = delta.y
-                                }
-                            }
-                        }
-
-                        moveCharacter(this.movingObj, this.pos)
 
                         gameOBJ.sprite.draw(this.ctx);
                     }

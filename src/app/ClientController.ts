@@ -97,7 +97,7 @@ class ClientController extends $OBSERVER {
         this.socket.on('movePlayer', () => { this.updatePlayer });
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
-        this.socket.on("moveReqResult", (delta, obj) => { this.moveCharacterResullt(delta, obj) })
+        // this.socket.on("moveReqResult", (delta, obj) => { this.moveCharacterResullt(delta, obj) })
         //end concepts
 
 
@@ -132,23 +132,42 @@ class ClientController extends $OBSERVER {
      * 
      */
     syncOverworld(overworld) {
+
+        let foundMatch = false;
+
         overworld.grassyField.gameObjects.forEach(char => {
-            this.OverworldMaps.grassyField.gameObjects.push(new Character({
-                isPlayerControlled: true,
-                x: char.x,
-                y: char.y,
-                src: "/images/characters/players/erio.png",
-                username: char.username,
-                attributes: char.attributes,
-                characterGender: char.gender,
-                player: char.player,
-                class: char.class,
-                guild: char.guild,
-                characterID: char.characterID,
-                items: char.items,
-                direction: "right",
-            }))
+            foundMatch = false;
+            
+            for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
+
+                if (char.name == this.OverworldMaps.grassyField.gameObjects[i].name) {
+                    this.OverworldMaps.grassyField.gameObjects[i].x = char.x;
+                    this.OverworldMaps.grassyField.gameObjects[i].y = char.y;
+                    foundMatch = true;
+                    break;
+                }
+            }
+
+            if (!foundMatch) {
+                this.OverworldMaps.grassyField.gameObjects.push(new Character({
+                    isPlayerControlled: true,
+                    x: char.x,
+                    y: char.y,
+                    src: "/images/characters/players/erio.png",
+                    username: char.username,
+                    attributes: char.attributes,
+                    characterGender: char.gender,
+                    player: char.player,
+                    class: char.class,
+                    guild: char.guild,
+                    characterID: char.characterID,
+                    items: char.items,
+                    direction: "right",
+                }))
+            }
+
         })
+
         window.OverworldMaps = this.OverworldMaps;
         this.OVERWORLD.init();
     }
@@ -160,7 +179,7 @@ class ClientController extends $OBSERVER {
     public set SETCharacter(char) {
         this.character = char;
     }
-    
+
     static syncUsertoCharacter(obj) {
         let char = new Character({
             isPlayerControlled: true,
@@ -180,10 +199,10 @@ class ClientController extends $OBSERVER {
         return char;
     }
 
-    public async reqMove(obj, direction) {
+    public reqMove(obj, direction) {
         if (obj.characterID == this.client.characters.at(0)._id) {
             console.log("movement req")
-            this.OVERWORLD.move(this.moveCharacter, direction, obj)
+            this.moveCharacter(direction, obj);
         }
     }
 
@@ -191,10 +210,10 @@ class ClientController extends $OBSERVER {
         this.socket.emit("moveReq", direction, gameOBJ.toJSON())
     }
 
-    moveCharacterResullt(delta, obj) {
-        this.OVERWORLD.pos = delta;
-        this.OVERWORLD.movingObj = obj;
-    }
+    // moveCharacterResullt(delta, obj) {
+    //      this.OVERWORLD.pos = delta;
+    //      this.OVERWORLD.movingObj = obj;
+    // }
 
     syncPlayer(obj) {
         let charJSON = ClientController.syncUsertoCharacter(obj).toJSON();
