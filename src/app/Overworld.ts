@@ -27,7 +27,7 @@ export class Overworld<T> {
         this.numbOfPlayers = config.numbOfPlayers || 1;
         this.gameWorld = null;
     }
-    
+
     startGameLoop() {
 
         const step = () => {

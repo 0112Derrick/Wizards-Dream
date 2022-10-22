@@ -81,7 +81,7 @@ class ClientController extends $OBSERVER {
         // @ts-ignore
 
         this.socket = await io();
-
+        this.OVERWORLD.init();
         this.socket.on("connected", this.testConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
         this.socket.on("onlineClient", (client) => { this.connect(client) });
@@ -137,7 +137,7 @@ class ClientController extends $OBSERVER {
 
         overworld.grassyField.gameObjects.forEach(char => {
             foundMatch = false;
-            
+
             for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
 
                 if (char.name == this.OverworldMaps.grassyField.gameObjects[i].name) {
@@ -169,7 +169,6 @@ class ClientController extends $OBSERVER {
         })
 
         window.OverworldMaps = this.OverworldMaps;
-        this.OVERWORLD.init();
     }
 
     public get Character() {
@@ -207,7 +206,8 @@ class ClientController extends $OBSERVER {
     }
 
     public moveCharacter(direction: string, gameOBJ) {
-        this.socket.emit("moveReq", direction, gameOBJ.toJSON())
+        if (direction)
+            this.socket.emit("moveReq", direction, gameOBJ.toJSON())
     }
 
     // moveCharacterResullt(delta, obj) {
@@ -284,7 +284,7 @@ class ClientController extends $OBSERVER {
         this.client = _client;
         console.log(`User: ${this.client.username} is online. \n`);
         if (this.client.characters.at(0))
-            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).id}`)
+            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`)
     }
 
     disconnect() {
