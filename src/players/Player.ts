@@ -15,9 +15,9 @@ export class Player {
     constructor() {
         this.data = {
             email: 'email@fakeEmail.com',
-            username: 'username',
+            name: 'username',
             characters: [{
-                username: 'username',
+                name: 'Character name',
                 characterGender: '',
                 player: '',
                 characterID: 0,

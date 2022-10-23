@@ -12,16 +12,16 @@ export interface playerStatusInterface {
 }
 
 export interface commonDataInterface {
-    username: string,
+    name: string,
 }
 
 export interface playerProfileDataInterface extends commonDataInterface {
-    username: string,
+    name: string,
     email: string,
 
 }
 interface commonCharacterDataInterface {
-    username: string,
+    name: string,
 }
 interface commonGameDataInterface extends commonDataInterface {
     x: number,

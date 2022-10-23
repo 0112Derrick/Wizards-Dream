@@ -42,10 +42,10 @@ playerRouter.post('/signup', express.json(), async function (req, res, next) {
 
 
 playerRouter.post('/savecharacter', express.json(), async function (req, res, next) {
-    if (req.body.username && req.body.characterGender) {
+    if (req.body.name && req.body.characterGender) {
         try {
             const character = await db_api.addCharacter({
-                username: req.body.username,
+                name: req.body.name,
                 characterGender: req.body.characterGender,
                 player: req.user.id,
                 x: 0,

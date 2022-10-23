@@ -42,7 +42,7 @@ async function addCharacter(characterInfo: $characterSignup) {
 
     let configCharacter: characterDataInterface = {
         characterID: id,
-        username: characterInfo.username,
+        name: characterInfo.name,
         characterGender: characterInfo.characterGender,
         x: 5,
         y: 5,

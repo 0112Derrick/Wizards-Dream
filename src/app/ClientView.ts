@@ -53,7 +53,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
     characterCreateCallback() {
 
         let formData: $characterSignup = {
-            username: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
+            name: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
             characterGender: (<HTMLInputElement>document.querySelector('input[name="character-gender"]:checked')).value,
             player: "",
             x: 0,
@@ -64,7 +64,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
         console.log("Got new player account submission", formData);
 
-        if (formData.username) {
+        if (formData.name) {
             console.log('Submitting character creation form', formData);
             this.dispatchEventLocal($events.CHARACTER_CREATE, formData);
 

@@ -15,6 +15,8 @@ export class DirectionInput {
             "KeyD": "right",
             "Space": "jump",
         }
+
+        this.init();
     }
     get direction() {
         return this.heldDirections[0];

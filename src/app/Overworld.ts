@@ -31,26 +31,15 @@ export class Overworld<T> {
     startGameLoop() {
 
         const step = () => {
-            //  setInterval(() => {
-            //Clear off canvas
             this.ctx?.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            //draw lower layer
             this.gameWorld.drawLowerImage(this.ctx);
 
 
             //draw gameObjects
-            //Object.values(this.gameWorld.gameObjects).forEach(o => {
             this.gameWorld.gameObjects.forEach(gameOBJ => {
                 if (gameOBJ instanceof GameObject) {
                     if (this.ctx) {
-
-                        // gameOBJ.update({
-                        //     //arrow:  movementReq(this.directionInput.direction)
-                        //     arrow: this.directionInput.direction
-                        // });
-
-                        clientController.reqMove(gameOBJ, this.directionInput.direction)
-
+                        clientController.requestMove(gameOBJ, this.directionInput.direction)
                         gameOBJ.sprite.draw(this.ctx);
                     }
                 }
@@ -73,7 +62,6 @@ export class Overworld<T> {
 
 
     init() {
-        // console.log("Overworld ", this);
         this.gameWorld = new OverworldMap(window.OverworldMaps.grassyField);
         this.directionInput = new DirectionInput();
         this.directionInput.init();

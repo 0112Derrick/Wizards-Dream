@@ -12,7 +12,6 @@ export class Character extends GameObject implements characterDataInterface {
     directionUpdate: {};
     isPlayerControlled: any;
 
-    username: string;
     characterID: number;
     class: string;
     characterGender: string;
@@ -55,20 +54,20 @@ export class Character extends GameObject implements characterDataInterface {
         }
 
         this.characterID = config.characterID || 1;
-        this.username = config.username || 'newCharacter';
+        this.name = config.name || 'newCharacter';
         this.attributes = config.atrributes || new CharacterAttributes();
         this.characterGender = config.characterGender || 'male';
         this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
         this.player = config.player;
-        this.name = config.username;
+        this.name = config.name;
     }
 
 
     toJSON() {
         return {
-            username: this.username,
+            name: this.name,
             player: this.player,
             characterID: this.characterID,
             attributes: this.attributes,

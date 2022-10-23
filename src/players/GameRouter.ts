@@ -44,26 +44,27 @@ interface coordniate {
  * 
  */
 
-
-
-
-
 export class GameRouter {
 
     private static gameRouter: GameRouter;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
     private io: any;
+    
     // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
 
     // passed from req object when page is loaded
     public client: any | null = null;
+    
     //passed from server on connection
     private clientSocket: any;
+    
     //Set by server once a client connects
     private clientMap: Map<string, Array<any>> = new Map();
+    
     //Set by req obj 
     private clientIP: string;
+    
     private OverworldMaps = {
         grassyField: {
             lowerSrc: "/images/maps/Battleground1.png",
@@ -196,45 +197,48 @@ export class GameRouter {
     addCharacterToOverworld(character): void {
         let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects
         for (let i = 0; i < arr.length; i++) {
-            if (arr[i].username == character.username) {
+            if (arr[i].name == character.name) {
                 GameRouter.GameRouterInstance.syncOverworld();
                 return
             }
         }
         GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects.push(character);
-        console.log(character.username + " added to the overworld");
+        console.log(character.name + " added to the overworld");
         GameRouter.GameRouterInstance.syncOverworld();
         return;
     }
 
 
-    moveCharacter(direction, obj) {
-        let delta = { x: obj.x, y: obj.y }
+    moveCharacter(direction, moveCharacter) {
+        
+        let moveDelta = { x: moveCharacter.x, y: moveCharacter.y }
+        
         switch (direction) {
             case "up":
-                delta.y -= 0.5;
+                moveDelta.y -= 0.5;
                 break;
             case "down":
-                delta.y += 0.5;
+                moveDelta.y += 0.5;
                 break;
 
             case "left":
-                delta.x -= 0.5;
+                moveDelta.x -= 0.5;
                 break;
 
             case "right":
-                delta.x += 0.5;
+                moveDelta.x += 0.5;
                 break;
             default:
-                delta;
+                moveDelta;
                 break;
         }
-        let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
 
-        arr.forEach(char => {
-            if (char.username == obj.username) {
-                char.x = delta.x;
-                char.y = delta.y
+        let overworldCharacters = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
+
+        overworldCharacters.forEach(character => {
+            if (character.name == moveCharacter.name) {
+                character.x = moveDelta.x;
+                character.y = moveDelta.y;
             }
 
             GameRouter.GameRouterInstance.syncOverworld();

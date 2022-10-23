@@ -44,7 +44,7 @@ export interface IplayerModel extends Model<IPlayerDoc> { }
 // reference the character schema in
 
 export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
-    username: { type: String, index: { unique: true }, required: true },
+    name: { type: String, index: { unique: true }, required: true },
     characterID: { type: Number, required: true },
     characterGender: { type: String },
     attributes: { type: Object },
@@ -59,7 +59,7 @@ characterSchema.method('syncCharacter', function (character): void {
     let docAsObject = this.toObject();
 
     let characterLocal: characterDataInterface = {
-        username: docAsObject.username,
+        name: docAsObject.name,
         characterID: docAsObject.characterID,
         characterGender: docAsObject.characterGender,
         attributes: {
@@ -72,8 +72,6 @@ characterSchema.method('syncCharacter', function (character): void {
             def: docAsObject.Def,
             mdef: docAsObject.Mdef,
             crit: docAsObject.Crit,
-
-
             Atk: docAsObject.atk,
             Matk: docAsObject.Matk,
             Vit: docAsObject.Vit,
@@ -98,7 +96,7 @@ characterSchema.method('syncCharacter', function (character): void {
 
 
 export const playerSchema = new Schema<IPlayerDoc, IplayerModel>({
-    username: { type: String, index: { unique: true }, required: true },
+    name: { type: String, index: { unique: true }, required: true },
     email: { type: String, index: { unique: true }, required: true },
     hash: { type: String },
     salt: { type: String },
@@ -130,7 +128,7 @@ playerSchema.method('hashPassword', function (password: string): void {
 
         let playerLocal: playerDataInterface = {
             characters: docAsObject.characters,
-            username: docAsObject.username,
+            name: docAsObject.username,
             email: docAsObject.email,
             playerID: docAsObject._id
         }

@@ -1,15 +1,12 @@
-import { View as $MainAppView } from "./ClientView.js";
-import $OBSERVER from "../framework/Observer.js";
 import NetworkProxy from "../network/NetworkProxy.js";
+import $OBSERVER from "../framework/Observer.js";
 import $HTMLNetwork from "../network/HTML-Proxy.js";
-import { EventConstants as $events, ServerNameConstants as $servers } from '../constants/EventConstants.js';
-import { StatusConstants as $StatusConstants } from "../constants/StatusConstants.js";
-//import { io, Socket } from "/socket.io-client/dist/socket.io.esm.min.js";
-import { appendFile } from "fs";
-import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
-import { Character } from "../app/Character.js"
+import { View as $MainAppView } from "./ClientView.js";
 import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
+import { EventConstants as $events, ServerNameConstants as $servers } from '../constants/EventConstants.js';
+import { CharacterCreationDataInterface as $characterCreationInterface } from '../players/PlayerDataInterface.js'
+import { Character } from "../app/Character.js"
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -48,40 +45,21 @@ class ClientController extends $OBSERVER {
         element: document.querySelector(".game-container")
     });
 
-    constructor(networkProxy: NetworkProxy) {
+    constructor(_networkProxy: NetworkProxy) {
         super();
-        this.networkProxy = networkProxy;
+        this.networkProxy = _networkProxy;
         const CharacterCreateRoute = '/player/savecharacter';
-        this.OVERWORLD.init();
         this.init();
-        //this.socket = io();
 
-
-        this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
+        this.listenForEvent($events.CHARACTER_CREATE, (e) => {
+            this.createCharacter(CharacterCreateRoute, e);
+        }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
         }, this.view);
-
-
-        //this.socket.on('playerJoinServer', this.playerJoinServer);
-        //move to view
-
-
-        //     let xz = { x: 1, y: 1 }
-
-        //     setInterval(async () => {
-        //         let coord = await this.movePlayer(xz);
-        //         xz.x++;
-        //         xz.y++;
-        //         //  this.socket.emit("move", coord, this.clientID);
-        //     }, 5000);
     }
 
-    async init() {
-        // @ts-ignore
-
-        this.socket = await io();
-        this.OVERWORLD.init();
+    initSocketReceiveEvents() {
         this.socket.on("connected", this.testConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
         this.socket.on("onlineClient", (client) => { this.connect(client) });
@@ -89,17 +67,21 @@ class ClientController extends $OBSERVER {
         this.socket.on("clientID", (id) => { this.setID(id) });
         this.socket.on("reconnect", () => { window.location.reload() })
 
-
-        this.socket.emit('connection');
-        this.socket.emit("online", this.clientID);
-
         //proof of concept events
         this.socket.on('movePlayer', () => { this.updatePlayer });
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
         // this.socket.on("moveReqResult", (delta, obj) => { this.moveCharacterResullt(delta, obj) })
         //end concepts
+    }
+    async init() {
+        // @ts-ignore
+        this.socket = await io();
+        this.OVERWORLD.init();
+        this.initSocketReceiveEvents();
 
+        this.socket.emit('connection');
+        this.socket.emit("online", this.clientID);
 
         document.querySelector('#joinServer')?.addEventListener('click', () => {
             let data = {
@@ -131,41 +113,43 @@ class ClientController extends $OBSERVER {
             this.player = config.player;
      * 
      */
-    syncOverworld(overworld) {
+    syncOverworld(overworldRemote) {
 
         let foundMatch = false;
 
-        overworld.grassyField.gameObjects.forEach(char => {
-            foundMatch = false;
+        overworldRemote.grassyField.gameObjects.forEach(remoteCharacter => {
 
-            for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
+            this.OverworldMaps.grassyField.gameObjects.forEach( localCharacter => {
 
-                if (char.name == this.OverworldMaps.grassyField.gameObjects[i].name) {
-                    this.OverworldMaps.grassyField.gameObjects[i].x = char.x;
-                    this.OverworldMaps.grassyField.gameObjects[i].y = char.y;
+                if (remoteCharacter.name == localCharacter.name) {
+                    localCharacter.x = remoteCharacter.x;
+                    localCharacter.y = remoteCharacter.y;
                     foundMatch = true;
-                    break;
+                    console.log("\nFound character " + remoteCharacter.name)
+                    return;
                 }
-            }
+            })
 
             if (!foundMatch) {
                 this.OverworldMaps.grassyField.gameObjects.push(new Character({
                     isPlayerControlled: true,
-                    x: char.x,
-                    y: char.y,
+                    x: remoteCharacter.x,
+                    y: remoteCharacter.y,
                     src: "/images/characters/players/erio.png",
-                    username: char.username,
-                    attributes: char.attributes,
-                    characterGender: char.gender,
-                    player: char.player,
-                    class: char.class,
-                    guild: char.guild,
-                    characterID: char.characterID,
-                    items: char.items,
+                    name: remoteCharacter.name,
+                    attributes: remoteCharacter.attributes,
+                    characterGender: remoteCharacter.gender,
+                    player: remoteCharacter.player,
+                    class: remoteCharacter.class,
+                    guild: remoteCharacter.guild,
+                    characterID: remoteCharacter.characterID,
+                    items: remoteCharacter.items,
                     direction: "right",
                 }))
+                console.log("\nPushing new character " + remoteCharacter.name);
             }
 
+            foundMatch = false;
         })
 
         window.OverworldMaps = this.OverworldMaps;
@@ -187,7 +171,7 @@ class ClientController extends $OBSERVER {
             src: "/images/characters/players/erio.png",
             direction: 'right',
             characterID: obj._id,
-            username: obj.username,
+            name: obj.name,
             attributes: obj.attributes,
             class: obj.class,
             guild: obj.guild,
@@ -198,22 +182,14 @@ class ClientController extends $OBSERVER {
         return char;
     }
 
-    public reqMove(obj, direction) {
-        if (obj.characterID == this.client.characters.at(0)._id) {
-            console.log("movement req")
-            this.moveCharacter(direction, obj);
+    public requestMove(obj, direction) {
+        if (direction) {
+            if (obj.characterID == this.client.characters.at(0)._id) {
+                console.log("movement req")
+                this.socket.emit("moveReq", direction, obj.toJSON())
+            }
         }
     }
-
-    public moveCharacter(direction: string, gameOBJ) {
-        if (direction)
-            this.socket.emit("moveReq", direction, gameOBJ.toJSON())
-    }
-
-    // moveCharacterResullt(delta, obj) {
-    //      this.OVERWORLD.pos = delta;
-    //      this.OVERWORLD.movingObj = obj;
-    // }
 
     syncPlayer(obj) {
         let charJSON = ClientController.syncUsertoCharacter(obj).toJSON();
@@ -243,11 +219,11 @@ class ClientController extends $OBSERVER {
         this.clientID = id;
     }
 
-    async createCharacter(route: string, data: any): Promise<boolean> {
+    async createCharacter(routeCreateCharacter: string, data: any): Promise<boolean> {
         try {
             console.log("sending data to server -ClientController");
-            let characterData: $characterSignup = {
-                username: "",
+            let characterData: $characterCreationInterface = {
+                name: "",
                 characterGender: "",
                 player: "",
                 x: 5,
@@ -258,7 +234,7 @@ class ClientController extends $OBSERVER {
 
             console.log(data.detail);
             characterData = Object.assign(characterData, data.detail);
-            let response = await this.networkProxy.postJSON(route, characterData);
+            let response = await this.networkProxy.postJSON(routeCreateCharacter, characterData);
 
             if (response && response.ok) {
                 this.view.resetSignupForm();
@@ -284,13 +260,12 @@ class ClientController extends $OBSERVER {
         this.client = _client;
         console.log(`User: ${this.client.username} is online. \n`);
         if (this.client.characters.at(0))
-            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`)
+            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).name}`)
     }
 
     disconnect() {
         console.log(`User: ${this.clientID} is offline.`)
     }
-
 
     playerJoinedServer(data) {
         console.log(`You successfully joined server: ${data.serverRoom}, your ID: ${data.id} `);
