@@ -11,7 +11,7 @@
     margin-top: 10px;
 }
 
-#chat {
+#game-chat-input {
     border: none;
     outline: rgba(200, 200, 200, .5) 1px solid;
     font-size: 7px;
@@ -23,7 +23,7 @@
     top: 187px;
 }
 
-#say {
+#game-chat-submit {
     background-color: rgba(200, 200, 200, 0.2);
     position: fixed;
     top: 187px;
@@ -36,7 +36,7 @@
     font-size: 5px;
 }
 
-#events {
+#game-chat-ul {
     /* margin: 10px 0px; */
     height: 25px;
     width: 80%;
@@ -59,11 +59,11 @@
     scrollbar-width: none;
 }
 
-#events::-webkit-scrollbar {
+#game-chat-form::-webkit-scrollbar {
     display: none;
 }
 
-#events>li:last-child {
+#game-chat-form>li:last-child {
     scroll-snap-align: end;
 }
 

@@ -169,6 +169,7 @@ export class GameRouter {
         //PlayerEvents
         _socket.on('playerJoinServer', this.playerJoinServer);
         _socket.on('playerLogout', this.playerLogout);
+        _socket.on("message", this.checkMessage);
 
         //test events
         if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ)) {
@@ -184,6 +185,14 @@ export class GameRouter {
             this.serverRooms = [];
             this.createServerRoom();
         }
+    }
+
+    checkMessage(message: string, user): void {
+        let cleanMessage: string = ''
+        if (message) {
+            cleanMessage = message;
+        }
+        GameRouter.GameRouterInstance.io.emit('globalMessage', cleanMessage, user);
     }
 
     /**

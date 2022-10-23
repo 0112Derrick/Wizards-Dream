@@ -63,19 +63,9 @@ class ClientController extends $OBSERVER {
             this.playerLogout();
         }, this.view);
 
+        this.listenForEvent($events.MESSAGE, (message) => { this.checkMessage(message) }, this.view)
 
         //this.socket.on('playerJoinServer', this.playerJoinServer);
-        //move to view
-
-
-        //     let xz = { x: 1, y: 1 }
-
-        //     setInterval(async () => {
-        //         let coord = await this.movePlayer(xz);
-        //         xz.x++;
-        //         xz.y++;
-        //         //  this.socket.emit("move", coord, this.clientID);
-        //     }, 5000);
     }
 
     async init() {
@@ -98,9 +88,8 @@ class ClientController extends $OBSERVER {
         this.socket.on('movePlayer', () => { this.updatePlayer });
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
-        // this.socket.on("moveReqResult", (delta, obj) => { this.moveCharacterResullt(delta, obj) })
+        this.socket.on("globalMessage", (message, username) => { this.postMessage(message, username) })
         //end concepts
-
 
         document.querySelector('#joinServer')?.addEventListener('click', () => {
             let data = {
@@ -110,6 +99,7 @@ class ClientController extends $OBSERVER {
             this.socket.emit('playerJoinServer', data);
         })
     }
+
     // player01: new Character({
     //     isPlayerControlled: true,
     //     x: Utils.withGrid(6),
@@ -218,11 +208,6 @@ class ClientController extends $OBSERVER {
             this.socket.emit("moveReq", direction, gameOBJ.toJSON())
     }
 
-    // moveCharacterResullt(delta, obj) {
-    //      this.OVERWORLD.pos = delta;
-    //      this.OVERWORLD.movingObj = obj;
-    // }
-
     syncPlayer(obj) {
         let charJSON = ClientController.syncUsertoCharacter(obj).toJSON();
         this.socket.emit("characterCreated", charJSON);
@@ -245,6 +230,22 @@ class ClientController extends $OBSERVER {
 
     updatePlayer(player) {
         console.log("player:", player.id, "moved to x: ", player.x, ', y: ', player.y)
+    }
+
+    checkMessage(message: string) {
+        let cleanMessage: any = '';
+        if (message) {
+            cleanMessage = message;
+        }
+        this.sendMessage(cleanMessage.detail, this.client.characters.at(0).username)
+    }
+
+    sendMessage(message: string, user) {
+        this.socket.emit("message", message, user)
+    }
+
+    postMessage(message: string, username) {
+        this.view.postMessage(message, username);
     }
 
     public setID(id: string): void {

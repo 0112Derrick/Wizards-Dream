@@ -5,6 +5,7 @@ export enum EventConstants {
     CHARACTER_CREATE = '_character-create',
     STOP_GAME_LOOP = 'stop-game-loop',
     START_GAME_LOOP = 'start-game-loop',
+    MESSAGE = 'message'
 }
 export enum ServerNameConstants {
     ROOM1 = 'room1',

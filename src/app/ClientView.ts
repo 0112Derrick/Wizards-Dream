@@ -30,6 +30,12 @@ class ClientView extends $ClientSyntheticEventEmitter {
             this.dispatchEventLocal($events.STOP_GAME_LOOP, null);
         })
 
+
+        this.DOM[$id.GAME_CHAT_FORM].addEventListener('submit', (event) => {
+            event.preventDefault();
+            this.sendMessage();
+        })
+
         this.DOM[$id.START_LOOP].addEventListener('click', () => {
             this.dispatchEventLocal($events.START_GAME_LOOP, null);
         })
@@ -57,6 +63,27 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
         //check ClassText
 
+    }
+
+    sendMessage() {
+        let message: string = (<HTMLInputElement>this.DOM[$id.GAME_CHAT_INPUT]).value;
+        this.dispatchEventLocal($events.MESSAGE, message);
+        this.resetMessageForm();
+    }
+
+    postMessage(message, username) {
+        let li: HTMLLIElement = document.createElement('li');
+        li.innerHTML = username + ": " + message;
+        <HTMLUListElement>this.DOM[$id.GAME_CHAT_UL].appendChild(li);
+        this.updateScroll(this.DOM[$id.GAME_CHAT_UL]);
+    }
+
+    updateScroll(chat) {
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    resetMessageForm() {
+        <HTMLFormElement>this.DOM[$id.GAME_CHAT_FORM].reset();
     }
 
     characterCreateCallback() {
