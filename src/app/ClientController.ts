@@ -56,7 +56,8 @@ class ClientController extends $OBSERVER {
         this.init();
         //this.socket = io();
 
-
+        this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; this.OVERWORLD.startGameLoop(); }, this.view);
+        this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
         this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
@@ -140,7 +141,7 @@ class ClientController extends $OBSERVER {
 
             for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
 
-                if (char.name == this.OverworldMaps.grassyField.gameObjects[i].name) {
+                if (char.username == this.OverworldMaps.grassyField.gameObjects[i].username) {
                     this.OverworldMaps.grassyField.gameObjects[i].x = char.x;
                     this.OverworldMaps.grassyField.gameObjects[i].y = char.y;
                     foundMatch = true;
@@ -199,11 +200,18 @@ class ClientController extends $OBSERVER {
     }
 
     public reqMove(obj, direction) {
-        if (obj.characterID == this.client.characters.at(0)._id) {
-            console.log("movement req")
-            this.moveCharacter(direction, obj);
+        if (direction) {
+            if (obj.characterID == this.client.characters.at(0)._id) {
+                console.log("movement req")
+                this.moveCharacter(direction, obj);
+                obj.update({ arrow: direction })
+            }
+        } else {
+            if (obj.characterID == this.client.characters.at(0)._id)
+                obj.update({ arrow: direction })
         }
     }
+
 
     public moveCharacter(direction: string, gameOBJ) {
         if (direction)

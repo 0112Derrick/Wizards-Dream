@@ -30,8 +30,19 @@
             </div>
         </div>
         <button id="character-modal-btn" class="">Create Character Menu</button>
-        <div id="joinServer">Join Server</div>
-        <div id="{{HTML_IDS.LOGOUT}}">Logout</div>
+        <ul style="list-style-type: none;">
+            <li>
+                <div id="joinServer">Join Server</div>
+            </li>
+            <li><button style="cursor: pointer;" id="{{HTML_IDS.LOGOUT}}">Logout</button></li>
+            <li><button style="cursor: pointer;" id="{{HTML_IDS.STOP_LOOP}}">Stop</button></li>
+            <li><button style="cursor: pointer;" id="{{HTML_IDS.START_LOOP}}">Start</button></li>
+            <li></li>
+        </ul>
+
+
+
+
         <div class="characterCreateModal" id="character-create-modal">
             <div class="character-modal-content">
                 <span class="close">

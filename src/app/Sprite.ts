@@ -14,6 +14,7 @@ export class Sprite {
     useShadow: boolean = true;
     animationFrameLimit: any;
     animationFrameProgress: any;
+    usernames: boolean = true;
 
     constructor(config) {
 
@@ -114,8 +115,17 @@ export class Sprite {
     draw(ctx): void {
         const posX = this.gameObject.x - 8;
         const posY = this.gameObject.y - 18;
+        const nameposX = this.gameObject.x + 5;
+        const nameposY = this.gameObject.y - 10;
         this.isShadowLoaded && ctx.drawImage(this.shadow, posX, posY
         );
+
+        if (this.usernames) {
+            ctx.font = '9px sans-serif';
+            ctx.fillText(this.gameObject.username, nameposX, nameposY, 16);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'white';
+        }
 
         const [frameX, frameY] = this.frame;
 

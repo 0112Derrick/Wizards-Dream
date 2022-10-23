@@ -15,6 +15,7 @@ export class Overworld<T> {
     gameWorld: any;
     image!: HTMLImageElement;
     directionInput!: DirectionInput;
+    stopLoop: boolean = false;
 
 
     constructor(config) {
@@ -30,7 +31,7 @@ export class Overworld<T> {
 
     startGameLoop() {
 
-        const step = () => {
+        const step = async () => {
             //  setInterval(() => {
             //Clear off canvas
             this.ctx?.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -50,6 +51,7 @@ export class Overworld<T> {
                         // });
 
                         clientController.reqMove(gameOBJ, this.directionInput.direction)
+                        // gameOBJ.update({ arrow: this.directionInput.direction })
 
                         gameOBJ.sprite.draw(this.ctx);
                     }
@@ -63,10 +65,11 @@ export class Overworld<T> {
             //draw upper layer
             //this.map.drawUpperImage(this.ctx);
             //    }, 1000 / 60); // sets Frame rate
-            requestAnimationFrame(() => {
-                step();
-                updateMap();
-            });
+            if (!this.stopLoop)
+                requestAnimationFrame(() => {
+                    step();
+                    updateMap();
+                });
         }
         step();
     }

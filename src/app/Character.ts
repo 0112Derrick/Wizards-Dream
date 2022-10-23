@@ -11,6 +11,7 @@ export class Character extends GameObject implements characterDataInterface {
     movingProgressRemaining: number;
     directionUpdate: {};
     isPlayerControlled: any;
+    lastDirection: string;
 
     username: string;
     characterID: number;
@@ -82,14 +83,26 @@ export class Character extends GameObject implements characterDataInterface {
     }
 
     update(state): void {
-        this.updatePosition();
+        //this.updatePosition();
         //console.log(state);
-        this.updateSprite(state);
+
 
         if (this.isPlayerControlled && this.movingProgressRemaining === 0 && state.arrow) {
             this.direction = state.arrow;
             this.movingProgressRemaining = 16;
         }
+        if (state.arrow) {
+            this.direction = state.arrow;
+            this.lastDirection = this.direction;
+            this.movingProgressRemaining = 16
+        }
+        else if (!state.arrow) {
+            this.movingProgressRemaining = 0
+            this.direction = this.lastDirection || "right";
+        }
+
+        this.updateSprite(state);
+
     }
 
     updatePosition() {
