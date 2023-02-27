@@ -1,20 +1,18 @@
 import { idText } from "typescript";
 import { characterDataInterface } from "../players/PlayerDataInterface.js";
 import { CharacterAttributesConstants as $chAttr, StatNames as $stats } from '../constants/CharacterAttributesConstants.js'
-// interface CharacterAttributes {
-
-// }
-
+import { SpriteAnimations } from "./Sprite.js";
 import { GameObject } from "./GameObject.js";
+import { Direction } from "./DirectionInput.js";
 
+// interface CharacterAttributes {
+// }
 export class Character extends GameObject implements characterDataInterface {
     movingProgressRemaining: number;
     directionUpdate: {};
     isPlayerControlled: any;
     lastDirection: string;
-
     username: string;
-    characterID: number;
     class: string;
     characterGender: string;
     attributes: {
@@ -48,14 +46,14 @@ export class Character extends GameObject implements characterDataInterface {
         this.isPlayerControlled = config.isPlayerControlled || false;
 
         this.directionUpdate = {
-            "up": ["y", -0.5],
-            "down": ["y", 0.5],
-            "left": ["x", -0.7],
-            "right": ["x", 0.7],
-            "jump": ["y", 0],
+            [Direction.UP]: ["y", -0.5],
+            [Direction.DOWN]: ["y", 0.5],
+            [Direction.LEFT]: ["x", -0.7],
+            [Direction.RIGHT]: ["x", 0.7],
+            [Direction.JUMP]: ["y", 0],
         }
 
-        this.characterID = config.characterID || 1;
+        this.gameObjectID = config.characterID || 1;
         this.username = config.username || 'newCharacter';
         this.attributes = config.atrributes || new CharacterAttributes();
         this.characterGender = config.characterGender || 'male';
@@ -71,7 +69,7 @@ export class Character extends GameObject implements characterDataInterface {
         return {
             username: this.username,
             player: this.player,
-            characterID: this.characterID,
+            characterID: this.gameObjectID,
             attributes: this.attributes,
             gender: this.characterGender,
             class: this.class,
@@ -82,26 +80,35 @@ export class Character extends GameObject implements characterDataInterface {
         }
     }
 
-    update(state): void {
+    /**
+     * 
+     * @param characterMovementState Should contain an attribute named arrow of type Direction.
+     */
+    updateCharacterLocationAndAppearance(characterMovementState: any): void {
         //this.updatePosition();
-        //console.log(state);
+        console.log(characterMovementState);
+        const GridBlockSize = 16;
+        this.movingProgressRemaining = 0;
 
 
-        if (this.isPlayerControlled && this.movingProgressRemaining === 0 && state.arrow) {
-            this.direction = state.arrow;
-            this.movingProgressRemaining = 16;
+        //if player is not moving and controlled it reassigns their direction to their last button clicked
+        if (this.isPlayerControlled && this.movingProgressRemaining === 0 && characterMovementState.arrow) {
+            this.direction = characterMovementState.arrow;
+            this.movingProgressRemaining = GridBlockSize;
         }
-        if (state.arrow) {
-            this.direction = state.arrow;
+        //if player is moving and controlled it reassigns their direction to their last button clicked and updates the movement gauge
+        if (characterMovementState.arrow) {
+            this.direction = characterMovementState.arrow;
             this.lastDirection = this.direction;
-            this.movingProgressRemaining = 16
+            this.movingProgressRemaining = GridBlockSize;
         }
-        else if (!state.arrow) {
-            this.movingProgressRemaining = 0
-            this.direction = this.lastDirection || "right";
+        //if player is not moving it reassigns their animation to the idle ver. of the last direction they were moving in or defaults to right. 
+        else if (!characterMovementState.arrow) {
+            this.movingProgressRemaining = 0;
+            this.direction = this.lastDirection || Direction.RIGHT;
         }
 
-        this.updateSprite(state);
+        this.updateSpriteAnimation(characterMovementState);
 
     }
 
@@ -113,14 +120,64 @@ export class Character extends GameObject implements characterDataInterface {
         }
     }
 
+    /**
+     * @description Updates players movement based on passed in direction
+     * @param characterMovementState 
+     */
+    updateSpriteAnimation(characterMovementState) {
+        if (this.isPlayerControlled && this.movingProgressRemaining === 0 && !characterMovementState.arrow) {
+            let animation = null;
+            switch (this.direction) {
+                case 'up':
+                    animation = SpriteAnimations.idle_up;
+                    break;
+                case 'down':
+                    animation = SpriteAnimations.idle_down;
+                    break;
+                case 'left':
+                    animation = SpriteAnimations.idle_left;
+                    break;
+                case 'right':
+                    animation = SpriteAnimations.idle_right;
+                    break;
+                case 'jump':
+                    animation = SpriteAnimations.idle_jump;
+                    break;
+                default:
+                    animation = SpriteAnimations.idle_right;
+                    break;
+            }
 
-    updateSprite(state) {
-        if (this.isPlayerControlled && this.movingProgressRemaining === 0 && !state.arrow) {
-            this.sprite.setAnimation('idle-' + this.direction);
+            this.sprite.setAnimation(animation);
         }
 
+        //Determines the walking animation to be played based on input direction
         if (this.movingProgressRemaining > 0) {
-            this.sprite.setAnimation('walk-' + this.direction);
+
+            let animation = null;
+
+            switch (this.direction) {
+                case 'up':
+                    animation = SpriteAnimations.walking_up;
+                    break;
+                case 'down':
+                    animation = SpriteAnimations.walking_down;
+                    break;
+                case 'left':
+                    animation = SpriteAnimations.walking_left;
+                    break;
+                case 'right':
+                    animation = SpriteAnimations.walking_right;
+                    break;
+                case 'jump':
+                    animation = SpriteAnimations.walking_jump;
+                    break;
+                default:
+                    animation = SpriteAnimations.idle_right;
+                    break;
+            }
+
+            this.sprite.setAnimation(animation);
         }
 
     }

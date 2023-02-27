@@ -1,21 +1,35 @@
+export enum Direction {
+    UP = "up",
+    DOWN = "down",
+    LEFT = "left",
+    RIGHT = "right",
+    W = "up",
+    A = "left",
+    S = "right",
+    D = "down",
+    JUMP = "jump",
+}
+
 export class DirectionInput {
     heldDirections: any[];
-    map: { ArrowUp: string; ArrowDown: string; ArrowLeft: string; ArrowRight: string; KeyW: string; KeyS: string; KeyA: string; KeyD: string; Space: string; };
+    map: { ArrowUp: Direction.UP; ArrowDown: Direction.DOWN; ArrowLeft: Direction.LEFT; ArrowRight: Direction.RIGHT; KeyW: Direction.UP; KeyS: Direction.DOWN; KeyA: Direction.LEFT; KeyD: Direction.RIGHT; Space: Direction.JUMP; };
+
     constructor() {
         this.heldDirections = [];
 
         this.map = {
-            "ArrowUp": "up",
-            "ArrowDown": "down",
-            "ArrowLeft": "left",
-            "ArrowRight": "right",
-            "KeyW": "up",
-            "KeyS": "down",
-            "KeyA": "left",
-            "KeyD": "right",
-            "Space": "jump",
+            "ArrowUp": Direction.UP,
+            "ArrowDown": Direction.DOWN,
+            "ArrowLeft": Direction.LEFT,
+            "ArrowRight": Direction.RIGHT,
+            "KeyW": Direction.UP,
+            "KeyS": Direction.DOWN,
+            "KeyA": Direction.LEFT,
+            "KeyD": Direction.RIGHT,
+            "Space": Direction.JUMP,
         }
     }
+
     get direction() {
         return this.heldDirections[0];
     }

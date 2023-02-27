@@ -44,13 +44,7 @@ export class Overworld<T> {
             this.gameWorld.gameObjects.forEach(gameOBJ => {
                 if (gameOBJ instanceof GameObject) {
                     if (this.ctx) {
-
-                        // gameOBJ.update({
-                        //     //arrow:  movementReq(this.directionInput.direction)
-                        //     arrow: this.directionInput.direction
-                        // });
-
-                        clientController.reqMove(gameOBJ, this.directionInput.direction)
+                        clientController.requestServerGameObjectMove(gameOBJ, this.directionInput.direction);
                         // gameOBJ.update({ arrow: this.directionInput.direction })
 
                         gameOBJ.sprite.draw(this.ctx);

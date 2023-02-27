@@ -41,7 +41,7 @@ async function addCharacter(characterInfo: $characterSignup) {
     }
 
     let configCharacter: characterDataInterface = {
-        characterID: id,
+        gameObjectID: id,
         username: characterInfo.username,
         characterGender: characterInfo.characterGender,
         x: 5,

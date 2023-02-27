@@ -45,7 +45,7 @@ export interface IplayerModel extends Model<IPlayerDoc> { }
 
 export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
     username: { type: String, index: { unique: true }, required: true },
-    characterID: { type: Number, required: true },
+    gameObjectID: { type: Number, required: true },
     characterGender: { type: String },
     attributes: { type: Object },
     class: { type: String },
@@ -60,7 +60,7 @@ characterSchema.method('syncCharacter', function (character): void {
 
     let characterLocal: characterDataInterface = {
         username: docAsObject.username,
-        characterID: docAsObject.characterID,
+        gameObjectID: docAsObject.characterID,
         characterGender: docAsObject.characterGender,
         attributes: {
             level: docAsObject.level,

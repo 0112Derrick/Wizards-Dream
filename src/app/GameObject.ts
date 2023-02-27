@@ -7,6 +7,8 @@ export class GameObject {
     y: number;
     sprite: Sprite;
     direction: any;
+    gameObjectID: number;
+
     constructor(config) {
         this.x = config.x || 0;
         this.y = config.y || 0;
@@ -17,7 +19,6 @@ export class GameObject {
             src: config.src || "/images/characters/players/erio.png"
         });
     }
-    update({ }) {
-
+    updateCharacterLocationAndAppearance({ }) {
     }
 }

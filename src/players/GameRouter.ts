@@ -4,6 +4,8 @@ import { Character } from "../app/Character.js";
 import { Overworld } from "../app/Overworld.js";
 import { GameObject } from "../app/GameObject.js"
 import { Utils } from "../app/Utils.js";
+import { DirectionInput, Direction } from "../app/DirectionInput.js";
+import { CharacterMovementData } from "./interfaces/CharacterInterfaces.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -14,8 +16,6 @@ export interface ClientDATA {
     id: string,
     arg: any
 }
-
-
 
 interface coordniate {
     x: number,
@@ -45,14 +45,13 @@ interface coordniate {
  */
 
 
-
-
-
 export class GameRouter {
 
     private static gameRouter: GameRouter;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
     private io: any;
+    private moveRequestQue: Array<Object> = [];
+    private moveRequestTimer: number = 1000;
     // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
 
@@ -111,8 +110,6 @@ export class GameRouter {
         return null;
     }
 
-
-
     public get ClientIP(): string {
         return this.clientIP;
     }
@@ -147,10 +144,13 @@ export class GameRouter {
         return this.clientIP;
     }
 
+    public getMoveRequestQue() {
+        return this.moveRequestQue;
+    }
 
-
-
-
+    public getMoveRequestTimer() {
+        return this.moveRequestTimer;
+    }
     /**
      * This function is called by server.js to initialize a new game instance.
      *
@@ -202,7 +202,7 @@ export class GameRouter {
      * Takes the character objects passes them to a method to sync the client side version of the overworld with the characterJSON 
      * @returns none
      */
-    addCharacterToOverworld(character): void {
+    addCharacterToOverworld(character, overworld = 'grassyfield'): void {
         let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects
         for (let i = 0; i < arr.length; i++) {
             if (arr[i].username == character.username) {
@@ -216,38 +216,76 @@ export class GameRouter {
         return;
     }
 
+    /**
+     * 
+     * @param characterMovingDirection See name
+     * @param characterObject See name
+     */
+    moveCharactersQue(characterMovingDirection: Direction, characterObject: Character) {
+        let que = GameRouter.GameRouterInstance.getMoveRequestQue();
+        que.push({
+            direction: characterMovingDirection,
+            character: characterObject,
+        })
 
-    moveCharacter(direction, obj) {
-        let delta = { x: obj.x, y: obj.y }
-        switch (direction) {
-            case "up":
-                delta.y -= 0.5;
-                break;
-            case "down":
-                delta.y += 0.5;
-                break;
+        setTimeout(() => {
+            this.moveCharacter(que);
+        }, GameRouter.GameRouterInstance.getMoveRequestTimer());
+    }
+    //characterMovingDirection: Direction, characterObject: Character
+    moveCharacter(arrCharacters) {
 
-            case "left":
-                delta.x -= 0.5;
-                break;
 
-            case "right":
-                delta.x += 0.5;
-                break;
-            default:
-                delta;
-                break;
-        }
-        let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
+        arrCharacters.forEach(character => {
+            //let delta = { x: characterObject.x, y: characterObject.y }
+            let delta = { x: characterObject.x, y: characterObject.y }
+            switch (characterMovingDirection) {
 
-        arr.forEach(char => {
-            if (char.username == obj.username) {
-                char.x = delta.x;
-                char.y = delta.y
+                case Direction.UP:
+                    delta.y -= 0.5;
+                    break;
+
+                case Direction.DOWN:
+                    delta.y += 0.5;
+
+                    break;
+
+                case Direction.LEFT:
+                    delta.x -= 0.5;
+
+                    break;
+
+                case Direction.RIGHT:
+                    delta.x += 0.5;
+                    break;
+
+                default:
+                    delta;
+                    break;
             }
 
-            GameRouter.GameRouterInstance.syncOverworld();
+            let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
+
+            gameObjectsArray.forEach(char => {
+                if (char.username == characterObject.username) {
+                    char.x = delta.x;
+                    char.y = delta.y;
+                }
+                GameRouter.GameRouterInstance.syncOverworld();
+            });
+
+            let characterDeltas: Array<CharacterMovementData>;
+
+            characterDeltas.push({
+                delta: {
+                    x: delta.x,
+                    y: delta.y,
+                },
+                direction: characterMovingDirection
+            });
         })
+        GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
+        //}
         //this.io.emit("moveReqAction", delta, obj);
     }
 
@@ -260,8 +298,14 @@ export class GameRouter {
      * 
      */
     syncOverworld(): void {
-        GameRouter.GameRouterInstance.io.emit("syncOverworld", GameRouter.GameRouterInstance.copyOverworld());
+        let syncedOverworld = GameRouter.GameRouterInstance.copyOverworld();
+        console.log("\n" + syncedOverworld);
+        //GameRouter.GameRouterInstance.io.emit("syncOverworld", syncedOverworld);
         return;
+    }
+
+    syncPlayersMovements(characters: Array<CharacterMovementData>) {
+        GameRouter.GameRouterInstance.io.emit("syncPlayersMovements", characters)
     }
 
     copyOverworld(): Object {

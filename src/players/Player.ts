@@ -20,7 +20,7 @@ export class Player {
                 username: 'username',
                 characterGender: '',
                 player: '',
-                characterID: 0,
+                gameObjectID: 0,
                 attributes: {
                     level: 0,
                     experience: 0,

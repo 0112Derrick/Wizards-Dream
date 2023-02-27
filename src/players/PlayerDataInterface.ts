@@ -34,7 +34,7 @@ export interface CharacterCreationDataInterface extends commonGameDataInterface 
     player: any
 }
 export interface characterDataInterface extends CharacterCreationDataInterface {
-    characterID: number,
+    gameObjectID: number,
     attributes: {
         level: number,
         experience: number,

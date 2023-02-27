@@ -10,6 +10,8 @@ import { CharacterCreationDataInterface as $characterSignup } from '../players/P
 import { Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
+import { GameObject } from "GameObject.js";
+import { DirectionInput, Direction } from "./DirectionInput.js";
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -88,6 +90,7 @@ class ClientController extends $OBSERVER {
         this.socket.on('movePlayer', () => { this.updatePlayer });
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
+        this.socket.on("syncPlayersMovements", (character: Character, delta_x: Number, delta_y: Number, direction: Direction) => { this.syncPlayersMovements(character, delta_x, delta_y, direction) })
         this.socket.on("globalMessage", (message, username) => { this.postMessage(message, username) })
         //end concepts
 
@@ -162,6 +165,18 @@ class ClientController extends $OBSERVER {
         window.OverworldMaps = this.OverworldMaps;
     }
 
+
+    syncPlayersMovements(character: Character, delta_x: Number, delta_y: Number, direction: Direction) {
+        window.OverworldMaps.grassyField.gameObject.forEach(char => {
+            if (character.username == char.username) {
+                char.x = delta_x;
+                char.y = delta_y;
+                char.updateSpriteAnimation({ arrow: direction });
+            }
+        })
+
+    }
+
     public get Character() {
         return this.character;
     }
@@ -189,23 +204,72 @@ class ClientController extends $OBSERVER {
         return char;
     }
 
-    public reqMove(obj, direction) {
-        if (direction) {
-            if (obj.characterID == this.client.characters.at(0)._id) {
-                console.log("movement req")
-                this.moveCharacter(direction, obj);
-                obj.update({ arrow: direction })
+    /**
+     * @description See function name
+     * @param gameObject See parameter name
+     * @param moveDirection See parameter name
+     */
+    public requestServerGameObjectMove(gameObject: GameObject, moveDirection: Direction) {
+        //If moveDirection is valid than move the character in the given direction and change their sprite direction
+        if (gameObject.gameObjectID == this.client.characters.at(0)._id) {
+
+            if (moveDirection) {
+                console.log(gameObject.gameObjectID + " " + "movement req")
+                this.moveCharacter(moveDirection, gameObject);
             }
-        } else {
-            if (obj.characterID == this.client.characters.at(0)._id)
-                obj.update({ arrow: direction })
+
+            console.log('ClientController func requestServerGameObjectMove\n Direction:\n' + moveDirection);
+            // If no direction than keep the sprite direction the same.
+            gameObject.updateCharacterLocationAndAppearance({ arrow: moveDirection })
         }
     }
 
+    /**
+     * 
+     * @param direction 
+     * @param gameOBJ 
+    */
 
-    public moveCharacter(direction: string, gameOBJ) {
-        if (direction)
-            this.socket.emit("moveReq", direction, gameOBJ.toJSON())
+    public moveCharacter(direction: Direction, gameOBJ: GameObject) {
+
+        console.log('ClientController func moveCharacter\n Direction:\n' + direction);
+        switch (direction) {
+
+            case Direction.UP:
+                if (gameOBJ.y - 0.5 <= 10) {
+                    return;
+                } else {
+                    this.socket.emit("moveReq", Direction.UP, gameOBJ);
+                }
+                break;
+
+            case Direction.DOWN:
+                if (gameOBJ.y + 0.5 >= 200) {
+                    return;
+                } else {
+                    this.socket.emit("moveReq", Direction.DOWN, gameOBJ);
+                }
+                break;
+
+            case Direction.LEFT:
+                if (gameOBJ.x - 0.5 <= 0) {
+                    return;
+                } else {
+                    this.socket.emit("moveReq", Direction.LEFT, gameOBJ);
+                }
+                break;
+
+            case Direction.RIGHT:
+                if (gameOBJ.x + 0.5 >= 250) {
+                    return;
+                } else {
+                    this.socket.emit("moveReq", Direction.RIGHT, gameOBJ);
+                }
+                break;
+
+        }
+
+
     }
 
     syncPlayer(obj) {
