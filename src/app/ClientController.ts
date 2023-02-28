@@ -12,6 +12,7 @@ import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
 import { DirectionInput, Direction } from "./DirectionInput.js";
+import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -90,7 +91,7 @@ class ClientController extends $OBSERVER {
         this.socket.on('movePlayer', () => { this.updatePlayer });
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
-        this.socket.on("syncPlayersMovements", (character: Character, delta_x: Number, delta_y: Number, direction: Direction) => { this.syncPlayersMovements(character, delta_x, delta_y, direction) })
+        this.socket.on("syncPlayersMovements", (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
         this.socket.on("globalMessage", (message, username) => { this.postMessage(message, username) })
         //end concepts
 
@@ -102,16 +103,6 @@ class ClientController extends $OBSERVER {
             this.socket.emit('playerJoinServer', data);
         })
     }
-
-    // player01: new Character({
-    //     isPlayerControlled: true,
-    //     x: Utils.withGrid(6),
-    //     y: Utils.withGrid(6),
-    //     src: "/images/characters/players/erio.png",
-    //     direction: 'down'
-    // })
-
-
     /**
      * 
      * @param obj 
@@ -129,35 +120,37 @@ class ClientController extends $OBSERVER {
 
         let foundMatch = false;
 
-        overworld.grassyField.gameObjects.forEach(char => {
+        overworld.grassyField.gameObjects.forEach((character: GameObject) => {
             foundMatch = false;
+            if (character instanceof Character) {
+                for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
 
-            for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
-
-                if (char.username == this.OverworldMaps.grassyField.gameObjects[i].username) {
-                    this.OverworldMaps.grassyField.gameObjects[i].x = char.x;
-                    this.OverworldMaps.grassyField.gameObjects[i].y = char.y;
-                    foundMatch = true;
-                    break;
+                    if (character.username == this.OverworldMaps.grassyField.gameObjects[i].username) {
+                        this.OverworldMaps.grassyField.gameObjects[i].x = character.x;
+                        this.OverworldMaps.grassyField.gameObjects[i].y = character.y;
+                        foundMatch = true;
+                        break;
+                    }
                 }
             }
 
             if (!foundMatch) {
-                this.OverworldMaps.grassyField.gameObjects.push(new Character({
+                /* this.OverworldMaps.grassyField.gameObjects.push(new Character({
                     isPlayerControlled: true,
-                    x: char.x,
-                    y: char.y,
+                    x: character.x,
+                    y: character.y,
                     src: "/images/characters/players/erio.png",
-                    username: char.username,
-                    attributes: char.attributes,
-                    characterGender: char.gender,
-                    player: char.player,
-                    class: char.class,
-                    guild: char.guild,
-                    characterID: char.characterID,
-                    items: char.items,
+                    username: character.username,
+                    attributes: character.attributes,
+                    characterGender: character.gender,
+                    player: character.player,
+                    class: character.class,
+                    guild: character.guild,
+                    characterID: character.characterID,
+                    items: character.items,
                     direction: "right",
-                }))
+                })) */
+                this.addCharacterToOverworld((character as Character));
             }
 
         })
@@ -166,15 +159,57 @@ class ClientController extends $OBSERVER {
     }
 
 
-    syncPlayersMovements(character: Character, delta_x: Number, delta_y: Number, direction: Direction) {
-        window.OverworldMaps.grassyField.gameObject.forEach(char => {
-            if (character.username == char.username) {
-                char.x = delta_x;
-                char.y = delta_y;
-                char.updateSpriteAnimation({ arrow: direction });
+    syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
+        let characterCreated: boolean = false;
+
+        charactersMovementData.forEach((character) => {
+            window.OverworldMaps.grassyField.gameObject.forEach(char => {
+                if (character.characterObj.username == char.username) {
+                    char.x = character.delta.x;
+                    char.y = character.delta.y;
+                    char.updateSpriteAnimation({ arrow: character.direction });
+                }
+            })
+            if (!characterCreated) {
+                this.addCharacterToOverworld(character.characterObj);
             }
         })
 
+
+    }
+
+    addCharacterToOverworld(character: Character, map = "grassyfield") {
+        switch (map) {
+            case "grassyfield":
+                let gameObjects = this.OverworldMaps.grassyField.gameObjects;
+                gameObjects.forEach((object: GameObject) => {
+                    if (object instanceof Character) {
+                        if ((object as Character).username == character.username) {
+                            return;
+                        }
+                    }
+                });
+
+                gameObjects.push(
+                    new Character({
+                        isPlayerControlled: true,
+                        x: character.x,
+                        y: character.y,
+                        src: "/images/characters/players/erio.png",
+                        username: character.username,
+                        attributes: character.attributes,
+                        characterGender: character.characterGender,
+                        player: character.player,
+                        class: character.class,
+                        guild: character.guild,
+                        characterID: character.gameObjectID,
+                        items: character.items,
+                        direction: "right",
+                    })
+                );
+                break;
+        }
+        window.OverworldMaps = this.OverworldMaps;
     }
 
     public get Character() {

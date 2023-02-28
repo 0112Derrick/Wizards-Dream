@@ -5,7 +5,8 @@ import { Overworld } from "../app/Overworld.js";
 import { GameObject } from "../app/GameObject.js"
 import { Utils } from "../app/Utils.js";
 import { DirectionInput, Direction } from "../app/DirectionInput.js";
-import { CharacterMovementData } from "./interfaces/CharacterInterfaces.js";
+import { CharacterMovementData, CharacterData_Direction } from "./interfaces/CharacterInterfaces.js";
+import Queue from ".././framework/Queue.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -50,8 +51,9 @@ export class GameRouter {
     private static gameRouter: GameRouter;
     private serverRooms: Array<Map<number, Array<Map<string, Object>>>> | null = null;
     private io: any;
-    private moveRequestQue: Array<Object> = [];
-    private moveRequestTimer: number = 1000;
+    //private moveRequestQue: Array<CharacterData_Direction> = [];
+    private moveRequestQue: Queue<CharacterData_Direction> = new Queue();
+    private moveRequestTimer: number = 300;
     // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
 
@@ -177,7 +179,8 @@ export class GameRouter {
                 _socket.emit('syncPlayer', gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0));
         }
 
-        _socket.on("moveReq", gameRouter.moveCharacter);
+        //_socket.on("moveReq", gameRouter.moveCharacter);
+        _socket.on("moveReq", gameRouter.addCharacterMoveRequestsToQueue);
         _socket.on("characterCreated", gameRouter.addCharacterToOverworld);
         // end
 
@@ -221,25 +224,30 @@ export class GameRouter {
      * @param characterMovingDirection See name
      * @param characterObject See name
      */
-    moveCharactersQue(characterMovingDirection: Direction, characterObject: Character) {
+
+    //research how to make a que
+    addCharacterMoveRequestsToQueue(characterMovingDirection: Direction, characterObject: Character) {
         let que = GameRouter.GameRouterInstance.getMoveRequestQue();
-        que.push({
+        que.add({
             direction: characterMovingDirection,
-            character: characterObject,
+            characterObj: characterObject,
         })
 
-        setTimeout(() => {
+        setInterval(() => {
             this.moveCharacter(que);
         }, GameRouter.GameRouterInstance.getMoveRequestTimer());
     }
     //characterMovingDirection: Direction, characterObject: Character
-    moveCharacter(arrCharacters) {
+    moveCharacter(characterMoveRequests: Queue<CharacterData_Direction>) {
 
+        while (!characterMoveRequests.isEmpty()) {
+            let currentCharacterMoveRequest = characterMoveRequests.dequeue();
+            let delta = {
+                x: currentCharacterMoveRequest.characterObj.x,
+                y: currentCharacterMoveRequest.characterObj.y,
+            }
 
-        arrCharacters.forEach(character => {
-            //let delta = { x: characterObject.x, y: characterObject.y }
-            let delta = { x: characterObject.x, y: characterObject.y }
-            switch (characterMovingDirection) {
+            switch (currentCharacterMoveRequest.direction) {
 
                 case Direction.UP:
                     delta.y -= 0.5;
@@ -263,29 +271,31 @@ export class GameRouter {
                     delta;
                     break;
             }
-
             let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
 
             gameObjectsArray.forEach(char => {
-                if (char.username == characterObject.username) {
+                if (char.username == currentCharacterMoveRequest.characterObj.username) {
                     char.x = delta.x;
                     char.y = delta.y;
                 }
-                GameRouter.GameRouterInstance.syncOverworld();
+
+                GameRouter.GameRouterInstance.copyOverworld();
+                //GameRouter.GameRouterInstance.syncOverworld();
             });
 
             let characterDeltas: Array<CharacterMovementData>;
 
             characterDeltas.push({
+                characterObj: currentCharacterMoveRequest.characterObj,
                 delta: {
                     x: delta.x,
                     y: delta.y,
                 },
-                direction: characterMovingDirection
+                direction: currentCharacterMoveRequest.direction,
             });
-        })
-        GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
-        //}
+            GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
+        }
+
         //this.io.emit("moveReqAction", delta, obj);
     }
 
@@ -300,12 +310,12 @@ export class GameRouter {
     syncOverworld(): void {
         let syncedOverworld = GameRouter.GameRouterInstance.copyOverworld();
         console.log("\n" + syncedOverworld);
-        //GameRouter.GameRouterInstance.io.emit("syncOverworld", syncedOverworld);
+        GameRouter.GameRouterInstance.io.emit("syncOverworld", syncedOverworld);
         return;
     }
 
-    syncPlayersMovements(characters: Array<CharacterMovementData>) {
-        GameRouter.GameRouterInstance.io.emit("syncPlayersMovements", characters)
+    syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
+        GameRouter.GameRouterInstance.io.emit("syncPlayersMovements", charactersMovementData)
     }
 
     copyOverworld(): Object {

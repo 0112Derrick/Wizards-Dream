@@ -1,0 +1,7 @@
+ player01: new Character({
+         isPlayerControlled: true,
+         x: Utils.withGrid(6),
+         y: Utils.withGrid(6),
+         src: "/images/characters/players/erio.png",
+         direction: 'down'
+     })
