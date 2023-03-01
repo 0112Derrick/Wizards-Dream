@@ -53,7 +53,7 @@ export class GameRouter {
     private io: any;
     //private moveRequestQue: Array<CharacterData_Direction> = [];
     private moveRequestQue: Queue<CharacterData_Direction> = new Queue();
-    private moveRequestTimer: number = 300;
+    private moveRequestTimer: number = 600;
     // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
 
@@ -146,7 +146,7 @@ export class GameRouter {
         return this.clientIP;
     }
 
-    public getMoveRequestQue() {
+    public getMoveRequestQueue() {
         return this.moveRequestQue;
     }
 
@@ -225,18 +225,23 @@ export class GameRouter {
      * @param characterObject See name
      */
 
-    //research how to make a que
+    //research how to make a queue
     addCharacterMoveRequestsToQueue(characterMovingDirection: Direction, characterObject: Character) {
-        let que = GameRouter.GameRouterInstance.getMoveRequestQue();
-        que.add({
+
+        let queue = GameRouter.GameRouterInstance.getMoveRequestQueue();
+        queue.add({
             direction: characterMovingDirection,
             characterObj: characterObject,
         })
 
         setInterval(() => {
-            this.moveCharacter(que);
+            if (!queue.isEmpty()) {
+                GameRouter.GameRouterInstance.moveCharacter(queue);
+            }
         }, GameRouter.GameRouterInstance.getMoveRequestTimer());
     }
+
+
     //characterMovingDirection: Direction, characterObject: Character
     moveCharacter(characterMoveRequests: Queue<CharacterData_Direction>) {
 
@@ -255,12 +260,10 @@ export class GameRouter {
 
                 case Direction.DOWN:
                     delta.y += 0.5;
-
                     break;
 
                 case Direction.LEFT:
                     delta.x -= 0.5;
-
                     break;
 
                 case Direction.RIGHT:
@@ -283,7 +286,7 @@ export class GameRouter {
                 //GameRouter.GameRouterInstance.syncOverworld();
             });
 
-            let characterDeltas: Array<CharacterMovementData>;
+            let characterDeltas: Array<CharacterMovementData> = [];
 
             characterDeltas.push({
                 characterObj: currentCharacterMoveRequest.characterObj,
@@ -381,6 +384,8 @@ export class GameRouter {
         let gameRouter = GameRouter.GameRouterInstance;
         gameRouter.clientSocket.emit("offline");
         gameRouter.clientMap.delete(client.id);
+        //update clients gameMap that the player is no longer there
+
     }
 
     playerLogout() {
@@ -391,8 +396,6 @@ export class GameRouter {
     createOverworld() {
         console.log('Create overworld not implemented - gameRouter');
         // GameRouter.GameRouterInstance.clientMap(ip)
-
-        // throw new Error("Method not implemented.");
     }
 }
 

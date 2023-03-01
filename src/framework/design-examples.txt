@@ -5,3 +5,19 @@
          src: "/images/characters/players/erio.png",
          direction: 'down'
      })
+
+     /* this.OverworldMaps.grassyField.gameObjects.push(new Character({
+                    isPlayerControlled: true,
+                    x: character.x,
+                    y: character.y,
+                    src: "/images/characters/players/erio.png",
+                    username: character.username,
+                    attributes: character.attributes,
+                    characterGender: character.gender,
+                    player: character.player,
+                    class: character.class,
+                    guild: character.guild,
+                    characterID: character.characterID,
+                    items: character.items,
+                    direction: "right",
+                })) */

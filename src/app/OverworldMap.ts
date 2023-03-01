@@ -8,6 +8,7 @@ class OverworldMap {
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
 
+
     // ctx!: CanvasRenderingContext2D | null;
 
     constructor(config) {
@@ -30,6 +31,82 @@ class OverworldMap {
 
 }
 
+class GameMap implements MapI {
+    gameObjects: Array<GameObject>;
+    playerList: Map<string, Character> = new Map();
+    lowerImage: HTMLImageElement;
+    upperImage: HTMLImageElement;
+    name: string;
+
+    constructor(config: MapConfigI) {
+        this.gameObjects = config.gameObjects || [];
+        this.lowerImage = new Image();
+        this.lowerImage.src = config.lowerImageSrc;
+        this.upperImage = new Image();
+        this.upperImage.src = config.lowerImageSrc;
+    }
+
+    drawLowerImage(ctx: CanvasRenderingContext2D): void {
+        throw new Error("Method not implemented.");
+    }
+    drawUpperImage(ctx: CanvasRenderingContext2D): void {
+        throw new Error("Method not implemented.");
+    }
+    clearCanvas(ctx: CanvasRenderingContext2D): void {
+        throw new Error("Method not implemented.");
+    }
+
+    addCharacter(character: Character): void {
+        throw new Error("Method not implemented.");
+    }
+    addGameObject(object: GameObject): void {
+        throw new Error("Method not implemented.");
+    }
+    removeCharacter(player: Character): void {
+        throw new Error("Method not implemented.");
+    }
+    removeAllCharacters(): void {
+        throw new Error("Method not implemented.");
+    }
+    viewCharacters(): any[] {
+        throw new Error("Method not implemented.");
+    }
+    findCharacter(character: Character): Boolean {
+        throw new Error("Method not implemented.");
+    }
+    syncCharactersList(playersList: Map<string, Character> | Array<Character>): void {
+        throw new Error("Method not implemented.");
+    }
+    updateCharacterLocation(character: Character): void {
+        throw new Error("Method not implemented.");
+    }
+
+}
+
+interface MapConfigI {
+    gameObjects: Array<GameObject> | null;
+    lowerImageSrc: string | null;
+    upperImageSrc: string | null;
+}
+
+interface OverworldMapsConfig {
+    Maps: Array<GameMap>;
+}
+
+interface MapI {
+    name: string;
+    addCharacter(character: Character): void;
+    addGameObject(object: GameObject): void;
+    removeCharacter(player: Character): void;
+    removeAllCharacters(): void;
+    viewCharacters(): Array<any>;
+    findCharacter(character: Character): Boolean;
+    syncCharactersList(playersList: Map<string, Character> | Array<Character>): void;
+    updateCharacterLocation(character: Character): void;
+    drawLowerImage(ctx: CanvasRenderingContext2D): void;
+    drawUpperImage(ctx: CanvasRenderingContext2D): void;
+    clearCanvas(ctx: CanvasRenderingContext2D): void;
+}
 
 window.OverworldMaps = {
     grassyField: {

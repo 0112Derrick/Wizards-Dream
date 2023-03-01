@@ -3,8 +3,8 @@ import { Direction } from "../../app/DirectionInput.js";
 
 export interface CharacterMovementData extends CharacterData_Direction {
     delta: {
-        x: Number,
-        y: Number
+        x: number,
+        y: number
     },
     direction: Direction;
 }

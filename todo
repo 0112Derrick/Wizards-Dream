@@ -1,6 +1,7 @@
 // Learn curl
 // create abstract class for network... implement 
-
+// Fix character assigning isPlayerControlled
+// Fix GameMap / OverworldMap
 
 Create player signup []
     - assign ID []

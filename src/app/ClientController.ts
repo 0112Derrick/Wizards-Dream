@@ -4,7 +4,7 @@ import NetworkProxy from "../network/NetworkProxy.js";
 import $HTMLNetwork from "../network/HTML-Proxy.js";
 import { EventConstants as $events, ServerNameConstants as $servers } from '../constants/EventConstants.js';
 import { StatusConstants as $StatusConstants } from "../constants/StatusConstants.js";
-//import { io, Socket } from "/socket.io-client/dist/socket.io.esm.min.js";
+
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
 import { Character } from "../app/Character.js"
@@ -57,7 +57,6 @@ class ClientController extends $OBSERVER {
         const CharacterCreateRoute = '/player/savecharacter';
         this.OVERWORLD.init();
         this.init();
-        //this.socket = io();
 
         this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; this.OVERWORLD.startGameLoop(); }, this.view);
         this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
@@ -135,21 +134,6 @@ class ClientController extends $OBSERVER {
             }
 
             if (!foundMatch) {
-                /* this.OverworldMaps.grassyField.gameObjects.push(new Character({
-                    isPlayerControlled: true,
-                    x: character.x,
-                    y: character.y,
-                    src: "/images/characters/players/erio.png",
-                    username: character.username,
-                    attributes: character.attributes,
-                    characterGender: character.gender,
-                    player: character.player,
-                    class: character.class,
-                    guild: character.guild,
-                    characterID: character.characterID,
-                    items: character.items,
-                    direction: "right",
-                })) */
                 this.addCharacterToOverworld((character as Character));
             }
 
@@ -163,19 +147,21 @@ class ClientController extends $OBSERVER {
         let characterCreated: boolean = false;
 
         charactersMovementData.forEach((character) => {
-            window.OverworldMaps.grassyField.gameObject.forEach(char => {
-                if (character.characterObj.username == char.username) {
-                    char.x = character.delta.x;
-                    char.y = character.delta.y;
-                    char.updateSpriteAnimation({ arrow: character.direction });
+            window.OverworldMaps.grassyField.gameObjects.forEach((char: GameObject) => {
+                if (char instanceof Character) {
+                    console.log("username: " + character.characterObj.username + " searching username: " + char.username);
+                    if (character.characterObj.username == char.username) {
+
+                        char.x = character.delta.x;
+                        char.y = character.delta.y;
+                        char.updateSpriteAnimation({ arrow: character.direction });
+                    }
                 }
             })
             if (!characterCreated) {
                 this.addCharacterToOverworld(character.characterObj);
             }
-        })
-
-
+        });
     }
 
     addCharacterToOverworld(character: Character, map = "grassyfield") {
@@ -241,21 +227,23 @@ class ClientController extends $OBSERVER {
 
     /**
      * @description See function name
-     * @param gameObject See parameter name
+     * @param character See parameter name
      * @param moveDirection See parameter name
      */
-    public requestServerGameObjectMove(gameObject: GameObject, moveDirection: Direction) {
+    public serverRequestMoveCharacter(character: Character, moveDirection: Direction) {
         //If moveDirection is valid than move the character in the given direction and change their sprite direction
-        if (gameObject.gameObjectID == this.client.characters.at(0)._id) {
+        console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
+        //FIX THIS LINE OF CODE
+        if (character.player == this.client.characters.at(0).player) {
 
             if (moveDirection) {
-                console.log(gameObject.gameObjectID + " " + "movement req")
-                this.moveCharacter(moveDirection, gameObject);
+                console.log(character.gameObjectID + " " + "movement req")
+                this.moveCharacter(moveDirection, character);
             }
 
-            console.log('ClientController func requestServerGameObjectMove\n Direction:\n' + moveDirection);
+            console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
             // If no direction than keep the sprite direction the same.
-            gameObject.updateCharacterLocationAndAppearance({ arrow: moveDirection })
+            //  character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
         }
     }
 
@@ -265,11 +253,8 @@ class ClientController extends $OBSERVER {
      * @param gameOBJ 
     */
 
-    public moveCharacter(direction: Direction, gameOBJ: GameObject) {
-
-        console.log('ClientController func moveCharacter\n Direction:\n' + direction);
+    public moveCharacter(direction: Direction, gameOBJ: Character) {        
         switch (direction) {
-
             case Direction.UP:
                 if (gameOBJ.y - 0.5 <= 10) {
                     return;
@@ -301,10 +286,7 @@ class ClientController extends $OBSERVER {
                     this.socket.emit("moveReq", Direction.RIGHT, gameOBJ);
                 }
                 break;
-
         }
-
-
     }
 
     syncPlayer(obj) {
@@ -408,6 +390,7 @@ class ClientController extends $OBSERVER {
         let response = await this.networkProxy.postJSON('/player/logout', null);
         if (response.ok) {
             console.log("Logged out");
+            this.socket.emit("playerLogout", this.client);
         } else {
             console.log('error');
         }

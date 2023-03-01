@@ -53,7 +53,8 @@ export class Character extends GameObject implements characterDataInterface {
             [Direction.JUMP]: ["y", 0],
         }
 
-        this.gameObjectID = config.characterID || 1;
+        //this.gameObjectID = config.characterID || 1;
+        this.gameObjectID = config.gameObjectID || 1;
         this.username = config.username || 'newCharacter';
         this.attributes = config.atrributes || new CharacterAttributes();
         this.characterGender = config.characterGender || 'male';
@@ -69,7 +70,7 @@ export class Character extends GameObject implements characterDataInterface {
         return {
             username: this.username,
             player: this.player,
-            characterID: this.gameObjectID,
+            gameObjectID: this.gameObjectID,
             attributes: this.attributes,
             gender: this.characterGender,
             class: this.class,
