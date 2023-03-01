@@ -62,12 +62,13 @@ export class Overworld<T> {
             //this.map.drawUpperImage(this.ctx);
             //    }, 1000 / 60); // sets Frame rate
             if (!this.stopLoop)
+
                 requestAnimationFrame(() => {
-                    step();
                     updateMap();
+                    step();
                 });
         }
-        //step();
+        step();
     }
 
 

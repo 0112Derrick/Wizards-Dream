@@ -2,6 +2,10 @@ import { Utils } from "./Utils.js";
 import { GameObject } from "./GameObject.js";
 import { Character } from "./Character.js";
 import { } from './Types.js'
+import { PrivateIdentifier } from "typescript";
+import { Direction } from "readline";
+import { DirectionInput } from "./DirectionInput.js";
+import { clientController } from "./ClientController.js";
 
 class OverworldMap {
     gameObjects: any;
@@ -36,7 +40,11 @@ class GameMap implements MapI {
     playerList: Map<string, Character> = new Map();
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
-    name: string;
+    private name: string;
+    canvas: HTMLCanvasElement | null;
+    private ctx: CanvasRenderingContext2D;
+    element: HTMLElement | undefined;
+    directionInput: DirectionInput
 
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
@@ -44,32 +52,80 @@ class GameMap implements MapI {
         this.lowerImage.src = config.lowerImageSrc;
         this.upperImage = new Image();
         this.upperImage.src = config.lowerImageSrc;
+        this.element = config.element;
+        this.element = config.element;
+        if (this.element)
+            this.canvas = this.element.querySelector(".game-canvas") || config.canvas;
+        if (this.canvas)
+            this.ctx = this.canvas.getContext("2d");
+    }
+
+    startGameLoop(): void {
+        this.directionInput = new DirectionInput();
+        window.requestAnimationFrame(this.animate);
+        throw new Error("Method not implemented.");
+    }
+
+    animate(): void {
+        this.clearCanvas(this.ctx);
+        this.drawLowerImage(this.ctx);
+        this.drawUpperImage(this.ctx);
+        this.gameObjects.forEach((gameObject) => {
+            if (gameObject instanceof Character) {
+                clientController.serverRequestMoveCharacter(gameObject, this.directionInput.direction);
+            }
+            gameObject.sprite.draw(this.ctx);
+        });
+
+        throw new Error("Method not implemented.");
+        window.requestAnimationFrame(this.animate);
     }
 
     drawLowerImage(ctx: CanvasRenderingContext2D): void {
-        throw new Error("Method not implemented.");
+        ctx.drawImage(this.lowerImage, 0, 0, ctx.canvas.width, ctx.canvas.height);
     }
     drawUpperImage(ctx: CanvasRenderingContext2D): void {
-        throw new Error("Method not implemented.");
+        ctx.drawImage(this.lowerImage, 0, 0, ctx.canvas.width, ctx.canvas.height);
     }
     clearCanvas(ctx: CanvasRenderingContext2D): void {
-        throw new Error("Method not implemented.");
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 
     addCharacter(character: Character): void {
-        throw new Error("Method not implemented.");
+        if (this.playerList.has(character.name)) {
+            return;
+        }
+        this.playerList.set(character.name, character);
+        this.gameObjects.push(character);
+        console.log('Player:' + character.name + " has been added to: " + this.name);
     }
+
     addGameObject(object: GameObject): void {
-        throw new Error("Method not implemented.");
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            if (this.gameObjects[i].gameObjectID == object.gameObjectID) {
+                return;
+            }
+        }
+        this.gameObjects.push(object);
     }
-    removeCharacter(player: Character): void {
-        throw new Error("Method not implemented.");
+
+    removeCharacter(character: Character): void {
+        if (this.playerList.has(character.name)) {
+            let result = this.playerList.delete(character.name);
+            console.log('Character was removed: ' + result);
+            for (let i = 0; i < this.gameObjects.length; i++) {
+                if (character.name == this.gameObjects[i].name) {
+                    this.gameObjects.splice(i);
+                }
+            }
+        }
     }
     removeAllCharacters(): void {
-        throw new Error("Method not implemented.");
+        this.gameObjects = [];
+        this.playerList.clear();
     }
-    viewCharacters(): any[] {
-        throw new Error("Method not implemented.");
+    viewCharacters(): IterableIterator<Character> {
+        return this.playerList.values();
     }
     findCharacter(character: Character): Boolean {
         throw new Error("Method not implemented.");
@@ -81,31 +137,45 @@ class GameMap implements MapI {
         throw new Error("Method not implemented.");
     }
 
+    changeMapName(): void {
+        throw new Error("Method not implemented.");
+    }
+    get getMapName(): string {
+        return this.name;
+    }
+    set setMapName(name: string) {
+        this.name = name;
+    }
+
 }
 
 interface MapConfigI {
     gameObjects: Array<GameObject> | null;
     lowerImageSrc: string | null;
     upperImageSrc: string | null;
+    canvas: HTMLCanvasElement | null;
+    element: HTMLElement | undefined;
 }
 
-interface OverworldMapsConfig {
+interface OverworldMapsI {
     Maps: Array<GameMap>;
 }
 
+
+
 interface MapI {
-    name: string;
     addCharacter(character: Character): void;
     addGameObject(object: GameObject): void;
     removeCharacter(player: Character): void;
     removeAllCharacters(): void;
-    viewCharacters(): Array<any>;
+    viewCharacters(): IterableIterator<Character>;
     findCharacter(character: Character): Boolean;
     syncCharactersList(playersList: Map<string, Character> | Array<Character>): void;
     updateCharacterLocation(character: Character): void;
     drawLowerImage(ctx: CanvasRenderingContext2D): void;
     drawUpperImage(ctx: CanvasRenderingContext2D): void;
     clearCanvas(ctx: CanvasRenderingContext2D): void;
+    startGameLoop(ctx: CanvasRenderingContext2D): void
 }
 
 window.OverworldMaps = {
