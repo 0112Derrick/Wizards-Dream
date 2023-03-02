@@ -85,7 +85,7 @@ export class Character extends GameObject implements characterDataInterface {
      * 
      * @param characterMovementState Should contain an attribute named arrow of type Direction.
      */
-    updateCharacterLocationAndAppearance(characterMovementState: any): void {
+    updateCharacterLocationAndAppearance(characterMovementState: CharacterMovementStateI): void {
         //this.updatePosition();
         console.log(characterMovementState);
         const GridBlockSize = 16;
@@ -125,7 +125,7 @@ export class Character extends GameObject implements characterDataInterface {
      * @description Updates players movement based on passed in direction
      * @param characterMovementState 
      */
-    updateSpriteAnimation(characterMovementState) {
+    updateSpriteAnimation(characterMovementState: CharacterMovementStateI) {
         if (this.isPlayerControlled && this.movingProgressRemaining === 0 && !characterMovementState.arrow) {
             let animation = null;
             switch (this.direction) {
@@ -184,8 +184,8 @@ export class Character extends GameObject implements characterDataInterface {
     }
 }
 
-interface characterMovementStateI {
-
+interface CharacterMovementStateI {
+    arrow?: Direction | null;
 }
 
 export class CharacterAttributes {

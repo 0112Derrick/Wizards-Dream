@@ -145,27 +145,7 @@ class ClientController extends $OBSERVER {
     }
 
 
-    syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
-        let characterCreated: boolean = false;
 
-        charactersMovementData.forEach((character) => {
-            window.OverworldMaps.grassyField.gameObjects.forEach((char: GameObject) => {
-                if (char instanceof Character) {
-                    console.log("username: " + character.characterObj.username + " searching username: " + char.username);
-                    if (character.characterObj.username == char.username) {
-                        char.updateCharacterLocationAndAppearance({ arrow: character.direction });
-                        char.x = character.delta.x;
-                        char.y = character.delta.y;
-                        characterCreated = true;
-                    }
-                }
-            });
-
-            if (!characterCreated) {
-                this.addCharacterToOverworld(character.characterObj);
-            }
-        });
-    }
 
     addCharacterToOverworld(character: Character, map = "grassyfield") {
         switch (map) {
@@ -246,7 +226,7 @@ class ClientController extends $OBSERVER {
 
             console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
             // If no direction than keep the sprite direction the same.
-            character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
+            //character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
         }
     }
 
@@ -290,6 +270,29 @@ class ClientController extends $OBSERVER {
                 }
                 break;
         }
+    }
+
+    syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
+        let characterCreated: boolean = false;
+
+        charactersMovementData.forEach((character) => {
+            window.OverworldMaps.grassyField.gameObjects.forEach((char: GameObject) => {
+                if (char instanceof Character) {
+                    console.log("username: " + character.characterObj.username + " searching username: " + char.username);
+                    if (character.characterObj.username == char.username) {
+                        char.updateCharacterLocationAndAppearance({ arrow: character.direction });
+                        char.x = character.delta.x;
+                        char.y = character.delta.y;
+                        characterCreated = true;
+                        setTimeout(() => { char.updateCharacterLocationAndAppearance({ arrow: null }); }, 1000);
+                    }
+                }
+            });
+
+            if (!characterCreated) {
+                this.addCharacterToOverworld(character.characterObj);
+            }
+        });
     }
 
     syncPlayer(obj) {
