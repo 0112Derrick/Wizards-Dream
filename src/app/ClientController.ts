@@ -80,8 +80,7 @@ class ClientController extends $OBSERVER {
         this.socket.on("onlineClient", (client) => { this.connect(client) });
         this.socket.on("offline", this.disconnect);
         this.socket.on("clientID", (id) => { this.setID(id) });
-        this.socket.on("reconnect", () => { window.location.reload() })
-
+        this.socket.on("reconnect", () => { window.location.reload() });
 
         this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
@@ -100,7 +99,10 @@ class ClientController extends $OBSERVER {
                 serverRoom: $servers.ROOM1
             }
             this.socket.emit('playerJoinServer', data);
-        })
+        });
+
+        //TODO: setInterval(){(character) => {save character} ,time}
+
     }
     /**
      * 
@@ -151,13 +153,14 @@ class ClientController extends $OBSERVER {
                 if (char instanceof Character) {
                     console.log("username: " + character.characterObj.username + " searching username: " + char.username);
                     if (character.characterObj.username == char.username) {
-
+                        char.updateCharacterLocationAndAppearance({ arrow: character.direction });
                         char.x = character.delta.x;
                         char.y = character.delta.y;
-                        char.updateSpriteAnimation({ arrow: character.direction });
+                        characterCreated = true;
                     }
                 }
-            })
+            });
+
             if (!characterCreated) {
                 this.addCharacterToOverworld(character.characterObj);
             }
@@ -233,7 +236,7 @@ class ClientController extends $OBSERVER {
     public serverRequestMoveCharacter(character: Character, moveDirection: Direction) {
         //If moveDirection is valid than move the character in the given direction and change their sprite direction
         console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
-        //FIX THIS LINE OF CODE
+        //TODO: The check needs to be for Character Ids which are currently being assigned to 1.
         if (character.player == this.client.characters.at(0).player) {
 
             if (moveDirection) {
@@ -243,7 +246,7 @@ class ClientController extends $OBSERVER {
 
             console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
             // If no direction than keep the sprite direction the same.
-            //  character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
+            character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
         }
     }
 
@@ -253,7 +256,7 @@ class ClientController extends $OBSERVER {
      * @param gameOBJ 
     */
 
-    public moveCharacter(direction: Direction, gameOBJ: Character) {        
+    public moveCharacter(direction: Direction, gameOBJ: Character) {
         switch (direction) {
             case Direction.UP:
                 if (gameOBJ.y - 0.5 <= 10) {

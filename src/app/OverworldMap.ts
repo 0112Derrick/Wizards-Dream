@@ -77,7 +77,6 @@ class GameMap implements MapI {
             gameObject.sprite.draw(this.ctx);
         });
 
-        throw new Error("Method not implemented.");
         window.requestAnimationFrame(this.animate);
     }
 

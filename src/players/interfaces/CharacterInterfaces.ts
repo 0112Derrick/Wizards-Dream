@@ -6,7 +6,6 @@ export interface CharacterMovementData extends CharacterData_Direction {
         x: number,
         y: number
     },
-    direction: Direction;
 }
 
 export interface CharacterData_Direction {

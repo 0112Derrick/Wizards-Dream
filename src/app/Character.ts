@@ -184,6 +184,10 @@ export class Character extends GameObject implements characterDataInterface {
     }
 }
 
+interface characterMovementStateI {
+
+}
+
 export class CharacterAttributes {
     private level = 1;
 

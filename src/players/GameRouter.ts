@@ -53,7 +53,7 @@ export class GameRouter {
     private io: any;
     //private moveRequestQue: Array<CharacterData_Direction> = [];
     private moveRequestQue: Queue<CharacterData_Direction> = new Queue();
-    private moveRequestTimer: number = 600;
+    private moveRequestTimer: number = 300;
     // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
 
@@ -76,6 +76,7 @@ export class GameRouter {
 
 
     private constructor() {
+
     }
 
     public static get GameRouterInstance(): GameRouter {
@@ -150,7 +151,7 @@ export class GameRouter {
         return this.moveRequestQue;
     }
 
-    public getMoveRequestTimer() {
+    public getMoveRequestIntervalTime() {
         return this.moveRequestTimer;
     }
     /**
@@ -188,6 +189,14 @@ export class GameRouter {
             this.serverRooms = [];
             this.createServerRoom();
         }
+
+        //Move characters at a set interval.
+        setInterval(() => {
+            if (!GameRouter.GameRouterInstance.moveRequestQue.isEmpty()) {
+                GameRouter.GameRouterInstance.moveCharacter(GameRouter.GameRouterInstance.moveRequestQue);
+            }
+        }, GameRouter.GameRouterInstance.getMoveRequestIntervalTime());
+
     }
 
     checkMessage(message: string, user): void {
@@ -227,18 +236,11 @@ export class GameRouter {
 
     //research how to make a queue
     addCharacterMoveRequestsToQueue(characterMovingDirection: Direction, characterObject: Character) {
-
         let queue = GameRouter.GameRouterInstance.getMoveRequestQueue();
         queue.add({
             direction: characterMovingDirection,
             characterObj: characterObject,
-        })
-
-        setInterval(() => {
-            if (!queue.isEmpty()) {
-                GameRouter.GameRouterInstance.moveCharacter(queue);
-            }
-        }, GameRouter.GameRouterInstance.getMoveRequestTimer());
+        });
     }
 
 
@@ -255,19 +257,19 @@ export class GameRouter {
             switch (currentCharacterMoveRequest.direction) {
 
                 case Direction.UP:
-                    delta.y -= 0.5;
+                    delta.y -= 0.7;
                     break;
 
                 case Direction.DOWN:
-                    delta.y += 0.5;
+                    delta.y += 0.7;
                     break;
 
                 case Direction.LEFT:
-                    delta.x -= 0.5;
+                    delta.x -= 0.7;
                     break;
 
                 case Direction.RIGHT:
-                    delta.x += 0.5;
+                    delta.x += 0.7;
                     break;
 
                 default:
