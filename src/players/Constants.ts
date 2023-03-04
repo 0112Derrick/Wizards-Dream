@@ -1,4 +1,4 @@
 export enum MovementContants {
-    North_South = 2,
-    West_East = 2,
+    North_South = 4,
+    West_East = 4,
 }
