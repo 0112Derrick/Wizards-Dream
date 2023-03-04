@@ -95,7 +95,9 @@ class ClientView extends $ClientSyntheticEventEmitter {
             x: 0,
             y: 0,
             sprite: undefined,
-            direction: ""
+            direction: "right",
+            width: 32,
+            height: 32,
         }
 
         console.log("Got new player account submission", formData);

@@ -47,9 +47,14 @@ export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
     username: { type: String, index: { unique: true }, required: true },
     gameObjectID: { type: Number, required: true },
     characterGender: { type: String },
+    direction: { type: String },
+    width: { type: Number },
+    height: { type: Number },
+    friends: { type: [Object] },
     attributes: { type: Object },
     class: { type: String },
     guild: { type: String },
+    equipment: { type: Object },
     items: { type: [String] },
     player: { type: Schema.Types.ObjectId, ref: 'Players' }
 });
@@ -62,6 +67,8 @@ characterSchema.method('syncCharacter', function (character): void {
         username: docAsObject.username,
         gameObjectID: docAsObject.characterID,
         characterGender: docAsObject.characterGender,
+        width: docAsObject.width,
+        height: docAsObject.height,
         attributes: {
             level: docAsObject.level,
             experience: docAsObject.experience,

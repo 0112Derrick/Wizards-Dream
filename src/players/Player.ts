@@ -20,6 +20,8 @@ export class Player {
                 username: 'username',
                 characterGender: '',
                 player: '',
+                width: 32,
+                height: 32,
                 gameObjectID: 0,
                 attributes: {
                     level: 0,

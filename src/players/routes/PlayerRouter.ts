@@ -50,9 +50,11 @@ playerRouter.post('/savecharacter', express.json(), async function (req, res, ne
                 player: req.user.id,
                 x: 0,
                 y: 0,
-                sprite: 0,
-                direction: 'right',
-            })
+                sprite: null,
+                direction: req.body.direction || 'right',
+                width: req.body.width,
+                height: req.body.height,
+            });
             console.log("Added character ", character);
             req.user.characters.push(character.id);// character.id;
             req.user.save();

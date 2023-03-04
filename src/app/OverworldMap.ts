@@ -6,6 +6,8 @@ import { PrivateIdentifier } from "typescript";
 import { Direction } from "readline";
 import { DirectionInput } from "./DirectionInput.js";
 import { clientController } from "./ClientController.js";
+import { OverworldMapsI, MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
+import { MapNames } from "../constants/MapNames.js";
 
 class OverworldMap {
     gameObjects: any;
@@ -35,16 +37,35 @@ class OverworldMap {
 
 }
 
-class GameMap implements MapI {
+export class Overworld_Test implements OverworldMapsI {
+    Maps: GameMap[];
+    addMap(map: GameMap) {
+        this.Maps.push(map);
+    }
+    init(startMap: MapNames) {
+        console.log("Overworld init started");
+
+        this.Maps.forEach((map) => {
+            if (startMap == map.getMapName) {
+                map.startGameLoop();
+                console.log("Map: " + map.getMapName + " started.");
+            }
+        });
+        console.log("OverWorld init complete.");
+    }
+}
+
+export class GameMap implements MapI {
     gameObjects: Array<GameObject>;
     playerList: Map<string, Character> = new Map();
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
-    private name: string;
+    private name: MapNames;
     canvas: HTMLCanvasElement | null;
     private ctx: CanvasRenderingContext2D;
     element: HTMLElement | undefined;
-    directionInput: DirectionInput
+    directionInput: DirectionInput;
+    stopLoop: boolean = false;
 
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
@@ -54,6 +75,7 @@ class GameMap implements MapI {
         this.upperImage.src = config.lowerImageSrc;
         this.element = config.element;
         this.element = config.element;
+        this.name = config.name;
         if (this.element)
             this.canvas = this.element.querySelector(".game-canvas") || config.canvas;
         if (this.canvas)
@@ -62,7 +84,9 @@ class GameMap implements MapI {
 
     startGameLoop(): void {
         this.directionInput = new DirectionInput();
-        window.requestAnimationFrame(this.animate);
+        if (!this.stopLoop) {
+            window.requestAnimationFrame(this.animate);
+        }
         throw new Error("Method not implemented.");
     }
 
@@ -136,46 +160,18 @@ class GameMap implements MapI {
         throw new Error("Method not implemented.");
     }
 
-    changeMapName(): void {
-        throw new Error("Method not implemented.");
+    changeMapName(name: MapNames): void {
+        this.name = name;
     }
-    get getMapName(): string {
+    get getMapName(): MapNames {
         return this.name;
     }
-    set setMapName(name: string) {
+    set setMapName(name: MapNames) {
         this.name = name;
     }
 
 }
 
-interface MapConfigI {
-    gameObjects: Array<GameObject> | null;
-    lowerImageSrc: string | null;
-    upperImageSrc: string | null;
-    canvas: HTMLCanvasElement | null;
-    element: HTMLElement | undefined;
-}
-
-interface OverworldMapsI {
-    Maps: Array<GameMap>;
-}
-
-
-
-interface MapI {
-    addCharacter(character: Character): void;
-    addGameObject(object: GameObject): void;
-    removeCharacter(player: Character): void;
-    removeAllCharacters(): void;
-    viewCharacters(): IterableIterator<Character>;
-    findCharacter(character: Character): Boolean;
-    syncCharactersList(playersList: Map<string, Character> | Array<Character>): void;
-    updateCharacterLocation(character: Character): void;
-    drawLowerImage(ctx: CanvasRenderingContext2D): void;
-    drawUpperImage(ctx: CanvasRenderingContext2D): void;
-    clearCanvas(ctx: CanvasRenderingContext2D): void;
-    startGameLoop(ctx: CanvasRenderingContext2D): void
-}
 
 window.OverworldMaps = {
     grassyField: {

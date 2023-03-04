@@ -55,3 +55,13 @@ export interface One_Hand_Weapon extends Weapons {
 export interface Two_Hand_Weapon extends Weapons {
     gearPosition: GearPosition.WEAPON_SLOT_BOTH,
 }
+
+export interface Accessory extends Gear {
+    def: number,
+    mdef: number,
+    gearPosition: GearPosition.ACCESSORY_1 | GearPosition.ACCESSORY_2,
+}
+
+class CreateGear<Gear> {
+
+}

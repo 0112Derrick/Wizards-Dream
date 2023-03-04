@@ -28,6 +28,8 @@ interface commonGameDataInterface extends commonDataInterface {
     y: number,
     sprite: any,
     direction: string,
+    width: number,
+    height: number,
 }
 export interface CharacterCreationDataInterface extends commonGameDataInterface {
     characterGender: string

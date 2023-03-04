@@ -7,7 +7,7 @@ import { Utils } from "../app/Utils.js";
 import { DirectionInput, Direction } from "../app/DirectionInput.js";
 import { CharacterMovementData, CharacterData_Direction } from "./interfaces/CharacterInterfaces.js";
 import Queue from ".././framework/Queue.js";
-import { MovementContants } from "./Constants.js";
+import { MovementContants } from "../constants/Constants.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,

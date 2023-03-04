@@ -16,8 +16,9 @@ export class Character extends GameObject implements characterDataInterface {
     username: string;
     class: string;
     characterGender: string;
-    width: number = 32;
-    height: number = 32;
+    width: number;
+    height: number;
+    walking: boolean;
 
     attributes: {
         level: number,//Determines players stat attributes
@@ -67,8 +68,10 @@ export class Character extends GameObject implements characterDataInterface {
         this.items = config.items || [];
         this.player = config.player;
         this.name = config.username;
+        this.width = config.width || 32;
+        this.height = config.height || 32;
+        this.walking = config.walking || false;
     }
-
 
     toJSON() {
         return {

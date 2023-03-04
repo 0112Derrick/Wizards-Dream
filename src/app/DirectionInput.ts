@@ -46,7 +46,6 @@ export class DirectionInput {
             if (dir && this.heldDirections.indexOf(dir) === -1) {
                 this.heldDirections.unshift(dir);
                 console.log('direction: ', this.heldDirections);
-
             }
         });
 

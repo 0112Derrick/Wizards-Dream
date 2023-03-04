@@ -13,6 +13,8 @@ import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
 import { DirectionInput, Direction } from "./DirectionInput.js";
 import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
+import { Overworld_Test } from "OverworldMap.js";
+import { MapNames } from "../constants/MapNames.js";
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -23,12 +25,12 @@ interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
 }
 
-(function () {
+/* (function () {
     const OVERWORLD = new Overworld({
         element: document.querySelector(".game-container")
     });
     OVERWORLD.init();
-});
+}); */
 
 
 class ClientController extends $OBSERVER {
@@ -38,28 +40,29 @@ class ClientController extends $OBSERVER {
     private clientID: string = "";
     private client: any;
     private character: any;
-    private OverworldMaps = {
+    /* private OverworldMaps = {
         grassyField: {
             lowerSrc: "/images/maps/Battleground1.png",
             upperSrc: "/images/maps/Battleground1.png",
             gameObjects: [],
             borders: [],
         }
-    };
+    }; */
 
-    private OVERWORLD = new Overworld({
+    /* private OVERWORLD = new Overworld({
         element: document.querySelector(".game-container")
-    });
+    }); */
+
+    private OVERWORLD = new Overworld_Test();
 
     constructor(networkProxy: NetworkProxy) {
         super();
         this.networkProxy = networkProxy;
         const CharacterCreateRoute = '/player/savecharacter';
-        this.OVERWORLD.init();
         this.init();
 
-        this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; this.OVERWORLD.startGameLoop(); }, this.view);
-        this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
+        //this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = false; this.OVERWORLD.startGameLoop(); }, this.view);
+        //this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
         this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
@@ -90,7 +93,7 @@ class ClientController extends $OBSERVER {
         this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
         this.socket.on("syncPlayersMovements", (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
-        this.socket.on("globalMessage", (message, username) => { this.postMessage(message, username) })
+        this.socket.on("globalMessage", (message: string, username: string) => { this.postMessage(message, username) })
         //end concepts
 
         document.querySelector('#joinServer')?.addEventListener('click', () => {
@@ -145,8 +148,6 @@ class ClientController extends $OBSERVER {
     }
 
 
-
-
     addCharacterToOverworld(character: Character, map = "grassyfield") {
         switch (map) {
             case "grassyfield":
@@ -164,6 +165,8 @@ class ClientController extends $OBSERVER {
                         isPlayerControlled: true,
                         x: character.x,
                         y: character.y,
+                        width: character.width,
+                        height: character.height,
                         src: "/images/characters/players/erio.png",
                         username: character.username,
                         attributes: character.attributes,
@@ -173,7 +176,7 @@ class ClientController extends $OBSERVER {
                         guild: character.guild,
                         characterID: character.gameObjectID,
                         items: character.items,
-                        direction: "right",
+                        direction: character.direction || "right",
                     })
                 );
                 break;
@@ -195,7 +198,9 @@ class ClientController extends $OBSERVER {
             x: Utils.withGrid(6),
             y: Utils.withGrid(6),
             src: "/images/characters/players/erio.png",
-            direction: 'right',
+            width: obj.width,
+            height: obj.height,
+            direction: obj.direction || 'right',
             characterID: obj._id,
             username: obj.username,
             attributes: obj.attributes,
@@ -354,6 +359,8 @@ class ClientController extends $OBSERVER {
                 y: 5,
                 direction: "right",
                 sprite: "",
+                height: 32,
+                width: 32,
             }
 
             console.log(data.detail);

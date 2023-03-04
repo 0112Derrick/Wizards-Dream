@@ -33,7 +33,7 @@ async function addPlayer(playerInfo) {
 //Add the new character to the DB.
 let id = 1;
 async function addCharacter(characterInfo: $characterSignup) {
-    let png;
+    let png: string;
     if (characterInfo.characterGender == 'male') {
         png = "/images/characters/players/erio.png";
     } else {
@@ -48,6 +48,8 @@ async function addCharacter(characterInfo: $characterSignup) {
         y: 5,
         sprite: png || -1,
         direction: 'right',
+        width: 32,
+        height: 32,
         attributes: {
             level: 1,
             experience: $chAttr.experience,
