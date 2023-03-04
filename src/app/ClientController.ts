@@ -222,6 +222,8 @@ class ClientController extends $OBSERVER {
             if (moveDirection) {
                 console.log(character.gameObjectID + " " + "movement req")
                 this.moveCharacter(moveDirection, character);
+            } else {
+                this.moveCharacter(Direction.STANDSTILL, character);
             }
 
             console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
@@ -269,6 +271,9 @@ class ClientController extends $OBSERVER {
                     this.socket.emit("moveReq", Direction.RIGHT, gameOBJ);
                 }
                 break;
+
+            default:
+                this.socket.emit("moveReq", Direction.STANDSTILL, gameOBJ);
         }
     }
 
@@ -284,7 +289,6 @@ class ClientController extends $OBSERVER {
                         char.x = character.delta.x;
                         char.y = character.delta.y;
                         characterCreated = true;
-                        setTimeout(() => { char.updateCharacterLocationAndAppearance({ arrow: null }); }, 1000);
                     }
                 }
             });

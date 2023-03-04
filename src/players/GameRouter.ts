@@ -7,6 +7,7 @@ import { Utils } from "../app/Utils.js";
 import { DirectionInput, Direction } from "../app/DirectionInput.js";
 import { CharacterMovementData, CharacterData_Direction } from "./interfaces/CharacterInterfaces.js";
 import Queue from ".././framework/Queue.js";
+import { MovementContants } from "./Constants.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -19,32 +20,9 @@ export interface ClientDATA {
 }
 
 interface coordniate {
-    x: number,
-    y: number
+    x: MovementContants.West_East,
+    y: MovementContants.North_South,
 }
-// player01: new Character({
-//     isPlayerControlled: true,
-//     x: Utils.withGrid(6),
-//     y: Utils.withGrid(6),
-//     src: "/images/characters/players/erio.png",
-//     direction: 'down'
-// })
-
-
-/**
- * 
- * @param obj 
- *     this.characterID = config.characterID || 1;
-        this.username = config.username || 'newCharacter';
-        this.attributes = config.atrributes || new CharacterAttributes();
-        this.characterGender = config.characterGender || 'male';
-        this.class = config.class || 'none';
-        this.guild = config.guild || 'none';
-        this.items = config.items || [];
-        this.player = config.player;
- * 
- */
-
 
 export class GameRouter {
 
@@ -214,7 +192,7 @@ export class GameRouter {
      * Takes the character objects passes them to a method to sync the client side version of the overworld with the characterJSON 
      * @returns none
      */
-    addCharacterToOverworld(character, overworld = 'grassyfield'): void {
+    addCharacterToOverworld(character: Character, overworld = 'grassyfield'): void {
         let arr = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects
         for (let i = 0; i < arr.length; i++) {
             if (arr[i].username == character.username) {
@@ -254,26 +232,30 @@ export class GameRouter {
                 y: currentCharacterMoveRequest.characterObj.y,
             }
 
+            const updateDelta: coordniate = {
+                x: MovementContants.West_East,
+                y: MovementContants.North_South,
+            }
+
             switch (currentCharacterMoveRequest.direction) {
 
                 case Direction.UP:
-                    delta.y -= 0.7;
+                    delta.y -= updateDelta.y;
                     break;
 
                 case Direction.DOWN:
-                    delta.y += 0.7;
+                    delta.y += updateDelta.y;
                     break;
 
                 case Direction.LEFT:
-                    delta.x -= 0.7;
+                    delta.x -= updateDelta.x;
                     break;
 
                 case Direction.RIGHT:
-                    delta.x += 0.7;
+                    delta.x += updateDelta.x;
                     break;
 
                 default:
-                    delta;
                     break;
             }
             let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
@@ -301,7 +283,6 @@ export class GameRouter {
             GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
         }
 
-        //this.io.emit("moveReqAction", delta, obj);
     }
 
 

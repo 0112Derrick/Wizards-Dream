@@ -9,7 +9,7 @@ import { Character } from "./Character.js";
 
 export class Overworld<T> {
     canvas!: HTMLCanvasElement | null;
-    element: HTMLElement | undefined;
+    htmlElement: HTMLElement | undefined;
     ctx!: CanvasRenderingContext2D | null;
     numbOfPlayers: number;
     gameWorld: any;
@@ -20,9 +20,9 @@ export class Overworld<T> {
 
     constructor(config) {
 
-        this.element = config.element;
-        if (this.element)
-            this.canvas = this.element.querySelector(".game-canvas");
+        this.htmlElement = config.element;
+        if (this.htmlElement)
+            this.canvas = this.htmlElement.querySelector(".game-canvas");
         if (this.canvas)
             this.ctx = this.canvas.getContext("2d");
         this.numbOfPlayers = config.numbOfPlayers || 1;
@@ -47,7 +47,6 @@ export class Overworld<T> {
                         if (gameOBJ instanceof Character) {
                             clientController.serverRequestMoveCharacter(gameOBJ, this.directionInput.direction);
                         }
-                        // gameOBJ.update({ arrow: this.directionInput.direction })
 
                         gameOBJ.sprite.draw(this.ctx);
                     }

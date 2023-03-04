@@ -99,6 +99,15 @@ export class Character extends GameObject implements characterDataInterface {
         }
         //if player is moving and controlled it reassigns their direction to their last button clicked and updates the movement gauge
         if (characterMovementState.arrow) {
+
+            if (characterMovementState.arrow == Direction.STANDSTILL) {
+                this.movingProgressRemaining = 0;
+                this.direction = this.lastDirection || Direction.RIGHT;
+                characterMovementState.arrow = null;
+                this.updateSpriteAnimation(characterMovementState);
+                return;
+            }
+
             this.direction = characterMovementState.arrow;
             this.lastDirection = this.direction;
             this.movingProgressRemaining = GridBlockSize;

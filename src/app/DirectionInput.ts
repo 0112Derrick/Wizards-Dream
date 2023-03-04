@@ -8,6 +8,7 @@ export enum Direction {
     S = "right",
     D = "down",
     JUMP = "jump",
+    STANDSTILL = "standstill",
 }
 
 export class DirectionInput {
@@ -32,6 +33,9 @@ export class DirectionInput {
 
     get direction() {
         return this.heldDirections[0];
+    }
+    get keyReleased() {
+        return this.heldDirections.length == 0 ? true : false;
     }
 
     init() {
