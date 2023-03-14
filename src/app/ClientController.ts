@@ -13,8 +13,10 @@ import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
 import { DirectionInput, Direction } from "./DirectionInput.js";
 import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
-import { Overworld_Test } from "OverworldMap.js";
+import { GameMap, Overworld_Test } from "./OverworldMap.js";
 import { MapNames } from "../constants/MapNames.js";
+import { MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
+import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -40,6 +42,8 @@ class ClientController extends $OBSERVER {
     private clientID: string = "";
     private client: any;
     private character: any;
+    private characters: Array<any>;
+    private overworldCreationCounter = 0;
     /* private OverworldMaps = {
         grassyField: {
             lowerSrc: "/images/maps/Battleground1.png",
@@ -53,12 +57,13 @@ class ClientController extends $OBSERVER {
         element: document.querySelector(".game-container")
     }); */
 
-    private OVERWORLD = new Overworld_Test();
+    private OVERWORLD: Overworld_Test;
 
     constructor(networkProxy: NetworkProxy) {
         super();
         this.networkProxy = networkProxy;
         const CharacterCreateRoute = '/player/savecharacter';
+        this.listenForEvent($events.SELECT_CHARACTER, (e) => { this.SETCharacter(e) }, this.view);
         this.init();
 
         //this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = false; this.OVERWORLD.startGameLoop(); }, this.view);
@@ -77,20 +82,22 @@ class ClientController extends $OBSERVER {
         // @ts-ignore
 
         this.socket = await io();
-        this.OVERWORLD.init();
-        this.socket.on("connected", this.testConnection);
+        //this.OVERWORLD.init();
+
+        this.socket.on("startOverworld", this.startOverworldOnConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
         this.socket.on("onlineClient", (client) => { this.connect(client) });
         this.socket.on("offline", this.disconnect);
         this.socket.on("clientID", (id) => { this.setID(id) });
         this.socket.on("reconnect", () => { window.location.reload() });
+        this.socket.on("newServerWorld", (world) => { this.createOverworld });
 
-        this.socket.emit('connection');
+        //this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
 
         //proof of concept events
-        this.socket.on('movePlayer', () => { this.updatePlayer });
-        this.socket.on('syncPlayer', (obj) => { this.syncPlayer(obj); });
+        //this.socket.on('movePlayer', () => { this.updatePlayer });
+        this.socket.on('syncPlayer', (ListOfCharacters) => { this.characterSelection(ListOfCharacters); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
         this.socket.on("syncPlayersMovements", (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
         this.socket.on("globalMessage", (message: string, username: string) => { this.postMessage(message, username) })
@@ -107,6 +114,58 @@ class ClientController extends $OBSERVER {
         //TODO: setInterval(){(character) => {save character} ,time}
 
     }
+
+    connect(_client) {
+        this.client = _client;
+        console.log(`User: ${this.client.username} is online. \n`);
+        this.characters = this.client.characters;
+        this.characterSelection(this.client.characters);
+        /* if (this.client.characters.at(0)) {
+            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`);
+        } */
+    }
+
+    createOverworld(overworld) {
+        let map1Config: MapConfigI = {
+            gameObjects: overworld.grassyfield.gameObjects,
+            name: MapNames.GrassyField,
+            lowerImageSrc: overworld.grassyfield.lowerSrc,
+            upperImageSrc: overworld.grassyfield.upperSrc,
+            canvas: document.querySelector("game-container").querySelector(".game-canvas"),
+            element: document.querySelector(".game-container"),
+        }
+        let map2Config: MapConfigI = {
+            gameObjects: overworld.hallway.gameObjects,
+            name: MapNames.Hallway,
+            lowerImageSrc: overworld.hallway.lowerSrc,
+            upperImageSrc: overworld.hallway.upperSrc,
+            canvas: document.querySelector("game-container").querySelector(".game-canvas"),
+            element: document.querySelector(".game-container"),
+        }
+
+        let grassyfield = new GameMap(map1Config);
+        let hallway = new GameMap(map2Config);
+
+        console.log("overworld created.")
+        this.OVERWORLD = new Overworld_Test();
+        this.OVERWORLD.addMap(grassyfield);
+        this.OVERWORLD.addMap(hallway);
+    }
+
+    //TODO LOAD IN MAP
+    startOverworldOnConnection(startMap: MapNames = MapNames.GrassyField) {
+        /*  if (!this.OVERWORLD) {
+             this.socket.emit("requestOverworld",);
+             this.overworldCreationCounter++;
+             if (this.overworldCreationCounter > 3) {
+                 throw new Error("Failure to create overworld");
+             }
+             this.overworldCreationCounter = 0;
+         }
+         console.log('Starting new Oveworld map');
+         this.OVERWORLD.init(startMap); */
+    }
+
     /**
      * 
      * @param obj 
@@ -120,7 +179,19 @@ class ClientController extends $OBSERVER {
             this.player = config.player;
      * 
      */
+
     syncOverworld(overworld) {
+        let matchFound = false;
+        /*come up with a framework to do interpolation
+          dependency injection or visitor pattern
+          vector from server > visitor pattern that implements interpolation
+          based on current direction continue moving non player controlled characters in that direction until you receive an update from the server
+        */
+        //sss
+        console.log("Received sync overworld response from the server.");
+    }
+
+    /* syncOverworld(overworld) {
 
         let foundMatch = false;
 
@@ -145,16 +216,27 @@ class ClientController extends $OBSERVER {
         })
 
         window.OverworldMaps = this.OverworldMaps;
-    }
+    } */
 
 
-    addCharacterToOverworld(character: Character, map = "grassyfield") {
+
+    addCharacterToOverworld(character: Character, map: MapNames = MapNames.GrassyField) {
         switch (map) {
-            case "grassyfield":
-                let gameObjects = this.OverworldMaps.grassyField.gameObjects;
+            case MapNames.GrassyField:
+                //  let gameObjects = this.OverworldMaps.grassyField.gameObjects;
+                let gameObjects = null;
+
+                gameObjects = this.findOverWorldMapByName(map).gameObjects;
+
+                if (!gameObjects) {
+                    console.log("Map not found");
+                    return;
+                }
+
                 gameObjects.forEach((object: GameObject) => {
                     if (object instanceof Character) {
                         if ((object as Character).username == character.username) {
+                            console.log("Character is already exists in this map.");
                             return;
                         }
                     }
@@ -181,7 +263,18 @@ class ClientController extends $OBSERVER {
                 );
                 break;
         }
-        window.OverworldMaps = this.OverworldMaps;
+        // window.OverworldMaps = this.OverworldMaps;
+    }
+
+    private findOverWorldMapByName(searchingMap: MapNames): GameMap | null {
+        let maps = this.OVERWORLD.Maps;
+
+        for (let i = 0; i < maps.length; i++) {
+            if (maps[i].getMapName == searchingMap) {
+                return maps[i];
+            }
+        }
+        return null;
     }
 
     public get Character() {
@@ -190,6 +283,16 @@ class ClientController extends $OBSERVER {
 
     public set SETCharacter(char) {
         this.character = char;
+    }
+
+    //TODO FIX CHARACTERSELECTION
+    async characterSelection(ListOfCharacters: Array<any>) {
+        let selectedCharacter = await this.view.selectCharacter(ListOfCharacters);
+        this.SETCharacter = selectedCharacter;
+        console.log(selectedCharacter.username + " was selected");
+        console.log(`User: ${this.client.username} is playing on ${this.Character.username}`);
+        let charJSON = ClientController.syncUsertoCharacter(selectedCharacter).toJSON();
+        this.socket.emit("characterCreated", charJSON);
     }
 
     static syncUsertoCharacter(obj) {
@@ -282,6 +385,7 @@ class ClientController extends $OBSERVER {
         }
     }
 
+    //Receives a list of characters from the server to update their positions
     syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
         let characterCreated: boolean = false;
 
@@ -304,28 +408,11 @@ class ClientController extends $OBSERVER {
         });
     }
 
-    syncPlayer(obj) {
-        let charJSON = ClientController.syncUsertoCharacter(obj).toJSON();
-        this.socket.emit("characterCreated", charJSON);
-    }
-
-
     emit(event: string, data: any = false) {
         if (data)
             this.socket.emit(event, data);
         this.socket.emit(event);
         console.log("emitting event: ", event);
-    }
-
-
-    async movePlayer(direction: string) {
-        this.socket.emit("move", direction, this.socket.clientID);
-        return direction;
-    }
-
-
-    updatePlayer(player) {
-        console.log("player:", player.id, "moved to x: ", player.x, ', y: ', player.y)
     }
 
     checkMessage(message: string) {
@@ -383,17 +470,9 @@ class ClientController extends $OBSERVER {
 
     }
 
-    testConnection(id) {
-        console.log('connected ' + id);
-    }
 
-    connect(_client) {
-        this.client = _client;
-        console.log(`User: ${this.client.username} is online. \n`);
-        if (this.client.characters.at(0))
-            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`)
-    }
 
+    //TODO
     disconnect() {
         console.log(`User: ${this.clientID} is offline.`)
     }
@@ -403,11 +482,12 @@ class ClientController extends $OBSERVER {
         console.log(`You successfully joined server: ${data.serverRoom}, your ID: ${data.id} `);
     }
 
+    //TODO
     async playerLogout() {
+        this.socket.emit("playerLogout", this.client);
         let response = await this.networkProxy.postJSON('/player/logout', null);
         if (response.ok) {
             console.log("Logged out");
-            this.socket.emit("playerLogout", this.client);
         } else {
             console.log('error');
         }

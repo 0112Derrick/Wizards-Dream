@@ -2,6 +2,7 @@ import { HTML_IDS as $id } from "../constants/HTMLElementIds.js";
 import $ClientSyntheticEventEmitter from '../framework/ClientSyntheticEventEmitter.js'
 import { EventConstants as $events } from '../constants/EventConstants.js'
 import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
+import { resolve } from "path";
 class MissingElementError extends Error {
     constructor(message: string) {
         super(message);
@@ -13,6 +14,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
     private DOM: HTMLElement[] = [];
     private characterMenuStatus = false;
+    seletctedButton: number = 0;
 
     constructor() {
         super();
@@ -39,7 +41,6 @@ class ClientView extends $ClientSyntheticEventEmitter {
         this.DOM[$id.START_LOOP].addEventListener('click', () => {
             this.dispatchEventLocal($events.START_GAME_LOOP, null);
         })
-
         this.DOM[$id.CHARACTER_CREATE_FORM].addEventListener('submit', (event) => {
             event.preventDefault();
             this.characterCreateCallback();
@@ -47,22 +48,64 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
         document.getElementById('logout')!.addEventListener('click', () => { this.logoutAccountCallback() });
 
-        document.getElementById('character-modal-btn')!.addEventListener('click', () => {
 
+        //document.getElementById(this.DOM[$id.CHARACTER_MODAL_BTN]).addEventListener('click', () => {
+        this.DOM[$id.CHARACTER_MODAL_BTN].addEventListener('click', () => {
             if (!this.characterMenuStatus) {
-                document.querySelector<HTMLElement>(".characterCreateModal")!.style.display = 'block';
+                // document.querySelector<HTMLElement>(this.DOM[$id.CHARACTER_MODAL_BTN])!.style.display = 'block';
+                this.DOM[$id.CHARACTER_CREATE_MODAL]!.style.display = 'block';
                 this.characterMenuStatus = true;
             } else {
-                document.querySelector<HTMLElement>(".characterCreateModal")!.style.display = 'none';
+                this.DOM[$id.CHARACTER_CREATE_MODAL]!.style.display = 'none';
+                // document.querySelector<HTMLElement>(this.DOM[$id.CHARACTER_MODAL_BTN])!.style.display = 'none';
                 this.characterMenuStatus = false;
             }
         })
     }
-    createCharacter() {
-        //check GenderText
 
-        //check ClassText
+    async selectCharacter(characters: Array<any>): Promise<any> {
+        characters.forEach((character, i) => {
 
+            let data = {
+                name: character.username,
+                index: i,
+            }
+            this.createButton(data);
+        });
+        let choosenCharacterID: number;
+        choosenCharacterID = await this.selectedButton();
+        let character = characters.at(choosenCharacterID);
+
+        return new Promise(resolve => {
+            resolve(character);
+        });
+    }
+
+    selectedButton(): Promise<number> {
+        let button: number;
+
+        document.getElementById("character+0").addEventListener("click", () => {
+            button = 0;
+        })
+
+        document.getElementById("character+1").addEventListener("click", () => {
+            button = 1;
+        })
+
+        return new Promise(resolve => {
+            resolve(button);
+        });
+
+    }
+
+    createButton(data) {
+        let button = document.createElement("button");
+        console.log(data);
+        button.setAttribute("type", "button");
+        button.innerHTML = "Char: " + data.name;
+        button.setAttribute("id", "character+" + data.index);
+
+        document.getElementById(this.DOM[$id.SELECT_CHARACTERS].appendChild(button));
     }
 
     sendMessage() {

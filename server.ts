@@ -1,5 +1,6 @@
 
-
+import cluster from 'cluster';
+import os from 'os';
 import connectMongo from 'connect-mongo';
 import { LANDING_HTML_IDS, HTML_IDS } from './src/constants/HTMLElementIds.js';
 import * as express from 'express';
@@ -14,7 +15,7 @@ import * as http from 'http';
 import { ClientMapSlot, GameRouter } from './src/players/GameRouter.js';
 
 
-import exp from 'constants';
+//import exp from 'constants';
 import { nextTick } from 'process';
 import { Document } from 'mongodb';
 import { mongo } from 'mongoose';
@@ -115,10 +116,10 @@ const fs = fsModule.promises;
         next();
     });
 
+
     configureRoutes(app);
 
     // runDBTest();
-
 
     app.engine('hbs', exhbs({
         defaultLayout: "index",
@@ -128,9 +129,15 @@ const fs = fsModule.promises;
     app.set('views', './render-templates');
     app.set("view engine", ".hbs");
 
+    const PORT = process.env.Port ?? 8080;
+
     const server = http.createServer(app);
 
     const io = new socketio.Server(server);
+
+    console.log("Server listening on port: " + PORT);
+
+    server.listen(PORT);
 
     let gameRouter = $gameRouter.GameRouterInstance;
     gameRouter.setIO(io);
@@ -198,17 +205,15 @@ const fs = fsModule.promises;
 
     });
 
-    io.on('disconnect', client => {
-        gameRouter.playerDisconnect(client.handshake.headers.host);
-    })
+    io.on('disconnect', clientSocket => {
+        gameRouter.playerDisconnect(clientSocket, clientSocket.handshake.address);
+    });
 
     server.on('error', (err) => {
         console.error(err);
     });
 
-    const PORT = process.env.Port ?? 8080;
-    console.log("Server listening on port: " + PORT);
-    server.listen(PORT);
+
 })();
 
 
@@ -233,10 +238,13 @@ function registerStaticPaths(app) {
 
 }
 
-function configureRoutes(app) {
+function configureRoutes(app, server?, io?, PORT?) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
     app.get("/", (req, res, next) => {
+        /* for (let i = 0; i < 1e8; i++) {
+
+        } */
 
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
@@ -256,6 +264,16 @@ function configureRoutes(app) {
         }
     });
 
+    /* const numCpu = os.cpus().length;
+
+    if (cluster.isPrimary) {
+        for (let i = 0; i < numCpu; i++) {
+            cluster.fork();
+        }
+    } else {
+        console.log("Server listening on port: " + PORT);
+        server.listen(PORT);
+    } */
 
     app.get('/main', (req, res) => {
 

@@ -39,9 +39,11 @@ class OverworldMap {
 
 export class Overworld_Test implements OverworldMapsI {
     Maps: GameMap[];
+    
     addMap(map: GameMap) {
         this.Maps.push(map);
     }
+
     init(startMap: MapNames) {
         console.log("Overworld init started");
 
@@ -72,9 +74,8 @@ export class GameMap implements MapI {
         this.lowerImage = new Image();
         this.lowerImage.src = config.lowerImageSrc;
         this.upperImage = new Image();
-        this.upperImage.src = config.lowerImageSrc;
-        this.element = config.element;
-        this.element = config.element;
+        this.upperImage.src = config.upperImageSrc;
+        this.element = config.element || null;
         this.name = config.name;
         if (this.element)
             this.canvas = this.element.querySelector(".game-canvas") || config.canvas;
