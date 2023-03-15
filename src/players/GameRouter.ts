@@ -188,6 +188,7 @@ export class GameRouter {
         _socket.on('playerLogout', this.playerLogout);
         _socket.on("message", this.checkMessage);
         _socket.on("requestOverworld", this.startServerRoom);
+        _socket.on("requestOverworldGameObjects", this.updateGameObjects);
         //_socket.on("connection");
 
         //test events
@@ -374,7 +375,23 @@ export class GameRouter {
         } else {
             return GameRouter.GameRouterInstance.Overworld;
         }
+    }
+    updateGameObjects(map: MapNames = MapNames.GrassyField) {
+        let gameObjects;
+        switch (map) {
+            case MapNames.GrassyField:
+                gameObjects = GameRouter.GameRouterInstance.getOverworld().grassyfield.gameObjects;
+                break;
 
+            case MapNames.Hallway:
+                gameObjects = GameRouter.GameRouterInstance.getOverworld().hallway.gameObjects;
+                break;
+
+            default:
+                gameObjects = GameRouter.GameRouterInstance.getOverworld().grassyfield.gameObjects;
+        }
+
+        GameRouter.GameRouterInstance.io.emit('updatedGameObjects', gameObjects, map);
     }
 
     checkMessage(message: string, user): void {

@@ -39,7 +39,11 @@ class OverworldMap {
 
 export class Overworld_Test implements OverworldMapsI {
     Maps: GameMap[];
-    
+
+    constructor() {
+        this.Maps = [];
+    }
+
     addMap(map: GameMap) {
         this.Maps.push(map);
     }
@@ -59,7 +63,7 @@ export class Overworld_Test implements OverworldMapsI {
 
 export class GameMap implements MapI {
     gameObjects: Array<GameObject>;
-    playerList: Map<string, Character> = new Map();
+    activeCharacters: Map<string, Character> = new Map<string, Character>();
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
     private name: MapNames;
@@ -68,6 +72,7 @@ export class GameMap implements MapI {
     element: HTMLElement | undefined;
     directionInput: DirectionInput;
     stopLoop: boolean = false;
+    counter = 0;
 
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
@@ -81,45 +86,56 @@ export class GameMap implements MapI {
             this.canvas = this.element.querySelector(".game-canvas") || config.canvas;
         if (this.canvas)
             this.ctx = this.canvas.getContext("2d");
+
     }
 
     startGameLoop(): void {
         this.directionInput = new DirectionInput();
         if (!this.stopLoop) {
-            window.requestAnimationFrame(this.animate);
+            this.animate();
+            // window.requestAnimationFrame(() => this.animate);
         }
-        throw new Error("Method not implemented.");
+        //throw new Error("Method not implemented.");
     }
 
     animate(): void {
+        //setInterval(() => {
         this.clearCanvas(this.ctx);
         this.drawLowerImage(this.ctx);
         this.drawUpperImage(this.ctx);
+        console.log(this.counter++);
         this.gameObjects.forEach((gameObject) => {
+
             if (gameObject instanceof Character) {
                 clientController.serverRequestMoveCharacter(gameObject, this.directionInput.direction);
             }
+            
             gameObject.sprite.draw(this.ctx);
         });
 
-        window.requestAnimationFrame(this.animate);
+        // }, 16);
+
+
+        window.requestAnimationFrame(() => this.animate);
     }
 
     drawLowerImage(ctx: CanvasRenderingContext2D): void {
         ctx.drawImage(this.lowerImage, 0, 0, ctx.canvas.width, ctx.canvas.height);
     }
+
     drawUpperImage(ctx: CanvasRenderingContext2D): void {
         ctx.drawImage(this.lowerImage, 0, 0, ctx.canvas.width, ctx.canvas.height);
     }
+
     clearCanvas(ctx: CanvasRenderingContext2D): void {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 
     addCharacter(character: Character): void {
-        if (this.playerList.has(character.name)) {
+        if (this.activeCharacters.has(character.name)) {
             return;
         }
-        this.playerList.set(character.name, character);
+        this.activeCharacters.set(character.name, character);
         this.gameObjects.push(character);
         console.log('Player:' + character.name + " has been added to: " + this.name);
     }
@@ -134,8 +150,8 @@ export class GameMap implements MapI {
     }
 
     removeCharacter(character: Character): void {
-        if (this.playerList.has(character.name)) {
-            let result = this.playerList.delete(character.name);
+        if (this.activeCharacters.has(character.name)) {
+            let result = this.activeCharacters.delete(character.name);
             console.log('Character was removed: ' + result);
             for (let i = 0; i < this.gameObjects.length; i++) {
                 if (character.name == this.gameObjects[i].name) {
@@ -146,10 +162,10 @@ export class GameMap implements MapI {
     }
     removeAllCharacters(): void {
         this.gameObjects = [];
-        this.playerList.clear();
+        this.activeCharacters.clear();
     }
     viewCharacters(): IterableIterator<Character> {
-        return this.playerList.values();
+        return this.activeCharacters.values();
     }
     findCharacter(character: Character): Boolean {
         throw new Error("Method not implemented.");

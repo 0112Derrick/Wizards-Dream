@@ -7,7 +7,7 @@ import { StatusConstants as $StatusConstants } from "../constants/StatusConstant
 
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
-import { Character } from "../app/Character.js"
+import { Character as $Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
@@ -41,9 +41,30 @@ class ClientController extends $OBSERVER {
     private socket: any;
     private clientID: string = "";
     private client: any;
-    private character: any;
-    private characters: Array<any>;
-    private overworldCreationCounter = 0;
+    private character: any = null;
+    private characters: Array<any> = [];
+    private static clientController: ClientController = null;
+
+
+    private grassyfieldConfig: MapConfigI = {
+        gameObjects: [],
+        activeCharacters: null,
+        name: MapNames.GrassyField,
+        lowerImageSrc: '/images/maps/Battleground1.png',
+        upperImageSrc: '/images/maps/Battleground1.png',
+        element: document.querySelector(".game-container"),
+        canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
+
+    }
+    private hallwayConfig: MapConfigI = {
+        gameObjects: [],
+        activeCharacters: null,
+        name: MapNames.Hallway,
+        lowerImageSrc: '/images/maps/Battleground2.png',
+        upperImageSrc: '/images/maps/Battleground2.png',
+        element: document.querySelector(".game-container"),
+        canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
+    }
     /* private OverworldMaps = {
         grassyField: {
             lowerSrc: "/images/maps/Battleground1.png",
@@ -57,17 +78,17 @@ class ClientController extends $OBSERVER {
         element: document.querySelector(".game-container")
     }); */
 
-    private OVERWORLD: Overworld_Test;
+    private OVERWORLD: Overworld_Test = null;
 
     constructor(networkProxy: NetworkProxy) {
         super();
         this.networkProxy = networkProxy;
         const CharacterCreateRoute = '/player/savecharacter';
-        this.listenForEvent($events.SELECT_CHARACTER, (e) => { this.SETCharacter(e) }, this.view);
         this.init();
 
         //this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = false; this.OVERWORLD.startGameLoop(); }, this.view);
         //this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
+        this.listenForEvent($events.SELECT_CHARACTER, (e) => { ClientController.ClientControllerInstance.characterSelectionCallback(e) }, this.view);
         this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
@@ -77,6 +98,15 @@ class ClientController extends $OBSERVER {
 
         //this.socket.on('playerJoinServer', this.playerJoinServer);
     }
+
+    public static get ClientControllerInstance(): ClientController {
+
+        if (this.clientController == null) {
+            this.clientController = new ClientController(new $HTMLNetwork());
+        }
+        return this.clientController;
+    }
+
 
     async init() {
         // @ts-ignore
@@ -90,14 +120,16 @@ class ClientController extends $OBSERVER {
         this.socket.on("offline", this.disconnect);
         this.socket.on("clientID", (id) => { this.setID(id) });
         this.socket.on("reconnect", () => { window.location.reload() });
-        this.socket.on("newServerWorld", (world) => { this.createOverworld });
-
+        this.socket.on("newServerWorld", () => { this.createOverworld });
+        this.socket.on("updatedGameObjects", (gameObjects, map: MapNames) => {
+            this.updateGameObjects;
+        });
         //this.socket.emit('connection');
         this.socket.emit("online", this.clientID);
 
         //proof of concept events
         //this.socket.on('movePlayer', () => { this.updatePlayer });
-        this.socket.on('syncPlayer', (ListOfCharacters) => { this.characterSelection(ListOfCharacters); });
+        this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
         this.socket.on("syncPlayersMovements", (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
         this.socket.on("globalMessage", (message: string, username: string) => { this.postMessage(message, username) })
@@ -116,54 +148,44 @@ class ClientController extends $OBSERVER {
     }
 
     connect(_client) {
-        this.client = _client;
-        console.log(`User: ${this.client.username} is online. \n`);
-        this.characters = this.client.characters;
-        this.characterSelection(this.client.characters);
+        let clientController = ClientController.ClientControllerInstance;
+        clientController.client = _client;
+        console.log(`User: ${clientController.client.username} is online. \n`);
+        clientController.characters = clientController.client.characters;
+        clientController.sendViewCharacterSelection(clientController.client.characters);
         /* if (this.client.characters.at(0)) {
             console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`);
         } */
     }
 
-    createOverworld(overworld) {
-        let map1Config: MapConfigI = {
-            gameObjects: overworld.grassyfield.gameObjects,
-            name: MapNames.GrassyField,
-            lowerImageSrc: overworld.grassyfield.lowerSrc,
-            upperImageSrc: overworld.grassyfield.upperSrc,
-            canvas: document.querySelector("game-container").querySelector(".game-canvas"),
-            element: document.querySelector(".game-container"),
-        }
-        let map2Config: MapConfigI = {
-            gameObjects: overworld.hallway.gameObjects,
-            name: MapNames.Hallway,
-            lowerImageSrc: overworld.hallway.lowerSrc,
-            upperImageSrc: overworld.hallway.upperSrc,
-            canvas: document.querySelector("game-container").querySelector(".game-canvas"),
-            element: document.querySelector(".game-container"),
-        }
-
-        let grassyfield = new GameMap(map1Config);
-        let hallway = new GameMap(map2Config);
+    createOverworld() {
+        let clientController = ClientController.ClientControllerInstance;
+        let grassyfield = new GameMap(clientController.grassyfieldConfig);
+        let hallway = new GameMap(clientController.hallwayConfig);
 
         console.log("overworld created.")
-        this.OVERWORLD = new Overworld_Test();
-        this.OVERWORLD.addMap(grassyfield);
-        this.OVERWORLD.addMap(hallway);
+        clientController.OVERWORLD = new Overworld_Test();
+        clientController.OVERWORLD.addMap(grassyfield);
+        clientController.OVERWORLD.addMap(hallway);
     }
 
     //TODO LOAD IN MAP
     startOverworldOnConnection(startMap: MapNames = MapNames.GrassyField) {
-        /*  if (!this.OVERWORLD) {
-             this.socket.emit("requestOverworld",);
-             this.overworldCreationCounter++;
-             if (this.overworldCreationCounter > 3) {
-                 throw new Error("Failure to create overworld");
-             }
-             this.overworldCreationCounter = 0;
-         }
-         console.log('Starting new Oveworld map');
-         this.OVERWORLD.init(startMap); */
+        if (ClientController.ClientControllerInstance.OVERWORLD == null) {
+            clientController.createOverworld();
+        }
+
+        clientController.socket.emit("requestOverworldGameObjects", startMap);
+        console.log('Starting new Oveworld map');
+        ClientController.ClientControllerInstance.OVERWORLD.init(startMap);
+    }
+
+    updateGameObjects(gameObjects, updatedMap: MapNames) {
+        ClientController.ClientControllerInstance.OVERWORLD.Maps.forEach(map => {
+            if (map.getMapName == updatedMap) {
+                map.gameObjects = gameObjects;
+            }
+        });
     }
 
     /**
@@ -220,13 +242,15 @@ class ClientController extends $OBSERVER {
 
 
 
-    addCharacterToOverworld(character: Character, map: MapNames = MapNames.GrassyField) {
+    addCharacterToOverworld(character: $Character, map: MapNames = MapNames.GrassyField) {
+        let clientController = ClientController.ClientControllerInstance;
         switch (map) {
+
             case MapNames.GrassyField:
                 //  let gameObjects = this.OverworldMaps.grassyField.gameObjects;
                 let gameObjects = null;
 
-                gameObjects = this.findOverWorldMapByName(map).gameObjects;
+                gameObjects = clientController.findOverWorldMapByName(map).gameObjects;
 
                 if (!gameObjects) {
                     console.log("Map not found");
@@ -234,8 +258,8 @@ class ClientController extends $OBSERVER {
                 }
 
                 gameObjects.forEach((object: GameObject) => {
-                    if (object instanceof Character) {
-                        if ((object as Character).username == character.username) {
+                    if (object instanceof $Character) {
+                        if ((object as $Character).username == character.username) {
                             console.log("Character is already exists in this map.");
                             return;
                         }
@@ -243,7 +267,7 @@ class ClientController extends $OBSERVER {
                 });
 
                 gameObjects.push(
-                    new Character({
+                    new $Character({
                         isPlayerControlled: true,
                         x: character.x,
                         y: character.y,
@@ -267,7 +291,8 @@ class ClientController extends $OBSERVER {
     }
 
     private findOverWorldMapByName(searchingMap: MapNames): GameMap | null {
-        let maps = this.OVERWORLD.Maps;
+        let clientController = ClientController.ClientControllerInstance;
+        let maps = clientController.OVERWORLD.Maps;
 
         for (let i = 0; i < maps.length; i++) {
             if (maps[i].getMapName == searchingMap) {
@@ -281,22 +306,27 @@ class ClientController extends $OBSERVER {
         return this.character;
     }
 
-    public set SETCharacter(char) {
+    public SETCharacter(char) {
         this.character = char;
     }
 
     //TODO FIX CHARACTERSELECTION
-    async characterSelection(ListOfCharacters: Array<any>) {
-        let selectedCharacter = await this.view.selectCharacter(ListOfCharacters);
-        this.SETCharacter = selectedCharacter;
-        console.log(selectedCharacter.username + " was selected");
-        console.log(`User: ${this.client.username} is playing on ${this.Character.username}`);
-        let charJSON = ClientController.syncUsertoCharacter(selectedCharacter).toJSON();
-        this.socket.emit("characterCreated", charJSON);
+    sendViewCharacterSelection(ListOfCharacters: Array<any>) {
+        let clientController = ClientController.ClientControllerInstance;
+        clientController.view.createCharacterSelectionButtons(ListOfCharacters);
+    }
+
+    characterSelectionCallback(data) {
+        let clientController = ClientController.ClientControllerInstance;
+        let characterPosition: number = data.detail;
+        clientController.SETCharacter(clientController.characters.at(characterPosition));
+        console.log(`User: ${clientController.client.username} is playing on ${clientController.character.username}`);
+        let charJSON = ClientController.syncUsertoCharacter(clientController.character).toJSON();
+        clientController.socket.emit("characterCreated", charJSON);
     }
 
     static syncUsertoCharacter(obj) {
-        let char = new Character({
+        let char = new $Character({
             isPlayerControlled: true,
             x: Utils.withGrid(6),
             y: Utils.withGrid(6),
@@ -312,7 +342,7 @@ class ClientController extends $OBSERVER {
             items: obj.items,
             player: obj.player,
         });
-        //clientController.SETCharacter(char);
+        clientController.SETCharacter(char);
         return char;
     }
 
@@ -321,17 +351,18 @@ class ClientController extends $OBSERVER {
      * @param character See parameter name
      * @param moveDirection See parameter name
      */
-    public serverRequestMoveCharacter(character: Character, moveDirection: Direction) {
+    public serverRequestMoveCharacter(character: $Character, moveDirection: Direction) {
         //If moveDirection is valid than move the character in the given direction and change their sprite direction
         console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
         //TODO: The check needs to be for Character Ids which are currently being assigned to 1.
+        let clientController = ClientController.ClientControllerInstance;
         if (character.player == this.client.characters.at(0).player) {
 
             if (moveDirection) {
                 console.log(character.gameObjectID + " " + "movement req")
-                this.moveCharacter(moveDirection, character);
+                clientController.moveCharacter(moveDirection, character);
             } else {
-                this.moveCharacter(Direction.STANDSTILL, character);
+                clientController.moveCharacter(Direction.STANDSTILL, character);
             }
 
             console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
@@ -346,13 +377,14 @@ class ClientController extends $OBSERVER {
      * @param gameOBJ 
     */
 
-    public moveCharacter(direction: Direction, gameOBJ: Character) {
+    public moveCharacter(direction: Direction, gameOBJ: $Character) {
+        let clientController = ClientController.ClientControllerInstance;
         switch (direction) {
             case Direction.UP:
                 if (gameOBJ.y - 0.5 <= 10) {
                     return;
                 } else {
-                    this.socket.emit("moveReq", Direction.UP, gameOBJ);
+                    clientController.socket.emit("moveReq", Direction.UP, gameOBJ);
                 }
                 break;
 
@@ -360,7 +392,7 @@ class ClientController extends $OBSERVER {
                 if (gameOBJ.y + 0.5 >= 200) {
                     return;
                 } else {
-                    this.socket.emit("moveReq", Direction.DOWN, gameOBJ);
+                    clientController.socket.emit("moveReq", Direction.DOWN, gameOBJ);
                 }
                 break;
 
@@ -368,7 +400,7 @@ class ClientController extends $OBSERVER {
                 if (gameOBJ.x - 0.5 <= 0) {
                     return;
                 } else {
-                    this.socket.emit("moveReq", Direction.LEFT, gameOBJ);
+                    clientController.socket.emit("moveReq", Direction.LEFT, gameOBJ);
                 }
                 break;
 
@@ -376,12 +408,12 @@ class ClientController extends $OBSERVER {
                 if (gameOBJ.x + 0.5 >= 250) {
                     return;
                 } else {
-                    this.socket.emit("moveReq", Direction.RIGHT, gameOBJ);
+                    clientController.socket.emit("moveReq", Direction.RIGHT, gameOBJ);
                 }
                 break;
 
             default:
-                this.socket.emit("moveReq", Direction.STANDSTILL, gameOBJ);
+                clientController.socket.emit("moveReq", Direction.STANDSTILL, gameOBJ);
         }
     }
 
@@ -391,7 +423,7 @@ class ClientController extends $OBSERVER {
 
         charactersMovementData.forEach((character) => {
             window.OverworldMaps.grassyField.gameObjects.forEach((char: GameObject) => {
-                if (char instanceof Character) {
+                if (char instanceof $Character) {
                     console.log("username: " + character.characterObj.username + " searching username: " + char.username);
                     if (character.characterObj.username == char.username) {
                         char.updateCharacterLocationAndAppearance({ arrow: character.direction });
@@ -403,15 +435,15 @@ class ClientController extends $OBSERVER {
             });
 
             if (!characterCreated) {
-                this.addCharacterToOverworld(character.characterObj);
+                clientController.addCharacterToOverworld(character.characterObj);
             }
         });
     }
 
     emit(event: string, data: any = false) {
         if (data)
-            this.socket.emit(event, data);
-        this.socket.emit(event);
+            clientController.socket.emit(event, data);
+        clientController.socket.emit(event);
         console.log("emitting event: ", event);
     }
 
@@ -420,19 +452,19 @@ class ClientController extends $OBSERVER {
         if (message) {
             cleanMessage = message;
         }
-        this.sendMessage(cleanMessage.detail, this.client.characters.at(0).username)
+        clientController.sendMessage(cleanMessage.detail, clientController.character.username)
     }
 
     sendMessage(message: string, user) {
-        this.socket.emit("message", message, user)
+        clientController.socket.emit("message", message, user)
     }
 
     postMessage(message: string, username) {
-        this.view.postMessage(message, username);
+        clientController.view.postMessage(message, username);
     }
 
     public setID(id: string): void {
-        this.clientID = id;
+        clientController.clientID = id;
     }
 
     async createCharacter(route: string, data: any): Promise<boolean> {
@@ -469,8 +501,6 @@ class ClientController extends $OBSERVER {
         }
 
     }
-
-
 
     //TODO
     disconnect() {

@@ -14,7 +14,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
     private DOM: HTMLElement[] = [];
     private characterMenuStatus = false;
-    seletctedButton: number = 0;
+
 
     constructor() {
         super();
@@ -63,39 +63,29 @@ class ClientView extends $ClientSyntheticEventEmitter {
         })
     }
 
-    async selectCharacter(characters: Array<any>): Promise<any> {
+    async createCharacterSelectionButtons(characters: Array<any>) {
         characters.forEach((character, i) => {
-
             let data = {
                 name: character.username,
                 index: i,
             }
             this.createButton(data);
         });
-        let choosenCharacterID: number;
-        choosenCharacterID = await this.selectedButton();
-        let character = characters.at(choosenCharacterID);
-
-        return new Promise(resolve => {
-            resolve(character);
-        });
+        this.characterButtons();
     }
 
-    selectedButton(): Promise<number> {
+    characterButtons() {
         let button: number;
 
         document.getElementById("character+0").addEventListener("click", () => {
             button = 0;
+            this.dispatchEventLocal($events.SELECT_CHARACTER, button);
         })
 
         document.getElementById("character+1").addEventListener("click", () => {
             button = 1;
+            this.dispatchEventLocal($events.SELECT_CHARACTER, button);
         })
-
-        return new Promise(resolve => {
-            resolve(button);
-        });
-
     }
 
     createButton(data) {

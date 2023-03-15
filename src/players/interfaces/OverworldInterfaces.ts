@@ -4,7 +4,8 @@ import { GameMap } from "../../app/OverworldMap.js";
 import { MapNames } from "../../constants/MapNames.js";
 
 export interface MapConfigI {
-    gameObjects: Array<GameObject> | null;
+    gameObjects: GameObject[];
+    activeCharacters: Map<string, Character> | null,
     lowerImageSrc: string | null;
     upperImageSrc: string | null;
     canvas: HTMLCanvasElement | null;

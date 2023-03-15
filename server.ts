@@ -194,15 +194,12 @@ const fs = fsModule.promises;
             gameRouter.setIO(io);
             gameRouter.initGame(clientSocket, clientSocket.handshake.address);
         } else {
-            clientSocket.emit("reconnect")
+            clientSocket.emit("reconnect");
         }
 
-        // console.log(gameRouter.client.characters.at(0).username)
-
-
+        // console.log(gameRouter.client.characters.at(0).username);
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
-
     });
 
     io.on('disconnect', clientSocket => {
