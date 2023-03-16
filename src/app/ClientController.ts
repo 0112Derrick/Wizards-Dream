@@ -6,14 +6,15 @@ import { EventConstants as $events, ServerNameConstants as $servers } from '../c
 import { StatusConstants as $StatusConstants } from "../constants/StatusConstants.js";
 
 import { appendFile } from "fs";
-import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
 import { Character as $Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
 import { DirectionInput, Direction } from "./DirectionInput.js";
 import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
-import { GameMap, Overworld_Test } from "./OverworldMap.js";
+import { GameMap } from "./GameMap";
+import { Overworld_Test } from "./Overworld_Test";
 import { MapNames } from "../constants/MapNames.js";
 import { MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
@@ -44,6 +45,7 @@ class ClientController extends $OBSERVER {
     private character: any = null;
     private characters: Array<any> = [];
     private static clientController: ClientController = null;
+    private nav: PerformanceObserver;
 
 
     private grassyfieldConfig: MapConfigI = {
@@ -94,7 +96,7 @@ class ClientController extends $OBSERVER {
             this.playerLogout();
         }, this.view);
 
-        this.listenForEvent($events.MESSAGE, (message) => { this.checkMessage(message) }, this.view)
+        this.listenForEvent($events.MESSAGE, (message) => { this.checkMessage(message) }, this.view);
 
         //this.socket.on('playerJoinServer', this.playerJoinServer);
     }
@@ -142,9 +144,20 @@ class ClientController extends $OBSERVER {
             }
             this.socket.emit('playerJoinServer', data);
         });
-
         //TODO: setInterval(){(character) => {save character} ,time}
 
+    }
+
+    public get Character() {
+        return this.character;
+    }
+
+    public SETCharacter(char) {
+        this.character = char;
+    }
+
+    public setID(id: string): void {
+        this.clientID = id;
     }
 
     connect(_client) {
@@ -153,6 +166,8 @@ class ClientController extends $OBSERVER {
         console.log(`User: ${clientController.client.username} is online. \n`);
         clientController.characters = clientController.client.characters;
         clientController.sendViewCharacterSelection(clientController.client.characters);
+        clientController.createOverworld();
+        clientController.startOverworldOnConnection();
         /* if (this.client.characters.at(0)) {
             console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`);
         } */
@@ -174,7 +189,6 @@ class ClientController extends $OBSERVER {
         if (ClientController.ClientControllerInstance.OVERWORLD == null) {
             clientController.createOverworld();
         }
-
         clientController.socket.emit("requestOverworldGameObjects", startMap);
         console.log('Starting new Oveworld map');
         ClientController.ClientControllerInstance.OVERWORLD.init(startMap);
@@ -186,6 +200,10 @@ class ClientController extends $OBSERVER {
                 map.gameObjects = gameObjects;
             }
         });
+    }
+
+    changeGameMap(map: MapNames) {
+        ClientController.ClientControllerInstance.OVERWORLD.init(map);
     }
 
     /**
@@ -271,6 +289,8 @@ class ClientController extends $OBSERVER {
                         isPlayerControlled: true,
                         x: character.x,
                         y: character.y,
+                        xVelocity: character.xVelocity || 0,
+                        yVelocity: character.yVelocity || 0,
                         width: character.width,
                         height: character.height,
                         src: "/images/characters/players/erio.png",
@@ -283,6 +303,7 @@ class ClientController extends $OBSERVER {
                         characterID: character.gameObjectID,
                         items: character.items,
                         direction: character.direction || "right",
+
                     })
                 );
                 break;
@@ -300,14 +321,6 @@ class ClientController extends $OBSERVER {
             }
         }
         return null;
-    }
-
-    public get Character() {
-        return this.character;
-    }
-
-    public SETCharacter(char) {
-        this.character = char;
     }
 
     //TODO FIX CHARACTERSELECTION
@@ -463,10 +476,6 @@ class ClientController extends $OBSERVER {
         clientController.view.postMessage(message, username);
     }
 
-    public setID(id: string): void {
-        clientController.clientID = id;
-    }
-
     async createCharacter(route: string, data: any): Promise<boolean> {
         try {
             console.log("sending data to server -ClientController");
@@ -480,6 +489,7 @@ class ClientController extends $OBSERVER {
                 sprite: "",
                 height: 32,
                 width: 32,
+                location: MapNames.GrassyField,
             }
 
             console.log(data.detail);

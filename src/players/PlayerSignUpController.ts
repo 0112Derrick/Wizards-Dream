@@ -6,7 +6,7 @@ import { StatusConstants as $statusConstants } from '../constants/StatusConstant
 import $NetworkProxy from '../network/NetworkProxy.js';
 import $HTMLProxy from '../network/HTML-Proxy.js';
 import { response } from 'express';
-import { playerSignupDataInterface as $playerSignupDataInterface } from '../players/PlayerDataInterface.js'
+import { playerSignupDataInterface as $playerSignupDataInterface } from './interfaces/PlayerDataInterface.js'
 import $Player from './Player.js';
 
 

@@ -1,7 +1,8 @@
-import $playerDataInterface, { characterDataInterface } from "./PlayerDataInterface.js";
-import IcharacterDocument from './PlayerDataInterface.js';
+import $playerDataInterface, { characterDataInterface } from "./interfaces/PlayerDataInterface.js";
+import IcharacterDocument from './interfaces/PlayerDataInterface.js';
 import $SyntheticEventEmitter from '../framework/SyntheticEventEmitter.js';
 import { EventConstants as $EventConstants } from '../constants/EventConstants.js';
+import { MapNames } from "../constants/MapNames.js";
 
 export class Player {
 
@@ -23,6 +24,7 @@ export class Player {
                 width: 32,
                 height: 32,
                 gameObjectID: 0,
+                location: MapNames.GrassyField,
                 attributes: {
                     level: 0,
                     experience: 0,

@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import { userInfo } from "os";
 import PlayerModel from "../players/PlayerDBModel.js";
-import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
 import { CharacterModel as $CharacterModel } from '../players/PlayerDBModel.js'
 import { CharacterAttributes } from "../app/CharacterAttributes";
 import { CharacterAttributesConstants as $chAttr } from '../constants/CharacterAttributesConstants.js'
-import { characterDataInterface } from '../players/PlayerDataInterface.js'
+import { characterDataInterface } from '../players/interfaces/PlayerDataInterface.js'
 import { Sprite } from '../app/Sprite.js';
 
 async function addPlayer(playerInfo) {

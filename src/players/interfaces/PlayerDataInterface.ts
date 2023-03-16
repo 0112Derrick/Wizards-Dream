@@ -1,4 +1,5 @@
-import { Character } from '../app/Character.js';
+import { MapNames } from '../../constants/MapNames.js';
+import { Character } from '../../app/Character.js';
 
 export interface playerSignupDataInterface {
     username: string,
@@ -34,6 +35,7 @@ interface commonGameDataInterface extends commonDataInterface {
 export interface CharacterCreationDataInterface extends commonGameDataInterface {
     characterGender: string
     player: any
+    location: MapNames,
 }
 export interface characterDataInterface extends CharacterCreationDataInterface {
     gameObjectID: number,

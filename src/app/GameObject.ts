@@ -5,6 +5,8 @@ export class GameObject {
     name: string;
     x: number;
     y: number;
+    xVelocity: number;
+    yVelocity: number;
     sprite: Sprite;
     direction: any;
     gameObjectID: number;
@@ -12,6 +14,7 @@ export class GameObject {
     constructor(config) {
         this.x = config.x || 0;
         this.y = config.y || 0;
+
         this.name = config.name || 'default';
         this.direction = config.direction || 'down';
         this.sprite = new Sprite({

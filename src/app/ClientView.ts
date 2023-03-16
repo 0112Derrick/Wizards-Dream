@@ -1,8 +1,9 @@
 import { HTML_IDS as $id } from "../constants/HTMLElementIds.js";
 import $ClientSyntheticEventEmitter from '../framework/ClientSyntheticEventEmitter.js'
 import { EventConstants as $events } from '../constants/EventConstants.js'
-import { CharacterCreationDataInterface as $characterSignup } from '../players/PlayerDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
 import { resolve } from "path";
+import { MapNames } from "../constants/MapNames.js";
 class MissingElementError extends Error {
     constructor(message: string) {
         super(message);
@@ -64,6 +65,15 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     async createCharacterSelectionButtons(characters: Array<any>) {
+        /*  for (let i = 0; i < characters.length; i++) {
+             let character = characters[i];
+             let data = {
+                 name: character.username,
+                 index: i,
+             }
+             this.createButton(data);
+         } */
+
         characters.forEach((character, i) => {
             let data = {
                 name: character.username,
@@ -88,7 +98,10 @@ class ClientView extends $ClientSyntheticEventEmitter {
         })
     }
 
-    createButton(data) {
+    createButton(data): void {
+        if (document.getElementById(data.index)) {
+            return;
+        }
         let button = document.createElement("button");
         console.log(data);
         button.setAttribute("type", "button");
@@ -96,6 +109,14 @@ class ClientView extends $ClientSyntheticEventEmitter {
         button.setAttribute("id", "character+" + data.index);
 
         document.getElementById(this.DOM[$id.SELECT_CHARACTERS].appendChild(button));
+    }
+
+    clearButtons(): void {
+        let button1 = document.getElementById("character+0");
+        let button2 = document.getElementById("character+1");
+
+        button1.remove();
+        button2.remove();
     }
 
     sendMessage() {
@@ -131,6 +152,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
             direction: "right",
             width: 32,
             height: 32,
+            location: MapNames.GrassyField,
         }
 
         console.log("Got new player account submission", formData);

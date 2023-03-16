@@ -7,6 +7,7 @@ import passport from 'passport';
 import { Sprite } from "../../app/Sprite.js"
 
 import { equal } from 'assert';
+import { MapNames } from '../../constants/MapNames.js';
 
 const playerRouter: Router = express.Router();
 /* express.urlencoded() */
@@ -54,6 +55,7 @@ playerRouter.post('/savecharacter', express.json(), async function (req, res, ne
                 direction: req.body.direction || 'right',
                 width: req.body.width,
                 height: req.body.height,
+                location: MapNames.GrassyField,
             });
             console.log("Added character ", character);
             req.user.characters.push(character.id);// character.id;

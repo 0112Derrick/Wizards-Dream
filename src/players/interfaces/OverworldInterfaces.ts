@@ -1,6 +1,6 @@
 import { GameObject } from "../../app/GameObject.js";
 import { Character } from "../../app/Character.js";
-import { GameMap } from "../../app/OverworldMap.js";
+import { GameMap } from "../../app/GameMap";
 import { MapNames } from "../../constants/MapNames.js";
 
 export interface MapConfigI {

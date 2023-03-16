@@ -1,9 +1,10 @@
 import { idText } from "typescript";
-import { characterDataInterface } from "../players/PlayerDataInterface.js";
+import { characterDataInterface } from "../players/interfaces/PlayerDataInterface.js";
 import { SpriteAnimations } from "./Sprite.js";
 import { GameObject } from "./GameObject.js";
 import { Direction } from "./DirectionInput.js";
 import { CharacterAttributes } from "./CharacterAttributes.js";
+import { MapNames } from "../constants/MapNames.js";
 
 interface CharacterMovementStateI {
     arrow?: Direction | null;
@@ -19,6 +20,7 @@ export class Character extends GameObject implements characterDataInterface {
     width: number;
     height: number;
     walking: boolean;
+    location: MapNames;
 
     attributes: {
         level: number,//Determines players stat attributes
