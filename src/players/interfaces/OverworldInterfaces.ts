@@ -31,3 +31,25 @@ export interface MapI {
     clearCanvas(ctx: CanvasRenderingContext2D): void;
     startGameLoop(ctx: CanvasRenderingContext2D): void
 }
+
+export interface OverWorld_MapI {
+    name: MapNames,
+    activePlayers: Character[],
+    gameObjects: GameObject[],
+    lowerSrc: string,
+    upperSrc: string,
+}
+
+export interface syncOverworld {
+    grassyfield: {
+        name: MapNames.GrassyField,
+        activePlayers: Map<Character>,
+        gameObjects: GameObject[],
+    }
+
+    hallway: {
+        name: MapNames.Hallway,
+        activePlayers: Character,
+        gameObjects: GameObject[],
+    }
+}

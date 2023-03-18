@@ -334,8 +334,10 @@ class ClientController extends $OBSERVER {
         let characterPosition: number = data.detail;
         clientController.SETCharacter(clientController.characters.at(characterPosition));
         console.log(`User: ${clientController.client.username} is playing on ${clientController.character.username}`);
-        let charJSON = ClientController.syncUsertoCharacter(clientController.character).toJSON();
-        clientController.socket.emit("characterCreated", charJSON);
+        //let charJSON = ClientController.syncUsertoCharacter(clientController.character).toJSON();
+        //clientController.socket.emit("characterCreated", charJSON);
+        let characterOBJ = ClientController.syncUsertoCharacter(clientController.character);
+        clientController.socket.emit("characterCreated", characterOBJ, characterOBJ.location, this.clientID);
     }
 
     static syncUsertoCharacter(obj) {

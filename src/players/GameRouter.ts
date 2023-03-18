@@ -9,10 +9,13 @@ import { CharacterMovementData, CharacterData_Direction } from "./interfaces/Cha
 import Queue from ".././framework/Queue.js";
 import { MovementContants } from "../constants/Constants.js";
 import { MapNames } from "../constants/MapNames.js";
+import { Overworld_Server } from "./Overworld_Server.js";
+import { OverWorld_MapI as $OverWorld_MapI, OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
-    ClientOBJ = 1
+    ClientOBJ = 1,
+    ClientActiveCharacter = 2,
 }
 
 export interface ClientDATA {
@@ -24,40 +27,8 @@ interface Coordniate {
     x: MovementContants.West_East,
     y: MovementContants.North_South,
 }
-interface OverWorld_MapI {
-    name: MapNames,
-    activePlayers: Character[],
-    gameObjects: GameObject[],
-    lowerSrc: string,
-    upperSrc: string,
-}
 
-class Overworld_Server {
-    maps: Array<MapNames>;
-    constructor() {
-        this.maps = [];
-        this.maps.push(MapNames.GrassyField);
-        this.maps.push(MapNames.Hallway);
-    }
-    grassyfield: OverWorld_MapI = {
-        name: MapNames.GrassyField,
-        activePlayers: [],
-        gameObjects: [],
-        lowerSrc: '/images/maps/Battleground1.png',
-        upperSrc: '/images/maps/Battleground1.png',
-        //element: string = 'document.querySelector(".game-container");'
-    }
 
-    hallway: {
-        name: MapNames.Hallway,
-        activePlayers: [Character],
-        gameObjects: [GameObject],
-        lowerSrc: '/images/maps/Battleground2.png',
-        upperSrc: '/images/maps/Battleground2.png',
-        //element: string = 'document.querySelector(".game-container");'
-    }
-
-}
 
 
 export class GameRouter {
@@ -131,6 +102,10 @@ export class GameRouter {
         return this.clientIP;
     }
 
+    /***
+     * data should have two parameters id = to clientID & arg which is equal to the data you want to set.
+     * slot should be equal to ClientMapSlot to ensure the data is always the same for every player.
+     */
     public setClientMap(_data: ClientDATA, slot: ClientMapSlot) {
 
         if (this.clientMap.has(_data.id)) {
@@ -140,6 +115,9 @@ export class GameRouter {
                     break;
                 case ClientMapSlot.ClientOBJ:
                     this.clientMap.get(_data.id)?.splice(1, 1, _data.arg);
+                    break;
+                case ClientMapSlot.ClientActiveCharacter:
+                    this.clientMap.get(_data.id)?.splice(2, 1, _data.arg);
                     break;
             }
         }
@@ -200,7 +178,7 @@ export class GameRouter {
 
         //_socket.on("moveReq", gameRouter.moveCharacter);
         _socket.on("moveReq", gameRouter.addCharacterMoveRequestsToQueue);
-        _socket.on("characterCreated", gameRouter.addCharacterToOverworld);
+        _socket.on("characterCreated", (character: Character, map: MapNames, clientID: string) => gameRouter.addCharacterToOverworld);
         // end
 
         if (GameRouter.GameRouterInstance.server == null) {
@@ -228,13 +206,32 @@ export class GameRouter {
      * 
      */
     syncOverworld(): void {
+        let gameRouter = GameRouter.GameRouterInstance;
+        let overworld = gameRouter.getOverworld();
+        let syncedOverworld: $syncOverworld = {
+            grassyfield: {
+                name: MapNames.GrassyField,
+                activePlayers: Object.assign({}, overworld.grassyfield.activePlayers),
+                gameObjects: Object.assign({}, overworld.grassyfield.gameObjects),
+            },
+            hallway: {
+                name: MapNames.Hallway,
+                activePlayers: Object.assign({}, overworld.hallway.activePlayers),
+                gameObjects: Object.assign({}, overworld.hallway.gameObjects),
+            }
+        }
+        console.log("Synced Overworld maps data with client");
+        gameRouter.io.emit("syncOverworld", syncedOverworld);
+    }
+
+    /* syncOverworld(): void {
         let syncedOverworld = GameRouter.GameRouterInstance.copyOverworld();
         console.log("\n" + syncedOverworld);
         GameRouter.GameRouterInstance.io.emit("syncOverworld", syncedOverworld);
         return;
-    }
+    } */
 
-    copyOverworld(): Object {
+    /* copyOverworld(): Object {
         //let clientOverworld = Object.assign({}, GameRouter.GameRouterInstance.OverworldMaps);
         if (GameRouter.GameRouterInstance.Overworld != null) {
             let clientOverworld = Object.assign({}, GameRouter.GameRouterInstance.Overworld);
@@ -242,7 +239,7 @@ export class GameRouter {
         } else {
             return Object.assign({}, GameRouter.GameRouterInstance.getOverworld());
         }
-    }
+    } */
 
     syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
         GameRouter.GameRouterInstance.io.emit("syncPlayersMovements", charactersMovementData)
@@ -349,6 +346,7 @@ export class GameRouter {
         // let characterName = gameRouter.ClientMap.get(id).at(ClientMapSlot.ClientOBJ).characters.username;
         //console.log(characterName);
     }
+
     //TODO update all clients and server to remove the character from active characters
     playerDisconnect(client, clientIP) {
         let gameRouter = GameRouter.GameRouterInstance;
@@ -376,6 +374,7 @@ export class GameRouter {
             return GameRouter.GameRouterInstance.Overworld;
         }
     }
+
     updateGameObjects(map: MapNames = MapNames.GrassyField) {
         let gameObjects;
         switch (map) {
@@ -409,10 +408,11 @@ export class GameRouter {
      * Takes the character objects passes them to a method to sync the client side version of the overworld with the characterJSON 
      * @returns none
      */
-
-    addCharacterToOverworld(character: Character, overworldMap = MapNames.GrassyField): void {
+    //TODO - controller function which then decides what to do with the data
+    addCharacterToOverworld(character: Character, overworldMap = MapNames.GrassyField, clientID: string): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let overworld: Overworld_Server = gameRouter.getOverworld();
+        gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
         let activeCharacters = null;
 
         switch (overworldMap) {
@@ -452,6 +452,33 @@ export class GameRouter {
         let overworld: Overworld_Server = gameRouter.getOverworld();
         let playerFound = false;
 
+        overworld.maps.forEach((map: $OverWorld_MapI) => {
+            if (map.name == character.location) {
+                map.activePlayers.forEach((activeCharacter: Character, i: number) => {
+                    if (character.name == activeCharacter.name) {
+                        console.log(overworld.grassyfield.activePlayers.splice(i, 1) + " was removed.");
+                        playerFound = true;
+                    }
+                })
+            }
+        })
+
+        switch (character.location) {
+            case MapNames.GrassyField:
+                overworld.grassyfield.activePlayers.forEach((activeCharacter: Character, i: number) => {
+                    if (character.name == activeCharacter.name) {
+                        console.log(overworld.grassyfield.activePlayers.splice(i, 1) + " was removed.");
+                        playerFound = true;
+                    }
+                })
+                break;
+
+            case MapNames.Hallway:
+
+                break;
+        }
+
+        //
         overworld.grassyfield.activePlayers.forEach((activeCharacter: Character, i: number) => {
             if (character.name == activeCharacter.name) {
                 console.log(overworld.grassyfield.activePlayers.splice(i, 1) + " was removed.");
@@ -517,6 +544,7 @@ export class GameRouter {
     }
 
 
+    //TODO Movement system will be updated to be client side using interpolation and periodic updates by the server and anti cheat checks on the server.
     //characterMovingDirection: Direction, characterObject: Character
     moveCharacter(characterMoveRequests: Queue<CharacterData_Direction>) {
 
