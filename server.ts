@@ -193,6 +193,7 @@ const fs = fsModule.promises;
             console.log("server sent client info: " + clientSocket.emit("onlineClient", gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
             gameRouter.setIO(io);
             gameRouter.initGame(clientSocket, clientSocket.handshake.address);
+
         } else {
             clientSocket.emit("reconnect");
         }
@@ -247,14 +248,14 @@ function configureRoutes(app, server?, io?, PORT?) {
             //Already logged in, so display main app
             //console.log('player: ' + req.user);
 
-            async function requestUserInfo() {
-                let clientOBJ = await req.user.populate('characters');
-                console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
-                $gameRouter.GameRouterInstance.setClientIP(req.ip);
-                $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
-            }
+            /*  async function requestUserInfo() {
+                 let clientOBJ = await req.user.populate('characters');
+                 console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
+                 $gameRouter.GameRouterInstance.setClientIP(req.ip);
+                 $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
+             } */
 
-            requestUserInfo();
+            // requestUserInfo();
             res.redirect("/main");
         } else {
             res.render("signup", { layout: 'landing' });

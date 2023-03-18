@@ -65,15 +65,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     async createCharacterSelectionButtons(characters: Array<any>) {
-        /*  for (let i = 0; i < characters.length; i++) {
-             let character = characters[i];
-             let data = {
-                 name: character.username,
-                 index: i,
-             }
-             this.createButton(data);
-         } */
-
+        
         characters.forEach((character, i) => {
             let data = {
                 name: character.username,

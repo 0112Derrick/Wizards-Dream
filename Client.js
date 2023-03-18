@@ -1,5 +1,5 @@
 
-const log = (text) => {
+/* const log = (text) => {
     const chat = document.querySelector('#events');
     let li = document.createElement('li');
     li.innerHTML = text;
@@ -49,6 +49,6 @@ function handleGameState(gameState) {
 
     document.querySelector('#chat-form').addEventListener('submit', onChatSubmitted(sock));
 
-})();
+})(); */
 
 

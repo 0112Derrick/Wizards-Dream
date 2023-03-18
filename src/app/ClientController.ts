@@ -36,7 +36,7 @@ interface ServerToClientEvents {
 }); */
 
 
-class ClientController extends $OBSERVER {
+export class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
     private socket: any;
@@ -45,7 +45,6 @@ class ClientController extends $OBSERVER {
     private character: any = null;
     private characters: Array<any> = [];
     private static clientController: ClientController = null;
-    private nav: PerformanceObserver;
 
 
     private grassyfieldConfig: MapConfigI = {
@@ -116,22 +115,21 @@ class ClientController extends $OBSERVER {
         this.socket = await io();
         //this.OVERWORLD.init();
 
-        this.socket.on("startOverworld", this.startOverworldOnConnection);
+        // this.socket.on("startOverworld", this.startOverworldOnConnection);
         this.socket.on("playerJoinedServer", this.playerJoinedServer);
         this.socket.on("onlineClient", (client) => { this.connect(client) });
         this.socket.on("offline", this.disconnect);
         this.socket.on("clientID", (id) => { this.setID(id) });
         this.socket.on("reconnect", () => { window.location.reload() });
-        this.socket.on("newServerWorld", () => { this.createOverworld });
+        // this.socket.on("newServerWorld", () => { this.createOverworld });
         this.socket.on("updatedGameObjects", (gameObjects, map: MapNames) => {
             this.updateGameObjects;
         });
         //this.socket.emit('connection');
-        this.socket.emit("online", this.clientID);
 
         //proof of concept events
         //this.socket.on('movePlayer', () => { this.updatePlayer });
-        this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
+        // this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
         this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
         this.socket.on("syncPlayersMovements", (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
         this.socket.on("globalMessage", (message: string, username: string) => { this.postMessage(message, username) })
@@ -164,9 +162,11 @@ class ClientController extends $OBSERVER {
         let clientController = ClientController.ClientControllerInstance;
         clientController.client = _client;
         console.log(`User: ${clientController.client.username} is online. \n`);
+        this.socket.emit("online", this.clientID);
         clientController.characters = clientController.client.characters;
         clientController.sendViewCharacterSelection(clientController.client.characters);
         clientController.createOverworld();
+        //TODO call startOverworldOnConnection with character.location
         clientController.startOverworldOnConnection();
         /* if (this.client.characters.at(0)) {
             console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`);
@@ -187,9 +187,9 @@ class ClientController extends $OBSERVER {
     //TODO LOAD IN MAP
     startOverworldOnConnection(startMap: MapNames = MapNames.GrassyField) {
         if (ClientController.ClientControllerInstance.OVERWORLD == null) {
-            clientController.createOverworld();
+            ClientController.ClientControllerInstance.createOverworld();
         }
-        clientController.socket.emit("requestOverworldGameObjects", startMap);
+        ClientController.ClientControllerInstance.socket.emit("requestOverworldGameObjects", startMap);
         console.log('Starting new Oveworld map');
         ClientController.ClientControllerInstance.OVERWORLD.init(startMap);
     }
@@ -357,7 +357,7 @@ class ClientController extends $OBSERVER {
             items: obj.items,
             player: obj.player,
         });
-        clientController.SETCharacter(char);
+        ClientController.ClientControllerInstance.SETCharacter(char);
         return char;
     }
 
@@ -450,15 +450,15 @@ class ClientController extends $OBSERVER {
             });
 
             if (!characterCreated) {
-                clientController.addCharacterToOverworld(character.characterObj);
+                ClientController.ClientControllerInstance.addCharacterToOverworld(character.characterObj);
             }
         });
     }
 
     emit(event: string, data: any = false) {
         if (data)
-            clientController.socket.emit(event, data);
-        clientController.socket.emit(event);
+            ClientController.ClientControllerInstance.socket.emit(event, data);
+        ClientController.ClientControllerInstance.socket.emit(event);
         console.log("emitting event: ", event);
     }
 
@@ -467,15 +467,15 @@ class ClientController extends $OBSERVER {
         if (message) {
             cleanMessage = message;
         }
-        clientController.sendMessage(cleanMessage.detail, clientController.character.username)
+        ClientController.ClientControllerInstance.sendMessage(cleanMessage.detail, ClientController.ClientControllerInstance.character.username)
     }
 
-    sendMessage(message: string, user) {
-        clientController.socket.emit("message", message, user)
+    sendMessage(message: string, user: string) {
+        ClientController.ClientControllerInstance.socket.emit("message", message, user)
     }
 
-    postMessage(message: string, username) {
-        clientController.view.postMessage(message, username);
+    postMessage(message: string, username: string) {
+        ClientController.ClientControllerInstance.view.postMessage(message, username);
     }
 
     async createCharacter(route: string, data: any): Promise<boolean> {
@@ -536,4 +536,4 @@ class ClientController extends $OBSERVER {
     }
 
 }
-export const clientController = new ClientController(new $HTMLNetwork());
+ClientController.ClientControllerInstance;

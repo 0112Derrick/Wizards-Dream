@@ -2,7 +2,7 @@ import { OverworldMap } from "./OverworldMap.js";
 import { GameObject } from "./GameObject.js"
 import { Sprite } from "./Sprite.js";
 import { DirectionInput } from "./DirectionInput.js";
-import { clientController } from "./ClientController.js";
+import { ClientController } from "./ClientController.js";
 
 import { runInThisContext } from "vm";
 import { Character } from "./Character.js";
@@ -45,7 +45,7 @@ export class Overworld<T> {
                 if (gameOBJ instanceof GameObject) {
                     if (this.ctx) {
                         if (gameOBJ instanceof Character) {
-                            clientController.serverRequestMoveCharacter(gameOBJ, this.directionInput.direction);
+                            ClientController.ClientControllerInstance.serverRequestMoveCharacter(gameOBJ, this.directionInput.direction);
                         }
                         gameOBJ.sprite.draw(this.ctx);
                     }

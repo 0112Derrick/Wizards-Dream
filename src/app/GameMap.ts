@@ -1,7 +1,7 @@
 import { GameObject } from "./GameObject.js";
 import { Character } from "./Character.js";
 import { DirectionInput } from "./DirectionInput.js";
-import { clientController } from "./ClientController.js";
+import { ClientController as $ClientController } from "./ClientController.js";
 import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 
@@ -18,6 +18,7 @@ export class GameMap implements MapI {
     directionInput: DirectionInput;
     stopLoop: boolean = false;
     counter = 0;
+    controller: $ClientController = $ClientController.ClientControllerInstance;
 
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
@@ -48,18 +49,18 @@ export class GameMap implements MapI {
         this.clearCanvas(this.ctx);
         this.drawLowerImage(this.ctx);
         this.drawUpperImage(this.ctx);
-        console.log(this.counter++);
+
         this.gameObjects.forEach((gameObject) => {
 
             if (gameObject instanceof Character) {
-                clientController.serverRequestMoveCharacter(gameObject, this.directionInput.direction);
+                this.controller.serverRequestMoveCharacter(gameObject, this.directionInput.direction);
             }
 
             gameObject.sprite.draw(this.ctx);
         });
 
         // }, 16);
-        window.requestAnimationFrame(() => this.animate);
+        window.requestAnimationFrame(() => this.animate());
     }
 
     drawLowerImage(ctx: CanvasRenderingContext2D): void {

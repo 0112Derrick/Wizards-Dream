@@ -10,7 +10,7 @@ import Queue from ".././framework/Queue.js";
 import { MovementContants } from "../constants/Constants.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
-import { OverWorld_MapI as $OverWorld_MapI, OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
+import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -27,9 +27,6 @@ interface Coordniate {
     x: MovementContants.West_East,
     y: MovementContants.North_South,
 }
-
-
-
 
 export class GameRouter {
 
@@ -49,14 +46,14 @@ export class GameRouter {
     private clientMap: Map<string, Array<any>> = new Map();
     //Set by req obj 
     private clientIP: string;
-    private OverworldMaps = {
+    /* private OverworldMaps = {
         grassyField: {
             lowerSrc: "/images/maps/Battleground1.png",
             upperSrc: "/images/maps/Battleground1.png",
             gameObjects: [],
             borders: [],
         }
-    };
+    }; */
 
     private Overworld: Overworld_Server = null;
 
@@ -178,7 +175,12 @@ export class GameRouter {
 
         //_socket.on("moveReq", gameRouter.moveCharacter);
         _socket.on("moveReq", gameRouter.addCharacterMoveRequestsToQueue);
-        _socket.on("characterCreated", (character: Character, map: MapNames, clientID: string) => gameRouter.addCharacterToOverworld);
+        _socket.on("characterCreated", (character: Character, map: MapNames, clientID: string) => {
+            //sets the active character
+            gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
+            //Adds the character to the overworld
+            gameRouter.addCharacterToOverworld(character, map);
+        });
         // end
 
         if (GameRouter.GameRouterInstance.server == null) {
@@ -291,19 +293,21 @@ export class GameRouter {
         }
 
         //let players: Array<Map<string, Object>> = gameRouter.server.at(0)?.get(0)!;
-        let world = this.getOverworld();
-        GameRouter.GameRouterInstance.io.emit('newServerWorld', world);
-        console.log("Sent newServerWorld.\n" + world);
 
-        setTimeout(() => {
+        // let world = this.getOverworld();
+        // GameRouter.GameRouterInstance.io.emit('newServerWorld', world);
+        // console.log("Sent newServerWorld.\n" + world);
+
+        /* setTimeout(() => {
             this.startOverworld();
-        }, 1000);
+        }, 1000); */
         //gameRouter.io.sockets.in(serverId).emit('newServerWorld', world);
     }
-    startOverworld() {
+
+    /* startOverworld() {
         GameRouter.GameRouterInstance.io.emit('startOverworld');
         console.log("Sent startOverworld.");
-    }
+    } */
 
     serverRoomFull() {
         console.log("Not implemented");
@@ -409,11 +413,9 @@ export class GameRouter {
      * @returns none
      */
     //TODO - controller function which then decides what to do with the data
-    addCharacterToOverworld(character: Character, overworldMap = MapNames.GrassyField, clientID: string): void {
+    addCharacterToOverworld(character: Character, overworldMap = MapNames.GrassyField): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let overworld: Overworld_Server = gameRouter.getOverworld();
-        gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
-        let activeCharacters = null;
 
         overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
         console.log(`${character.name} switched to ${overworldMap} map.`);
@@ -446,7 +448,7 @@ export class GameRouter {
                         console.log(overworld.maps.get(character.location).gameObjects.splice(i, 1) + " was successfully removed.");
                     }
                 }
-            })
+            });
         } else {
             console.log("Unable to remove character.");
         };
@@ -489,64 +491,64 @@ export class GameRouter {
     //characterMovingDirection: Direction, characterObject: Character
     moveCharacter(characterMoveRequests: Queue<CharacterData_Direction>) {
 
-        while (!characterMoveRequests.isEmpty()) {
-            let currentCharacterMoveRequest = characterMoveRequests.dequeue();
-            let delta = {
-                x: currentCharacterMoveRequest.characterObj.x,
-                y: currentCharacterMoveRequest.characterObj.y,
-            }
-
-            const updateDelta: Coordniate = {
-                x: MovementContants.West_East,
-                y: MovementContants.North_South,
-            }
-
-            switch (currentCharacterMoveRequest.direction) {
-
-                case Direction.UP:
-                    delta.y -= updateDelta.y;
-                    break;
-
-                case Direction.DOWN:
-                    delta.y += updateDelta.y;
-                    break;
-
-                case Direction.LEFT:
-                    delta.x -= updateDelta.x;
-                    break;
-
-                case Direction.RIGHT:
-                    delta.x += updateDelta.x;
-                    break;
-
-                default:
-                    break;
-            }
-            let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
-
-            gameObjectsArray.forEach(char => {
-                if (char.username == currentCharacterMoveRequest.characterObj.username) {
-                    char.x = delta.x;
-                    char.y = delta.y;
-                }
-
-                //GameRouter.GameRouterInstance.copyOverworld();
-                GameRouter.GameRouterInstance.syncOverworld();
-            });
-
-            let characterDeltas: Array<CharacterMovementData> = [];
-
-            characterDeltas.push({
-                characterObj: currentCharacterMoveRequest.characterObj,
-                delta: {
-                    x: delta.x,
-                    y: delta.y,
-                },
-                direction: currentCharacterMoveRequest.direction,
-            });
-            GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
-        }
-
+        /*  while (!characterMoveRequests.isEmpty()) {
+             let currentCharacterMoveRequest = characterMoveRequests.dequeue();
+             let delta = {
+                 x: currentCharacterMoveRequest.characterObj.x,
+                 y: currentCharacterMoveRequest.characterObj.y,
+             }
+ 
+             const updateDelta: Coordniate = {
+                 x: MovementContants.West_East,
+                 y: MovementContants.North_South,
+             }
+ 
+             switch (currentCharacterMoveRequest.direction) {
+ 
+                 case Direction.UP:
+                     delta.y -= updateDelta.y;
+                     break;
+ 
+                 case Direction.DOWN:
+                     delta.y += updateDelta.y;
+                     break;
+ 
+                 case Direction.LEFT:
+                     delta.x -= updateDelta.x;
+                     break;
+ 
+                 case Direction.RIGHT:
+                     delta.x += updateDelta.x;
+                     break;
+ 
+                 default:
+                     break;
+             }
+             let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
+ 
+             gameObjectsArray.forEach(char => {
+                 if (char.username == currentCharacterMoveRequest.characterObj.username) {
+                     char.x = delta.x;
+                     char.y = delta.y;
+                 }
+ 
+                 //GameRouter.GameRouterInstance.copyOverworld();
+                 GameRouter.GameRouterInstance.syncOverworld();
+             });
+ 
+             let characterDeltas: Array<CharacterMovementData> = [];
+ 
+             characterDeltas.push({
+                 characterObj: currentCharacterMoveRequest.characterObj,
+                 delta: {
+                     x: delta.x,
+                     y: delta.y,
+                 },
+                 direction: currentCharacterMoveRequest.direction,
+             });
+             GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
+         }
+  */
     }
 
 }
