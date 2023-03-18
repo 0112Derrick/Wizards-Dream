@@ -7,6 +7,8 @@ import { CharacterAttributes } from "../app/CharacterAttributes";
 import { CharacterAttributesConstants as $chAttr } from '../constants/CharacterAttributesConstants.js'
 import { characterDataInterface } from '../players/interfaces/PlayerDataInterface.js'
 import { Sprite } from '../app/Sprite.js';
+import { MapNames } from "../constants/MapNames.js";
+import { Direction } from "../app/DirectionInput.js";
 
 async function addPlayer(playerInfo) {
 
@@ -47,7 +49,8 @@ async function addCharacter(characterInfo: $characterSignup) {
         x: 5,
         y: 5,
         sprite: png || -1,
-        direction: 'right',
+        direction: Direction.RIGHT,
+        location: MapNames.GrassyField,
         width: 32,
         height: 32,
         attributes: {

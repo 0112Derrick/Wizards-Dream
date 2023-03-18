@@ -13,7 +13,7 @@ export class Character extends GameObject implements characterDataInterface {
     movingProgressRemaining: number;
     directionUpdate: {};
     isPlayerControlled: any;
-    lastDirection: string;
+    lastDirection: Direction;
     username: string;
     class: string;
     characterGender: string;
@@ -86,7 +86,11 @@ export class Character extends GameObject implements characterDataInterface {
             guild: this.guild,
             items: this.items,
             x: this.x,
-            y: this.y
+            y: this.y,
+            location: this.location,
+            xVelocity: this.xVelocity,
+            yVelocity: this.yVelocity,
+            lastDirection: this.lastDirection,
         }
     }
 

@@ -415,34 +415,19 @@ export class GameRouter {
         gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
         let activeCharacters = null;
 
-        switch (overworldMap) {
-            case MapNames.GrassyField:
-                activeCharacters = overworld.grassyfield.activePlayers;
-                for (let i = 0; i < activeCharacters.length; i++) {
-                    if (character.name == activeCharacters[i].name) {
-                        gameRouter.syncOverworld();
-                        return;
-                    }
+        overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
+        console.log(`${character.name} switched to ${overworldMap} map.`);
+        character.location = overworldMap;
+        overworld.maps.get(overworldMap).gameObjects.forEach((gameObj, i) => {
+            if (gameObj instanceof Character) {
+                if ((gameObj as Character).name == character.name) {
+                    console.log(`${character.name} already exists in ${overworld.maps.get(overworldMap).name} map gameObjects list.`);
+                    return;
                 }
-                activeCharacters.push(character);
-                overworld.grassyfield.gameObjects.push(character);
-                console.log(character.username + " was added to overworld map grassyfield - server");
-                break;
+            }
+        });
+        overworld.maps.get(overworldMap).gameObjects.push(character);
 
-            case MapNames.Hallway:
-                activeCharacters = overworld.hallway.activePlayers;
-                for (let i = 0; i < activeCharacters.length; i++) {
-                    if (character.name == activeCharacters[i].name) {
-                        gameRouter.syncOverworld();
-                        return;
-                    }
-                }
-                activeCharacters.push(character);
-                overworld.hallway.gameObjects.push(character);
-                console.log(character.username + " was added to overworld map hallway - server");
-                break;
-
-        }
         gameRouter.syncOverworld();
     }
 
@@ -452,64 +437,20 @@ export class GameRouter {
         let overworld: Overworld_Server = gameRouter.getOverworld();
         let playerFound = false;
 
-        overworld.maps.forEach((map: $OverWorld_MapI) => {
-            if (map.name == character.location) {
-                map.activePlayers.forEach((activeCharacter: Character, i: number) => {
-                    if (character.name == activeCharacter.name) {
-                        console.log(overworld.grassyfield.activePlayers.splice(i, 1) + " was removed.");
-                        playerFound = true;
-                    }
-                })
-            }
-        })
 
-        switch (character.location) {
-            case MapNames.GrassyField:
-                overworld.grassyfield.activePlayers.forEach((activeCharacter: Character, i: number) => {
-                    if (character.name == activeCharacter.name) {
-                        console.log(overworld.grassyfield.activePlayers.splice(i, 1) + " was removed.");
-                        playerFound = true;
-                    }
-                })
-                break;
-
-            case MapNames.Hallway:
-
-                break;
-        }
-
-        //
-        overworld.grassyfield.activePlayers.forEach((activeCharacter: Character, i: number) => {
-            if (character.name == activeCharacter.name) {
-                console.log(overworld.grassyfield.activePlayers.splice(i, 1) + " was removed.");
-                playerFound = true;
-            }
-        });
-        if (playerFound) {
-            overworld.grassyfield.gameObjects.forEach((gameObject: GameObject, i: number) => {
-                if (gameObject instanceof (Character)) {
-                    if (character.name == (gameObject as Character).name) {
-                        overworld.grassyfield.gameObjects.splice(i, 1);
+        if (overworld.maps.get(character.location).activePlayers.delete(character.name)) {
+            console.log("Character was successfully removed.");
+            overworld.maps.get(character.location).gameObjects.forEach((gameObj, i) => {
+                if (gameObj instanceof Character) {
+                    if ((gameObj as Character).name == character.name) {
+                        console.log(overworld.maps.get(character.location).gameObjects.splice(i, 1) + " was successfully removed.");
                     }
                 }
             })
         } else {
-            overworld.hallway.activePlayers.forEach((activeCharacter: Character, i: number) => {
-                if (character.name == activeCharacter.name) {
-                    console.log(overworld.hallway.activePlayers.splice(i, 1) + " was removed.");
-                    playerFound = true;
-                }
-            });
-            if (playerFound) {
-                overworld.hallway.gameObjects.forEach((gameObject: GameObject, i: number) => {
-                    if (gameObject instanceof (Character)) {
-                        if (character.name == (gameObject as Character).name) {
-                            overworld.hallway.gameObjects.splice(i, 1);
-                        }
-                    }
-                })
-            }
-        }
+            console.log("Unable to remove character.");
+        };
+
         gameRouter.syncOverworld();
     }
 
@@ -589,8 +530,8 @@ export class GameRouter {
                     char.y = delta.y;
                 }
 
-                GameRouter.GameRouterInstance.copyOverworld();
-                //GameRouter.GameRouterInstance.syncOverworld();
+                //GameRouter.GameRouterInstance.copyOverworld();
+                GameRouter.GameRouterInstance.syncOverworld();
             });
 
             let characterDeltas: Array<CharacterMovementData> = [];

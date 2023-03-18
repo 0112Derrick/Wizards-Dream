@@ -34,7 +34,7 @@ export interface MapI {
 
 export interface OverWorld_MapI {
     name: MapNames,
-    activePlayers: Character[],
+    activePlayers: Map<string, Character>,
     gameObjects: GameObject[],
     lowerSrc: string,
     upperSrc: string,
@@ -43,13 +43,13 @@ export interface OverWorld_MapI {
 export interface syncOverworld {
     grassyfield: {
         name: MapNames.GrassyField,
-        activePlayers: Map<Character>,
+        activePlayers: Map<string, Character>,
         gameObjects: GameObject[],
     }
 
     hallway: {
         name: MapNames.Hallway,
-        activePlayers: Character,
+        activePlayers: Map<string, Character>,
         gameObjects: GameObject[],
     }
 }

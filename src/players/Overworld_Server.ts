@@ -1,8 +1,9 @@
+import { Character } from "../app/Character.js";
 import { MapNames } from "../constants/MapNames.js";
 import { OverWorld_MapI } from "./interfaces/OverworldInterfaces.js";
 
 export class Overworld_Server {
-    maps: Map<string, OverWorld_MapI>;
+    maps: Map<MapNames, OverWorld_MapI>;
     constructor() {
         this.maps = new Map();
         this.maps.set(MapNames.GrassyField, this.grassyfield);
@@ -10,7 +11,7 @@ export class Overworld_Server {
     }
     grassyfield: OverWorld_MapI = {
         name: MapNames.GrassyField,
-        activePlayers: new Map,
+        activePlayers: new Map<string, Character>(),
         gameObjects: [],
         lowerSrc: '/images/maps/Battleground1.png',
         upperSrc: '/images/maps/Battleground1.png',
@@ -19,7 +20,7 @@ export class Overworld_Server {
 
     hallway: OverWorld_MapI = {
         name: MapNames.Hallway,
-        activePlayers: new Map(),
+        activePlayers: new Map<string, Character>(),
         gameObjects: [],
         lowerSrc: '/images/maps/Battleground2.png',
         upperSrc: '/images/maps/Battleground2.png',
