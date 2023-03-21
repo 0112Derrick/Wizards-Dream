@@ -32,7 +32,7 @@
         <button id="{{HTML_IDS.CHARACTER_MODAL_BTN}}" class="">Create Character Menu</button>
         <ul style="list-style-type: none;">
             <li>
-                <div id="joinServer">Join Server</div>
+                <button id="{{HTML_IDS.SELECT_SERVER}}">Select Server</button>
             </li>
             <li><button style="cursor: pointer;" id="{{HTML_IDS.LOGOUT}}">Logout</button></li>
             <li><button style="cursor: pointer;" id="{{HTML_IDS.STOP_LOOP}}">Stop</button></li>
@@ -42,8 +42,15 @@
 
         <div id="{{HTML_IDS.SELECT_CHARACTERS}}"></div>
 
+        <div class="server-select-modal" id="{{HTML_IDS.SERVER_SELECTION_MODAL}}">
+            <div class="server-modal-content">
+                <span id="{{HTML_IDS.CLOSE_SERVER_MODAL}}" class="close">&times;</span>
+                <h2>Sever selection modal</h2>
+                <div id="{{HTML_IDS.SERVER_SELECTION_BUTTONS_CONTAINER}}"></div>
+            </div>
+        </div>
 
-        <div class="characterCreateModal" id="{{HTML_IDS.CHARACTER_CREATE_MODAL}}">
+        <div class="character-modal" id="{{HTML_IDS.CHARACTER_CREATE_MODAL}}">
             <div class="character-modal-content">
                 <span class="close">
                     <form action="" id="{{HTML_IDS.CHARACTER_CREATE_FORM}}">

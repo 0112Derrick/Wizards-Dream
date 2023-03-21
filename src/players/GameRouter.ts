@@ -1,4 +1,4 @@
-import { ServerSizeConstants as $serverSize } from "../constants/ServerSizeConstants.js";
+import { ServerSizeConstants as $serverSize, SocketConstants as $socketRoutes } from "../constants/ServerConstants.js";
 import { OverworldMap } from "../app/OverworldMap.js";
 import { Character } from "../app/Character.js";
 import { Overworld } from "../app/Overworld.js";
@@ -11,7 +11,6 @@ import { MovementContants } from "../constants/Constants.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
 import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
-
 export enum ClientMapSlot {
     ClientSocket = 0,
     ClientOBJ = 1,
@@ -28,10 +27,10 @@ interface Coordniate {
     y: MovementContants.North_South,
 }
 
-export class GameRouter {
 
+export class GameRouter {
     private static gameRouter: GameRouter;
-    private server: Map<number, Array<Map<string, Object>>> | null = null;
+    // private server: Map<number, Array<Map<string, Object>>> | null = null;
     private io: any;
     private moveRequestQue: Queue<CharacterData_Direction> = new Queue();
     private moveRequestTimer: number = 100;
@@ -46,6 +45,9 @@ export class GameRouter {
     private clientMap: Map<string, Array<any>> = new Map();
     //Set by req obj 
     private clientIP: string;
+
+    private serverRooms: Map<string, string> = new Map();
+
     /* private OverworldMaps = {
         grassyField: {
             lowerSrc: "/images/maps/Battleground1.png",
@@ -153,29 +155,20 @@ export class GameRouter {
     initGame(_socket, _ip: string) {
         let gameRouter = GameRouter.GameRouterInstance;
 
-        //Server Events
-        _socket.on('serverRoomFull', this.serverRoomFull);
-        //_socket.emit('connected', _ip);
-        _socket.on("online", this.playerConnected);
-
-        //PlayerEvents
-        _socket.on('playerJoinServer', this.playerJoinServer);
-        _socket.on('playerLogout', this.playerLogout);
-        _socket.on("message", this.checkMessage);
-        _socket.on("requestOverworld", this.startServerRoom);
-        _socket.on("requestOverworldGameObjects", this.updateGameObjects);
+        this.setClientSocket(_socket);
+        //Client Events
+        _socket.on($socketRoutes.REQUEST_JOIN_SERVER_ROOM, (clientID: string, serverRoom: string) => this.playerJoinServer(clientID, serverRoom));
+        _socket.on($socketRoutes.REQUEST_CLIENT_LOGOUT, this.playerLogout);
+        _socket.on($socketRoutes.REQUEST_MESSAGE, this.checkMessage);
+        _socket.on($socketRoutes.REQUEST_OVERWORLD_GAME_OBJECTS, this.updateGameObjects);
+        // _socket.on("requestOverworld", this.startServerRoom);
         //_socket.on("connection");
 
+        _socket.on($socketRoutes.REQUEST_ACTIVE_SERVERS, this.sendServersList);
         //test events
-        /* if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ)) {
-            if (gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0))
-                //_socket.emit('syncPlayer', gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters.at(0));
-                _socket.emit('syncPlayer', gameRouter.getClientMap().get(_ip).at(ClientMapSlot.ClientOBJ).characters);
-        } */
 
-        //_socket.on("moveReq", gameRouter.moveCharacter);
-        _socket.on("moveReq", gameRouter.addCharacterMoveRequestsToQueue);
-        _socket.on("characterCreated", (character: Character, map: MapNames, clientID: string) => {
+        _socket.on($socketRoutes.REQUEST_CHARACTER_MOVEMENT, gameRouter.addCharacterMoveRequestsToQueue);
+        _socket.on($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, (character: Character, map: MapNames, clientID: string) => {
             //sets the active character
             gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
             //Adds the character to the overworld
@@ -183,13 +176,7 @@ export class GameRouter {
         });
         // end
 
-        if (GameRouter.GameRouterInstance.server == null) {
-            /* this.server = {
-                serverRooms: [],
-            } */
-            this.server = new Map();
-            this.createServerRoom();
-        }
+        this.createServerRoom();
 
         //Move characters at a set interval.
         setInterval(() => {
@@ -198,6 +185,11 @@ export class GameRouter {
             }
         }, GameRouter.GameRouterInstance.getMoveRequestIntervalTime());
 
+    }
+    //sends an array of arrays with server names
+    sendServersList() {
+        let gameRouter = GameRouter.GameRouterInstance;
+        gameRouter.io.emit($socketRoutes.RESPONSE_ACTIVE_SERVERS, [...gameRouter.serverRooms]);
     }
 
     /**
@@ -223,7 +215,7 @@ export class GameRouter {
             }
         }
         console.log("Synced Overworld maps data with client");
-        gameRouter.io.emit("syncOverworld", syncedOverworld);
+        gameRouter.io.emit($socketRoutes.RESPONSE_SYNC_OVERWORLD, syncedOverworld);
     }
 
     /* syncOverworld(): void {
@@ -244,65 +236,35 @@ export class GameRouter {
     } */
 
     syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
-        GameRouter.GameRouterInstance.io.emit("syncPlayersMovements", charactersMovementData)
+        GameRouter.GameRouterInstance.io.emit($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, charactersMovementData)
     }
 
-    createServerRoom(customId: number = 0) {
+    createServerRoom() {
         let gameRouter = GameRouter.GameRouterInstance;
-        let serverRoom = new Array<Map<string, any>>($serverSize.serverSize);
-        if (gameRouter.server.size > customId) {
-            customId = gameRouter.server.size + 1;
-        }
-        let _serverId = customId;
 
-        //let serverRoom: Array<Map<string, any>> = playersList;
-        //let serverRoom: Map<number, Array<Map<string, Object>>> = new Map([[_serverId, playersList]]);
-        //gameRouter.server.serverRooms.push(serverRoom);
+        if (!gameRouter.serverRooms.has("US"))
+            gameRouter.serverRooms.set("US", "us-1");
 
-        /**
-            * creates a serverRoom , using serverId & an array of all players who are currently logged into that server
-        */
+        if (!gameRouter.serverRooms.has("EU"))
+            gameRouter.serverRooms.set("EU", "eu-1");
 
-        gameRouter.server.set(_serverId, serverRoom);
-        gameRouter.startServerRoom(_serverId);
+        if (!gameRouter.serverRooms.has("ASIA"))
+            gameRouter.serverRooms.set("ASIA", "asia-1");
+
     }
 
-    checkServerRoomCapacity(serverID: number): number | null {
+    checkServerRoomCapacity(serverID: number) {
         let gameRouter = GameRouter.GameRouterInstance;
 
-        if (gameRouter.server.has(serverID)) {
+        /* if (gameRouter.server.has(serverID)) {
             return gameRouter.server.get(serverID).length;
         } else {
             return null;
-        }
+        } */
     }
 
 
-    startServerRoom(serverId: number) {
-        if (!serverId) {
-            serverId = 0;
-        }
-        let gameRouter = GameRouter.GameRouterInstance;
-        console.log('starting server');
-        let playerList: Array<Map<string, any>> | null;
 
-        if (gameRouter.server.has(serverId)) {
-            playerList = gameRouter.server.get(serverId);
-        } else {
-            playerList = null;
-        }
-
-        //let players: Array<Map<string, Object>> = gameRouter.server.at(0)?.get(0)!;
-
-        // let world = this.getOverworld();
-        // GameRouter.GameRouterInstance.io.emit('newServerWorld', world);
-        // console.log("Sent newServerWorld.\n" + world);
-
-        /* setTimeout(() => {
-            this.startOverworld();
-        }, 1000); */
-        //gameRouter.io.sockets.in(serverId).emit('newServerWorld', world);
-    }
 
     /* startOverworld() {
         GameRouter.GameRouterInstance.io.emit('startOverworld');
@@ -311,7 +273,7 @@ export class GameRouter {
 
     serverRoomFull() {
         console.log("Not implemented");
-        let gameRouter = GameRouter.GameRouterInstance;
+        /* let gameRouter = GameRouter.GameRouterInstance;
         gameRouter.server.forEach(serverRoom => {
             if (serverRoom.findIndex(null) != -1) {
                 console.log(serverRoom.findIndex(null));
@@ -320,53 +282,36 @@ export class GameRouter {
             }
         })
 
-        throw new Error("Method not implemented");
+        throw new Error("Method not implemented"); */
     }
 
-    //TODO IMPLEMENT system to start overworld on client once the client connects to the server.
-    playerJoinServer(data) {
+    playerJoinServer(playerID: string, server: string) {
         let gameRouter = GameRouter.GameRouterInstance;
-        this.clientIP = data.id;
-        //todo
-        if (!(gameRouter.clientMap.has(this.clientIP))) {
-            console.log("client does not exist - gameRouter");
-            return;
-        }
-
-        gameRouter.clientSocket = gameRouter.clientMap.get(this.clientIP)?.at(ClientMapSlot.ClientSocket);
-        console.log('ip (gameRouter - join server): ', gameRouter.ClientIP);
-        // Look up the room ID in the Socket.IO manager object.
-        let room = gameRouter.clientSocket.rooms['/' + data.serverRoom];
-        //if (room != undefined) {
-        // attach the socket id to the data object.
-        console.log(data.id + data.serverRoom);
-        gameRouter.clientSocket.join(data.serverRoom);
-        gameRouter.io.sockets.in(data.serverRoom).emit('playerJoinedServer', data);
+        let socket = gameRouter.clientMap.get(playerID).at(ClientMapSlot.ClientSocket)
+        console.log(`User ${socket.id} joined room ${server}`);
+        socket.join(server);
+        gameRouter.io.to(server).emit($socketRoutes.RESPONSE_SERVER_MESSAGE, `Welcome to ${server}`, "Server");
     }
 
-    playerConnected(id) {
-        console.log("player connected called - gameRouter");
-        let gameRouter = GameRouter.GameRouterInstance;
-        // let characterName = gameRouter.ClientMap.get(id).at(ClientMapSlot.ClientOBJ).characters.username;
-        //console.log(characterName);
-    }
 
     //TODO update all clients and server to remove the character from active characters
     playerDisconnect(client, clientIP) {
         let gameRouter = GameRouter.GameRouterInstance;
-        gameRouter.clientSocket.emit("offline");
-        gameRouter.clientMap.delete(client.id);
-        gameRouter.removeCharacterFromOverworld(client.characters.at(0));
+        gameRouter.clientSocket.emit($socketRoutes.RESPONSE_OFFLINE_CLIENT);
+        throw new Error("method not implemented")
+        // gameRouter.clientMap.delete(client.id);
+        // gameRouter.removeCharacterFromOverworld(client.characters.at(0));
         //update clients gameMap that the player is no longer there
 
     }
+
     //TODO update all clients and server to remove the character from active characters
-    playerLogout(client) {
+    playerLogout(id, character: Character) {
         let gameRouter = GameRouter.GameRouterInstance;
-        console.log('player logout not implemented - gameRouter');
-        gameRouter.clientSocket.emit("offline");
-        gameRouter.clientMap.delete(client.id);
-        gameRouter.removeCharacterFromOverworld(client.characters.at(0));
+        console.log(`${character.username} has logged out.`);
+        gameRouter.clientSocket.emit($socketRoutes.RESPONSE_OFFLINE_CLIENT);
+        gameRouter.clientMap.delete(id);
+        gameRouter.removeCharacterFromOverworld(character);
     }
 
     getOverworld() {
@@ -394,15 +339,21 @@ export class GameRouter {
                 gameObjects = GameRouter.GameRouterInstance.getOverworld().grassyfield.gameObjects;
         }
 
-        GameRouter.GameRouterInstance.io.emit('updatedGameObjects', gameObjects, map);
+        GameRouter.GameRouterInstance.io.emit($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, gameObjects, map);
     }
 
-    checkMessage(message: string, user): void {
+    checkMessage(server: string, message: string, user): void {
+        let gameRouter = GameRouter.GameRouterInstance;
         let cleanMessage: string = ''
         if (message) {
             cleanMessage = message;
         }
-        GameRouter.GameRouterInstance.io.emit('globalMessage', cleanMessage, user);
+        if (server.toLocaleLowerCase().localeCompare("global") || !server) {
+            gameRouter.io.emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
+        }
+        //gameRouter.io.to(server).emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
+        gameRouter.clientSocket.to(server).emit($socketRoutes.RESPONSE_MESSAGE, message, user)
+        gameRouter.clientSocket.emit($socketRoutes.RESPONSE_MESSAGE, { roomName: server, message: message })
     }
 
     /**
@@ -416,14 +367,17 @@ export class GameRouter {
     addCharacterToOverworld(character: Character, overworldMap = MapNames.GrassyField): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let overworld: Overworld_Server = gameRouter.getOverworld();
+        if (!overworldMap) {
+            overworldMap = MapNames.GrassyField;
+        }
 
         overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
-        console.log(`${character.name} switched to ${overworldMap} map.`);
+        console.log(`${character.username} switched to ${overworldMap} map.`);
         character.location = overworldMap;
         overworld.maps.get(overworldMap).gameObjects.forEach((gameObj, i) => {
             if (gameObj instanceof Character) {
-                if ((gameObj as Character).name == character.name) {
-                    console.log(`${character.name} already exists in ${overworld.maps.get(overworldMap).name} map gameObjects list.`);
+                if ((gameObj as Character).username == character.username) {
+                    console.log(`${character.username} already exists in ${overworld.maps.get(overworldMap).name} map gameObjects list.`);
                     return;
                 }
             }
@@ -497,47 +451,47 @@ export class GameRouter {
                  x: currentCharacterMoveRequest.characterObj.x,
                  y: currentCharacterMoveRequest.characterObj.y,
              }
- 
+     
              const updateDelta: Coordniate = {
                  x: MovementContants.West_East,
                  y: MovementContants.North_South,
              }
- 
+     
              switch (currentCharacterMoveRequest.direction) {
- 
+     
                  case Direction.UP:
                      delta.y -= updateDelta.y;
                      break;
- 
+     
                  case Direction.DOWN:
                      delta.y += updateDelta.y;
                      break;
- 
+     
                  case Direction.LEFT:
                      delta.x -= updateDelta.x;
                      break;
- 
+     
                  case Direction.RIGHT:
                      delta.x += updateDelta.x;
                      break;
- 
+     
                  default:
                      break;
              }
              let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
- 
+     
              gameObjectsArray.forEach(char => {
                  if (char.username == currentCharacterMoveRequest.characterObj.username) {
                      char.x = delta.x;
                      char.y = delta.y;
                  }
- 
+     
                  //GameRouter.GameRouterInstance.copyOverworld();
                  GameRouter.GameRouterInstance.syncOverworld();
              });
- 
+     
              let characterDeltas: Array<CharacterMovementData> = [];
- 
+     
              characterDeltas.push({
                  characterObj: currentCharacterMoveRequest.characterObj,
                  delta: {
@@ -548,7 +502,7 @@ export class GameRouter {
              });
              GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
          }
-  */
+    */
     }
 
 }

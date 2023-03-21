@@ -27,12 +27,23 @@ class ClientView extends $ClientSyntheticEventEmitter {
                 throw new MissingElementError(`Element id: ${$id}: ${$id[elem_id]} .`);
             }
         }
-        this.DOM[$id.LOGOUT].addEventListener('click', () => { this.logoutAccountCallback() })
+        this.DOM[$id.LOGOUT].addEventListener('click', () => { this.logoutAccountCallback() });
 
         this.DOM[$id.STOP_LOOP].addEventListener('click', () => {
             this.dispatchEventLocal($events.STOP_GAME_LOOP, null);
+        });
+
+        this.DOM[$id.SELECT_SERVER].addEventListener('click', () => {
+            this.selectServerCallback();
         })
 
+        this.DOM[$id.CLOSE_SERVER_MODAL].addEventListener('click', () => this.closeServerModal());
+
+        window.addEventListener('click', (e) => {
+            if (e.target === this.DOM[$id.SERVER_SELECTION_MODAL]) {
+                this.closeServerModal();
+            }
+        })
 
         this.DOM[$id.GAME_CHAT_FORM].addEventListener('submit', (event) => {
             event.preventDefault();
@@ -64,22 +75,77 @@ class ClientView extends $ClientSyntheticEventEmitter {
         })
     }
 
+
+    //createButton takes in an object with the attributes name, id, innerHtml / & html element to append to.
+    createButton(data, appendLocation): void {
+        if (document.getElementById(data.index)) {
+            return;
+        }
+        let button = document.createElement("button");
+        console.log(data);
+        button.setAttribute("type", "button");
+        button.innerHTML = `${data.innerHtml}: ${data.name}`;
+        button.setAttribute("id", data.id);
+
+        appendLocation.appendChild(button);
+    }
+
+    selectServerCallback() {
+        this.DOM[$id.SERVER_SELECTION_MODAL].style.display = 'block';
+        this.dispatchEventLocal($events.REQUEST_SERVER_ROOMS, null);
+    }
+
+
+    closeServerModal() {
+        this.DOM[$id.SERVER_SELECTION_MODAL].style.display = 'none';
+    }
+
+    createServerSelectionButtons(serverRooms: Array<string>) {
+        serverRooms.forEach((serverRoom) => {
+            let serverRoomData = {
+                name: serverRoom.at(0),
+                id: serverRoom.at(0),
+                innerHtml: "Server",
+            }
+
+            this.createButton(serverRoomData, this.DOM[$id.SERVER_SELECTION_BUTTONS_CONTAINER]);
+        })
+        /* for (let serverRoom of serverRooms) {
+        } */
+        this.serverButtons(serverRooms);
+    }
+
+    serverButtons(serverRooms: Array<string>) {
+        serverRooms.forEach((serverRoom) => {
+            document.getElementById(serverRoom.at(0)).addEventListener('click', () => {
+                this.dispatchEventLocal($events.SELECT_SERVER, serverRoom.at(1));
+            });
+        })
+        /* for (let serverRoom of serverRooms) {
+      } */
+    }
+
     async createCharacterSelectionButtons(characters: Array<any>) {
-        
+
         characters.forEach((character, i) => {
             let data = {
                 name: character.username,
                 index: i,
             }
-            this.createButton(data);
+            this.createCharacterSelectButton(data);
         });
-        this.characterButtons();
+        this.characterButtons(characters.length);
     }
 
-    characterButtons() {
+    characterButtons(numOfCharacter: number) {
         let button: number;
-
-        document.getElementById("character+0").addEventListener("click", () => {
+        for (let i = 0; i < numOfCharacter; i++) {
+            document.getElementById("character+" + i).addEventListener("click", () => {
+                button = i;
+                this.dispatchEventLocal($events.SELECT_CHARACTER, button);
+            })
+        }
+        /* document.getElementById("character+0").addEventListener("click", () => {
             button = 0;
             this.dispatchEventLocal($events.SELECT_CHARACTER, button);
         })
@@ -87,10 +153,11 @@ class ClientView extends $ClientSyntheticEventEmitter {
         document.getElementById("character+1").addEventListener("click", () => {
             button = 1;
             this.dispatchEventLocal($events.SELECT_CHARACTER, button);
-        })
+        }) */
     }
 
-    createButton(data): void {
+
+    createCharacterSelectButton(data): void {
         if (document.getElementById(data.index)) {
             return;
         }

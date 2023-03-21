@@ -24,6 +24,7 @@ import { Player } from './src/players/Player.js';
 import connectDB from './src/db/db-init.js';
 import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
+import { SocketConstants as $SocketConstants } from './src/constants/ServerConstants.js';
 import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
 //import authorRouter from './testDB.js'
 
@@ -142,8 +143,6 @@ const fs = fsModule.promises;
     let gameRouter = $gameRouter.GameRouterInstance;
     gameRouter.setIO(io);
 
-    let id = 0;
-
     io.on('connection', clientSocket => {
         console.log("connecting client: " + clientSocket.handshake.address);
 
@@ -188,14 +187,14 @@ const fs = fsModule.promises;
                 gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
             }
 
-            clientSocket.emit('clientID', clientSocket.handshake.address);
+            clientSocket.emit($SocketConstants.RESPONSE_CLIENT_ID, clientSocket.handshake.address);
 
-            console.log("server sent client info: " + clientSocket.emit("onlineClient", gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
+            console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
             gameRouter.setIO(io);
             gameRouter.initGame(clientSocket, clientSocket.handshake.address);
 
         } else {
-            clientSocket.emit("reconnect");
+            clientSocket.emit($SocketConstants.RESPONSE_RECONNECT_CLIENT);
         }
 
         // console.log(gameRouter.client.characters.at(0).username);

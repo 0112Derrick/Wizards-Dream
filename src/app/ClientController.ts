@@ -3,7 +3,7 @@ import $OBSERVER from "../framework/Observer.js";
 import NetworkProxy from "../network/NetworkProxy.js";
 import $HTMLNetwork from "../network/HTML-Proxy.js";
 import { EventConstants as $events, ServerNameConstants as $servers } from '../constants/EventConstants.js';
-import { StatusConstants as $StatusConstants } from "../constants/StatusConstants.js";
+import { SocketConstants as $socketRoutes } from "../constants/ServerConstants.js";
 
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
@@ -18,6 +18,7 @@ import { Overworld_Test } from "./Overworld_Test.js";
 import { MapNames } from "../constants/MapNames.js";
 import { MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
+
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -45,7 +46,7 @@ export class ClientController extends $OBSERVER {
     private character: any = null;
     private characters: Array<any> = [];
     private static clientController: ClientController = null;
-
+    private activeServer: string = null;
 
     private grassyfieldConfig: MapConfigI = {
         gameObjects: [],
@@ -95,9 +96,16 @@ export class ClientController extends $OBSERVER {
             this.playerLogout();
         }, this.view);
 
+        this.listenForEvent($events.REQUEST_SERVER_ROOMS, () => {
+            ClientController.ClientControllerInstance.requestActiveServers();
+        }, this.view)
+
+        this.listenForEvent($events.SELECT_SERVER, (data) => {
+            ClientController.ClientControllerInstance.joinServer(data)
+        }, this.view);
+
         this.listenForEvent($events.MESSAGE, (message) => { this.checkMessage(message) }, this.view);
 
-        //this.socket.on('playerJoinServer', this.playerJoinServer);
     }
 
     public static get ClientControllerInstance(): ClientController {
@@ -116,13 +124,13 @@ export class ClientController extends $OBSERVER {
         //this.OVERWORLD.init();
 
         // this.socket.on("startOverworld", this.startOverworldOnConnection);
-        this.socket.on("playerJoinedServer", this.playerJoinedServer);
-        this.socket.on("onlineClient", (client) => { this.connect(client) });
-        this.socket.on("offline", this.disconnect);
-        this.socket.on("clientID", (id) => { this.setID(id) });
-        this.socket.on("reconnect", () => { window.location.reload() });
+        this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
+        this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
+        this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
+        this.socket.on($socketRoutes.RESPONSE_CLIENT_ID, (id) => { this.setID(id) });
+        this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => { window.location.reload() });
         // this.socket.on("newServerWorld", () => { this.createOverworld });
-        this.socket.on("updatedGameObjects", (gameObjects, map: MapNames) => {
+        this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
             this.updateGameObjects;
         });
         //this.socket.emit('connection');
@@ -130,18 +138,22 @@ export class ClientController extends $OBSERVER {
         //proof of concept events
         //this.socket.on('movePlayer', () => { this.updatePlayer });
         // this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
-        this.socket.on("syncOverworld", (overworld) => { this.syncOverworld(overworld) })
-        this.socket.on("syncPlayersMovements", (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
-        this.socket.on("globalMessage", (message: string, username: string) => { this.postMessage(message, username) })
+        this.socket.on($socketRoutes.RESPONSE_SYNC_OVERWORLD, (overworld) => { this.syncOverworld(overworld) })
+        this.socket.on($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
+        this.socket.on($socketRoutes.RESPONSE_MESSAGE, (message: string, username: string) => { this.postMessage(message, username) })
+        this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') })
+        this.socket.on($socketRoutes.RESPONSE_ACTIVE_SERVERS, (servers: Array<string>) => {
+            this.receiveActiveServers(servers);
+        })
         //end concepts
 
-        document.querySelector('#joinServer')?.addEventListener('click', () => {
-            let data = {
-                id: this.clientID,
-                serverRoom: $servers.ROOM1
-            }
-            this.socket.emit('playerJoinServer', data);
-        });
+        /*  document.querySelector('#joinServer')?.addEventListener('click', () => {
+             let data = {
+                 id: this.clientID,
+                 serverRoom: $servers.ROOM1
+             }
+             this.socket.emit('playerJoinServer', data);
+         }); */
         //TODO: setInterval(){(character) => {save character} ,time}
 
     }
@@ -162,7 +174,7 @@ export class ClientController extends $OBSERVER {
         let clientController = ClientController.ClientControllerInstance;
         clientController.client = _client;
         console.log(`User: ${clientController.client.username} is online. \n`);
-        this.socket.emit("online", this.clientID);
+        this.socket.emit($socketRoutes.REQUEST_CLIENT_ONLINE, this.clientID);
         clientController.characters = clientController.client.characters;
         clientController.sendViewCharacterSelection(clientController.client.characters);
         clientController.createOverworld();
@@ -186,24 +198,49 @@ export class ClientController extends $OBSERVER {
 
     //TODO LOAD IN MAP
     startOverworldOnConnection(startMap: MapNames = MapNames.GrassyField) {
-        if (ClientController.ClientControllerInstance.OVERWORLD == null) {
-            ClientController.ClientControllerInstance.createOverworld();
+        let clientController = ClientController.ClientControllerInstance;
+        if (clientController.OVERWORLD == null) {
+            clientController.createOverworld();
         }
-        ClientController.ClientControllerInstance.socket.emit("requestOverworldGameObjects", startMap);
+        clientController.socket.emit("requestOverworldGameObjects", startMap);
         console.log('Starting new Oveworld map');
-        ClientController.ClientControllerInstance.OVERWORLD.init(startMap);
+        clientController.OVERWORLD.init(startMap);
     }
 
     updateGameObjects(gameObjects, updatedMap: MapNames) {
-        ClientController.ClientControllerInstance.OVERWORLD.Maps.forEach(map => {
+        let clientController = ClientController.ClientControllerInstance;
+        clientController.OVERWORLD.Maps.forEach(map => {
             if (map.getMapName == updatedMap) {
                 map.gameObjects = gameObjects;
             }
         });
     }
 
+    requestActiveServers() {
+        let clientController = ClientController.ClientControllerInstance;
+        clientController.socket.emit($socketRoutes.REQUEST_ACTIVE_SERVERS);
+    }
+
+    receiveActiveServers(serverRooms: Array<string>) {
+        let clientController = ClientController.ClientControllerInstance;
+        if (serverRooms.length < 0) {
+            console.log(serverRooms + "is empty");
+            return;
+        }
+        clientController.view.createServerSelectionButtons(serverRooms);
+    }
+
+    joinServer(serverRoom) {
+        let clientController = ClientController.ClientControllerInstance;
+        console.log("controller: Server room selected: " + serverRoom.detail);
+        clientController.activeServer = serverRoom.detail;
+        clientController.socket.emit($socketRoutes.REQUEST_JOIN_SERVER_ROOM, clientController.clientID, serverRoom.detail);
+    }
+
     changeGameMap(map: MapNames) {
-        ClientController.ClientControllerInstance.OVERWORLD.init(map);
+        let clientController = ClientController.ClientControllerInstance;
+        clientController.OVERWORLD.init(map);
+
     }
 
     /**
@@ -232,14 +269,14 @@ export class ClientController extends $OBSERVER {
     }
 
     /* syncOverworld(overworld) {
-
+ 
         let foundMatch = false;
-
+ 
         overworld.grassyField.gameObjects.forEach((character: GameObject) => {
             foundMatch = false;
             if (character instanceof Character) {
                 for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
-
+ 
                     if (character.username == this.OverworldMaps.grassyField.gameObjects[i].username) {
                         this.OverworldMaps.grassyField.gameObjects[i].x = character.x;
                         this.OverworldMaps.grassyField.gameObjects[i].y = character.y;
@@ -248,13 +285,13 @@ export class ClientController extends $OBSERVER {
                     }
                 }
             }
-
+ 
             if (!foundMatch) {
                 this.addCharacterToOverworld((character as Character));
             }
-
+ 
         })
-
+ 
         window.OverworldMaps = this.OverworldMaps;
     } */
 
@@ -337,7 +374,7 @@ export class ClientController extends $OBSERVER {
         //let charJSON = ClientController.syncUsertoCharacter(clientController.character).toJSON();
         //clientController.socket.emit("characterCreated", charJSON);
         let characterOBJ = ClientController.syncUsertoCharacter(clientController.character);
-        clientController.socket.emit("characterCreated", characterOBJ, characterOBJ.location, this.clientID);
+        clientController.socket.emit($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, characterOBJ, characterOBJ.location, this.clientID);
     }
 
     static syncUsertoCharacter(obj) {
@@ -399,7 +436,7 @@ export class ClientController extends $OBSERVER {
                 if (gameOBJ.y - 0.5 <= 10) {
                     return;
                 } else {
-                    clientController.socket.emit("moveReq", Direction.UP, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.UP, gameOBJ);
                 }
                 break;
 
@@ -407,7 +444,7 @@ export class ClientController extends $OBSERVER {
                 if (gameOBJ.y + 0.5 >= 200) {
                     return;
                 } else {
-                    clientController.socket.emit("moveReq", Direction.DOWN, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.DOWN, gameOBJ);
                 }
                 break;
 
@@ -415,7 +452,7 @@ export class ClientController extends $OBSERVER {
                 if (gameOBJ.x - 0.5 <= 0) {
                     return;
                 } else {
-                    clientController.socket.emit("moveReq", Direction.LEFT, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.LEFT, gameOBJ);
                 }
                 break;
 
@@ -423,12 +460,12 @@ export class ClientController extends $OBSERVER {
                 if (gameOBJ.x + 0.5 >= 250) {
                     return;
                 } else {
-                    clientController.socket.emit("moveReq", Direction.RIGHT, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.RIGHT, gameOBJ);
                 }
                 break;
 
             default:
-                clientController.socket.emit("moveReq", Direction.STANDSTILL, gameOBJ);
+                clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.STANDSTILL, gameOBJ);
         }
     }
 
@@ -471,7 +508,11 @@ export class ClientController extends $OBSERVER {
     }
 
     sendMessage(message: string, user: string) {
-        ClientController.ClientControllerInstance.socket.emit("message", message, user)
+        if (ClientController.ClientControllerInstance.activeServer) {
+            ClientController.ClientControllerInstance.socket.emit($socketRoutes.REQUEST_MESSAGE, this.activeServer, message, user)
+            return;
+        }
+        alert("Select a server to send a message.");
     }
 
     postMessage(message: string, username: string) {
@@ -526,7 +567,7 @@ export class ClientController extends $OBSERVER {
 
     //TODO
     async playerLogout() {
-        this.socket.emit("playerLogout", this.client);
+        this.socket.emit($socketRoutes.REQUEST_CLIENT_LOGOUT, this.clientID, this.character);
         let response = await this.networkProxy.postJSON('/player/logout', null);
         if (response.ok) {
             console.log("Logged out");
