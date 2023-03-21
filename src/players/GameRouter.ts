@@ -156,6 +156,7 @@ export class GameRouter {
         let gameRouter = GameRouter.GameRouterInstance;
 
         this.setClientSocket(_socket);
+
         //Client Events
         _socket.on($socketRoutes.REQUEST_JOIN_SERVER_ROOM, (clientID: string, serverRoom: string) => this.playerJoinServer(clientID, serverRoom));
         _socket.on($socketRoutes.REQUEST_CLIENT_LOGOUT, this.playerLogout);
@@ -176,7 +177,7 @@ export class GameRouter {
         });
         // end
 
-        this.createServerRoom();
+        this.createServerRooms();
 
         //Move characters at a set interval.
         setInterval(() => {
@@ -239,7 +240,7 @@ export class GameRouter {
         GameRouter.GameRouterInstance.io.emit($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, charactersMovementData)
     }
 
-    createServerRoom() {
+    createServerRooms() {
         let gameRouter = GameRouter.GameRouterInstance;
 
         if (!gameRouter.serverRooms.has("US"))
@@ -263,14 +264,6 @@ export class GameRouter {
         } */
     }
 
-
-
-
-    /* startOverworld() {
-        GameRouter.GameRouterInstance.io.emit('startOverworld');
-        console.log("Sent startOverworld.");
-    } */
-
     serverRoomFull() {
         console.log("Not implemented");
         /* let gameRouter = GameRouter.GameRouterInstance;
@@ -285,6 +278,14 @@ export class GameRouter {
         throw new Error("Method not implemented"); */
     }
 
+
+
+    /* startOverworld() {
+        GameRouter.GameRouterInstance.io.emit('startOverworld');
+        console.log("Sent startOverworld.");
+    } */
+
+    
     playerJoinServer(playerID: string, server: string) {
         let gameRouter = GameRouter.GameRouterInstance;
         let socket = gameRouter.clientMap.get(playerID).at(ClientMapSlot.ClientSocket)
@@ -352,7 +353,7 @@ export class GameRouter {
             gameRouter.io.emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
         }
         //gameRouter.io.to(server).emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
-        gameRouter.clientSocket.to(server).emit($socketRoutes.RESPONSE_MESSAGE, message, user)
+        gameRouter.clientSocket.to(server).emit($socketRoutes.RESPONSE_MESSAGE, message, user);
         gameRouter.clientSocket.emit($socketRoutes.RESPONSE_MESSAGE, { roomName: server, message: message })
     }
 

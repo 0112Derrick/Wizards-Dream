@@ -101,6 +101,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     createServerSelectionButtons(serverRooms: Array<string>) {
+        this.deleteServerButtons();
         serverRooms.forEach((serverRoom) => {
             let serverRoomData = {
                 name: serverRoom.at(0),
@@ -112,7 +113,12 @@ class ClientView extends $ClientSyntheticEventEmitter {
         })
         /* for (let serverRoom of serverRooms) {
         } */
+
         this.serverButtons(serverRooms);
+    }
+
+    deleteServerButtons() {
+        this.DOM[$id.SERVER_SELECTION_BUTTONS_CONTAINER].innerHTML = '';
     }
 
     serverButtons(serverRooms: Array<string>) {
