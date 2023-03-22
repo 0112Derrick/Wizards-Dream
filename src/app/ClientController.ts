@@ -128,7 +128,11 @@ export class ClientController extends $OBSERVER {
         this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
         this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
         this.socket.on($socketRoutes.RESPONSE_CLIENT_ID, (id) => { this.setID(id) });
-        this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => { window.location.reload() });
+        this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => {
+            if (!document.hidden) {
+                window.location.reload();
+            }
+        });
         // this.socket.on("newServerWorld", () => { this.createOverworld });
         this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
             this.updateGameObjects;
@@ -144,7 +148,8 @@ export class ClientController extends $OBSERVER {
         this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') })
         this.socket.on($socketRoutes.RESPONSE_ACTIVE_SERVERS, (servers: Array<string>) => {
             this.receiveActiveServers(servers);
-        })
+        });
+
         //end concepts
 
         /*  document.querySelector('#joinServer')?.addEventListener('click', () => {
@@ -509,7 +514,7 @@ export class ClientController extends $OBSERVER {
 
     sendMessage(message: string, user: string) {
         if (ClientController.ClientControllerInstance.activeServer) {
-            ClientController.ClientControllerInstance.socket.emit($socketRoutes.REQUEST_MESSAGE, this.activeServer, message, user)
+            ClientController.ClientControllerInstance.socket.emit($socketRoutes.REQUEST_MESSAGE, this.activeServer, message, user);
             return;
         }
         alert("Select a server to send a message.");

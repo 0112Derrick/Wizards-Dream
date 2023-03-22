@@ -285,12 +285,21 @@ export class GameRouter {
         console.log("Sent startOverworld.");
     } */
 
-    
+
     playerJoinServer(playerID: string, server: string) {
         let gameRouter = GameRouter.GameRouterInstance;
         let socket = gameRouter.clientMap.get(playerID).at(ClientMapSlot.ClientSocket)
         console.log(`User ${socket.id} joined room ${server}`);
         socket.join(server);
+        let room = gameRouter.io.sockets.adapter.rooms.get(server);
+
+
+        if (room) {
+            console.log(`Sockets in ${server}: ` + [...room]);
+        } else {
+            console.log("room doesn't exist");
+        }
+
         gameRouter.io.to(server).emit($socketRoutes.RESPONSE_SERVER_MESSAGE, `Welcome to ${server}`, "Server");
     }
 
@@ -343,18 +352,20 @@ export class GameRouter {
         GameRouter.GameRouterInstance.io.emit($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, gameObjects, map);
     }
 
-    checkMessage(server: string, message: string, user): void {
+    checkMessage(serverRoom: string, message: string, user): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let cleanMessage: string = ''
         if (message) {
             cleanMessage = message;
         }
-        if (server.toLocaleLowerCase().localeCompare("global") || !server) {
+        if (serverRoom.toLocaleLowerCase() == 'global' || serverRoom == '') {
+            console.log('Emitting globally.');
             gameRouter.io.emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
         }
-        //gameRouter.io.to(server).emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
-        gameRouter.clientSocket.to(server).emit($socketRoutes.RESPONSE_MESSAGE, message, user);
-        gameRouter.clientSocket.emit($socketRoutes.RESPONSE_MESSAGE, { roomName: server, message: message })
+
+        gameRouter.io.to(serverRoom).emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
+        //gameRouter.clientSocket.to(server).emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);
+        //gameRouter.clientSocket.emit($socketRoutes.RESPONSE_MESSAGE, { roomName: server, message: cleanMessage })
     }
 
     /**

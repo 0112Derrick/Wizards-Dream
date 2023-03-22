@@ -132,7 +132,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     async createCharacterSelectionButtons(characters: Array<any>) {
-
+        this.clearButtons();
         characters.forEach((character, i) => {
             let data = {
                 name: character.username,
@@ -144,6 +144,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     characterButtons(numOfCharacter: number) {
+
         let button: number;
         for (let i = 0; i < numOfCharacter; i++) {
             document.getElementById("character+" + i).addEventListener("click", () => {
@@ -151,15 +152,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
                 this.dispatchEventLocal($events.SELECT_CHARACTER, button);
             })
         }
-        /* document.getElementById("character+0").addEventListener("click", () => {
-            button = 0;
-            this.dispatchEventLocal($events.SELECT_CHARACTER, button);
-        })
 
-        document.getElementById("character+1").addEventListener("click", () => {
-            button = 1;
-            this.dispatchEventLocal($events.SELECT_CHARACTER, button);
-        }) */
     }
 
 
@@ -167,6 +160,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
         if (document.getElementById(data.index)) {
             return;
         }
+
         let button = document.createElement("button");
         console.log(data);
         button.setAttribute("type", "button");
@@ -177,11 +171,8 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     clearButtons(): void {
-        let button1 = document.getElementById("character+0");
-        let button2 = document.getElementById("character+1");
 
-        button1.remove();
-        button2.remove();
+        this.DOM[$id.SELECT_CHARACTERS].innerHTML = '';
     }
 
     sendMessage() {
