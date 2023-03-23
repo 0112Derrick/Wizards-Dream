@@ -106,6 +106,17 @@ export class ClientController extends $OBSERVER {
 
         this.listenForEvent($events.MESSAGE, (message) => { this.checkMessage(message) }, this.view);
 
+
+        document.addEventListener('visibilitychange', () => {
+            console.log('Visibility state:', document.visibilityState);
+            if (document.visibilityState === 'visible') {
+                if (!this.socket || this.socket.disconnected) {
+                    console.log('Reconnecting socket...');
+                    //this.connectSocket();
+                    this.init();
+                }
+            }
+        });
     }
 
     public static get ClientControllerInstance(): ClientController {
@@ -116,39 +127,54 @@ export class ClientController extends $OBSERVER {
         return this.clientController;
     }
 
+    async connectSocket() {
+        //@ts-ignore
+        this.socket = await io();
+
+        this.socket.on('connect', () => {
+            console.log('Socket connected:' + this.socket.id);
+            this.clientID = this.socket.id;
+        });
+
+        this.socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+        })
+    }
 
     async init() {
         // @ts-ignore
 
-        this.socket = await io();
+        this.connectSocket().then(() => {
+            // this.socket.on("startOverworld", this.startOverworldOnConnection);
+            this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
+            this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
+            this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
+            //this.socket.on($socketRoutes.RESPONSE_CLIENT_ID, (id) => { this.setID(id) });
+            this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => {
+                if (!document.hidden) {
+                    window.location.reload();
+                }
+            });
+            // this.socket.on("newServerWorld", () => { this.createOverworld });
+            this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
+                this.updateGameObjects;
+            });
+            //this.socket.emit('connection');
+
+            //proof of concept events
+            //this.socket.on('movePlayer', () => { this.updatePlayer });
+            // this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
+            this.socket.on($socketRoutes.RESPONSE_SYNC_OVERWORLD, (overworld) => { this.syncOverworld(overworld) })
+            this.socket.on($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
+            this.socket.on($socketRoutes.RESPONSE_MESSAGE, (message: string, username: string) => { this.postMessage(message, username) })
+            this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') })
+            this.socket.on($socketRoutes.RESPONSE_ACTIVE_SERVERS, (servers: Array<string>) => {
+                this.receiveActiveServers(servers);
+            });
+
+        });
+        //this.socket = await io();
         //this.OVERWORLD.init();
-
-        // this.socket.on("startOverworld", this.startOverworldOnConnection);
-        this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
-        this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
-        this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
-        this.socket.on($socketRoutes.RESPONSE_CLIENT_ID, (id) => { this.setID(id) });
-        this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => {
-            if (!document.hidden) {
-                window.location.reload();
-            }
-        });
-        // this.socket.on("newServerWorld", () => { this.createOverworld });
-        this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
-            this.updateGameObjects;
-        });
-        //this.socket.emit('connection');
-
-        //proof of concept events
-        //this.socket.on('movePlayer', () => { this.updatePlayer });
-        // this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
-        this.socket.on($socketRoutes.RESPONSE_SYNC_OVERWORLD, (overworld) => { this.syncOverworld(overworld) })
-        this.socket.on($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
-        this.socket.on($socketRoutes.RESPONSE_MESSAGE, (message: string, username: string) => { this.postMessage(message, username) })
-        this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') })
-        this.socket.on($socketRoutes.RESPONSE_ACTIVE_SERVERS, (servers: Array<string>) => {
-            this.receiveActiveServers(servers);
-        });
 
         //end concepts
 
@@ -509,7 +535,12 @@ export class ClientController extends $OBSERVER {
         if (message) {
             cleanMessage = message;
         }
-        ClientController.ClientControllerInstance.sendMessage(cleanMessage.detail, ClientController.ClientControllerInstance.character.username)
+        try {
+            ClientController.ClientControllerInstance.sendMessage(cleanMessage.detail, ClientController.ClientControllerInstance.character.username);
+        } catch (error) {
+            alert('No character selected');
+        }
+
     }
 
     sendMessage(message: string, user: string) {

@@ -288,19 +288,23 @@ export class GameRouter {
 
     playerJoinServer(playerID: string, server: string) {
         let gameRouter = GameRouter.GameRouterInstance;
-        let socket = gameRouter.clientMap.get(playerID).at(ClientMapSlot.ClientSocket)
-        console.log(`User ${socket.id} joined room ${server}`);
-        socket.join(server);
-        let room = gameRouter.io.sockets.adapter.rooms.get(server);
+        try {
+            let socket = gameRouter.clientMap.get(playerID).at(ClientMapSlot.ClientSocket)
+            console.log(`User ${socket.id} joined room ${server}`);
+            socket.join(server);
+            let room = gameRouter.io.sockets.adapter.rooms.get(server);
 
 
-        if (room) {
-            console.log(`Sockets in ${server}: ` + [...room]);
-        } else {
-            console.log("room doesn't exist");
+            if (room) {
+                console.log(`Sockets in ${server}: ` + [...room]);
+            } else {
+                console.log("room doesn't exist");
+            }
+            gameRouter.io.to(socket.id).emit($socketRoutes.RESPONSE_SERVER_MESSAGE, `Welcome to ${server}`, "Server");
+        } catch (error) {
+            console.log("Error connecting socket to room: " + error);
         }
 
-        gameRouter.io.to(server).emit($socketRoutes.RESPONSE_SERVER_MESSAGE, `Welcome to ${server}`, "Server");
     }
 
 

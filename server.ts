@@ -157,19 +157,26 @@ const fs = fsModule.promises;
             if (!gameRouter.getClientMap().has(clientSocket.handshake.address)) {
                 let mapArr: Array<any> = [];
                 console.log('new Client Added: ', clientSocket.handshake.address);
-                gameRouter.getClientMap().set(clientSocket.handshake.address, mapArr);
+                gameRouter.getClientMap().set(clientSocket.id, mapArr);
+                //gameRouter.getClientMap().set(clientSocket.handshake.address, mapArr);
             }
 
             /*
             * Check to see if client socket data is set in our map
             * If client socket data does not exist in client map then add the data to the map
             */
-            if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientSocket)) {
-                let clientSocketOBJ = {
+            // if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientSocket)) {
+            if (!gameRouter.getClientMap().get(clientSocket.id).at(ClientMapSlot.ClientSocket)) {
+                /* let clientSocketOBJ = {
                     id: clientSocket.handshake.address,
                     arg: clientSocket
+                } */
+                let clientSocketOBJ = {
+                    id: clientSocket.id,
+                    arg: clientSocket,
                 }
-                console.log("Client socket set", clientSocket.handshake.address)
+                // console.log("Client socket set", clientSocket.handshake.address)
+                console.log("Client socket set", clientSocket.id);
                 gameRouter.setClientMap(clientSocketOBJ, ClientMapSlot.ClientSocket);
             }
 
@@ -177,19 +184,21 @@ const fs = fsModule.promises;
             * Check to see if client Obj (character data) is set in our map
             * If client Obj does not exist in client map then add the data to the map
             */
-            if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientOBJ)) {
-
+            // if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientOBJ)) {
+            if (!gameRouter.getClientMap().get(clientSocket.id).at(ClientMapSlot.ClientOBJ)) {
                 let clientOBJ = {
-                    id: clientSocket.handshake.address,
-                    arg: gameRouter.getClient(clientSocket.handshake.address)
+                    //id: clientSocket.handshake.address,
+                    id: clientSocket.id,
+                    arg: gameRouter.getClient(clientSocket.handshake.address),
                 }
 
                 gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
             }
 
-            clientSocket.emit($SocketConstants.RESPONSE_CLIENT_ID, clientSocket.handshake.address);
+            //clientSocket.emit($SocketConstants.RESPONSE_CLIENT_ID, clientSocket.handshake.address);
 
-            console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
+            //console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
+            console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.id)?.at(ClientMapSlot.ClientOBJ)));
             gameRouter.setIO(io);
             gameRouter.initGame(clientSocket, clientSocket.handshake.address);
 
@@ -201,6 +210,10 @@ const fs = fsModule.promises;
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
     });
+
+    io.on('connect_error', (err) => {
+        console.log("sockets connection error " + err.message);
+    })
 
     io.on('disconnect', clientSocket => {
         gameRouter.playerDisconnect(clientSocket, clientSocket.handshake.address);
