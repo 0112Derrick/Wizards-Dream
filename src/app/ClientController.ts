@@ -18,6 +18,7 @@ import { Overworld_Test } from "./Overworld_Test.js";
 import { MapNames } from "../constants/MapNames.js";
 import { MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
+import { Socket } from "socket.io-client";
 
 
 interface ClientToServerEvents {
@@ -40,7 +41,7 @@ interface ServerToClientEvents {
 export class ClientController extends $OBSERVER {
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
-    private socket: any;
+    private socket: Socket;
     private clientID: string = "";
     private client: any;
     private character: any = null;
@@ -56,7 +57,6 @@ export class ClientController extends $OBSERVER {
         upperImageSrc: '/images/maps/Battleground1.png',
         element: document.querySelector(".game-container"),
         canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
-
     }
     private hallwayConfig: MapConfigI = {
         gameObjects: [],
@@ -117,6 +117,7 @@ export class ClientController extends $OBSERVER {
                 }
             }
         });
+
     }
 
     public static get ClientControllerInstance(): ClientController {
@@ -130,7 +131,6 @@ export class ClientController extends $OBSERVER {
     async connectSocket() {
         //@ts-ignore
         this.socket = await io();
-
         this.socket.on('connect', () => {
             console.log('Socket connected:' + this.socket.id);
             this.clientID = this.socket.id;
@@ -271,7 +271,6 @@ export class ClientController extends $OBSERVER {
     changeGameMap(map: MapNames) {
         let clientController = ClientController.ClientControllerInstance;
         clientController.OVERWORLD.init(map);
-
     }
 
     /**
@@ -406,6 +405,7 @@ export class ClientController extends $OBSERVER {
         //clientController.socket.emit("characterCreated", charJSON);
         let characterOBJ = ClientController.syncUsertoCharacter(clientController.character);
         clientController.socket.emit($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, characterOBJ, characterOBJ.location, this.clientID);
+        clientController.addCharacterToOverworld(clientController.character, clientController.character.location);
     }
 
     static syncUsertoCharacter(obj) {
@@ -436,10 +436,10 @@ export class ClientController extends $OBSERVER {
      */
     public serverRequestMoveCharacter(character: $Character, moveDirection: Direction) {
         //If moveDirection is valid than move the character in the given direction and change their sprite direction
-        console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
+        // console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
         //TODO: The check needs to be for Character Ids which are currently being assigned to 1.
         let clientController = ClientController.ClientControllerInstance;
-        if (character.player == this.client.characters.at(0).player) {
+        if (character.player == clientController.character.player) {
 
             if (moveDirection) {
                 console.log(character.gameObjectID + " " + "movement req")
@@ -448,7 +448,7 @@ export class ClientController extends $OBSERVER {
                 clientController.moveCharacter(Direction.STANDSTILL, character);
             }
 
-            console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
+            //console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
             // If no direction than keep the sprite direction the same.
             //character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
         }

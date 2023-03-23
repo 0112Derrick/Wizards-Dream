@@ -10,6 +10,10 @@
     color: blue;
     margin-top: 10px;
 }
+.gameButtons {
+    list-style-type: none;
+    display: flex;
+}
 
 #game-chat-input {
     border: none;
