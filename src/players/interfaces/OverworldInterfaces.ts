@@ -26,7 +26,7 @@ export interface MapI {
     removeAllCharacters(): void;
     viewCharacters(): IterableIterator<Character>;
     findCharacter(character: Character): Boolean;
-    syncCharactersList(playersList: Map<string, Character> | Array<Character>): void;
+    syncGameObjects(playersList: Map<string, Character> | Array<GameObject>): void;
     updateCharacterLocation(character: Character): void;
     drawLowerImage(ctx: CanvasRenderingContext2D): void;
     drawUpperImage(ctx: CanvasRenderingContext2D): void;

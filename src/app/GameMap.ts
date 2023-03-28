@@ -7,7 +7,7 @@ import { MapNames } from "../constants/MapNames.js";
 import Camera from "./Camera.js";
 
 export class GameMap implements MapI {
-    gameObjects: Array<GameObject>;
+    private gameObjects: Array<GameObject>;
     activeCharacters: Map<string, Character> = new Map<string, Character>();
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
@@ -47,6 +47,22 @@ export class GameMap implements MapI {
         if (this.canvas)
             this.ctx = this.canvas.getContext("2d");
 
+    }
+
+    get GameObjects(): Array<GameObject> {
+        return this.gameObjects;
+    }
+
+    setGameObjects(value: Array<GameObject>) {
+        if (!Array.isArray(value)) {
+            //console.log("Attempted to set gameObjects to a non array.");
+            const error = new Error("Attempted to set gameObjects to a non array.");
+            const stackLines = error.stack.split('\n');
+            const callerLine = stackLines[2];
+            console.log('Caller: ', callerLine);
+            return;
+        }
+        this.gameObjects = value;
     }
 
     startGameLoop(): void {
@@ -129,7 +145,7 @@ export class GameMap implements MapI {
     }
 
     updateNpcCharacter(gameOBJ: GameObject) {
-        
+
 
 
     }
@@ -234,8 +250,20 @@ export class GameMap implements MapI {
     findCharacter(character: Character): Boolean {
         throw new Error("Method not implemented.");
     }
-    syncCharactersList(playersList: Map<string, Character> | Array<Character>): void {
-        throw new Error("Method not implemented.");
+    syncGameObjects(playersList: Array<GameObject>): void {
+        if (!Array.isArray(playersList)) {
+            //console.log("Attempted to set gameObjects to a non array.");
+            const error = new Error("Attempted to set gameObjects to a non array.");
+            const stackLines = error.stack.split('\n');
+            const callerLine = stackLines[2];
+            console.log('Caller: ', callerLine);
+            return;
+        }
+        this.setGameObjects(playersList);
+    }
+
+    syncActiveCharacters(activeCharactersList: Map<string, Character>): void {
+        this.activeCharacters = activeCharactersList;
     }
     updateCharacterLocation(character: Character): void {
         throw new Error("Method not implemented.");

@@ -184,6 +184,7 @@ export class GameRouter {
             if (!GameRouter.GameRouterInstance.moveRequestQue.isEmpty()) {
                 GameRouter.GameRouterInstance.moveCharacter(GameRouter.GameRouterInstance.moveRequestQue);
             }
+            //this.syncOverworld();
         }, GameRouter.GameRouterInstance.getMoveRequestIntervalTime());
 
     }
@@ -387,9 +388,16 @@ export class GameRouter {
             overworldMap = MapNames.GrassyField;
         }
 
-        overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
+        if (!overworld.maps.get(overworldMap).activePlayers.has(character.name)) {
+            overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
+        } else {
+            return;
+        }
+
         console.log(`${character.username} switched to ${overworldMap} map.`);
+
         character.location = overworldMap;
+
         overworld.maps.get(overworldMap).gameObjects.forEach((gameObj, i) => {
             if (gameObj instanceof Character) {
                 if ((gameObj as Character).username == character.username) {
@@ -398,6 +406,7 @@ export class GameRouter {
                 }
             }
         });
+
         overworld.maps.get(overworldMap).gameObjects.push(character);
 
         gameRouter.syncOverworld();

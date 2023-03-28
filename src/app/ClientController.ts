@@ -7,7 +7,7 @@ import { SocketConstants as $socketRoutes } from "../constants/ServerConstants.j
 
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
-import { Character as $Character } from "../app/Character.js"
+import { Character as $Character, Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
@@ -16,7 +16,7 @@ import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces
 import { GameMap } from "./GameMap.js";
 import { Overworld_Test } from "./Overworld_Test.js";
 import { MapNames } from "../constants/MapNames.js";
-import { MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
+import { MapConfigI, syncOverworld as $syncOverworld } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
 import { Socket } from "socket.io-client";
 
@@ -50,7 +50,7 @@ export class ClientController extends $OBSERVER {
     private activeServer: string = null;
 
     private grassyfieldConfig: MapConfigI = {
-        gameObjects: [],
+        gameObjects: new Array<GameObject>(),
         activeCharacters: null,
         name: MapNames.GrassyField,
         mapMinHeight: 500,
@@ -61,7 +61,7 @@ export class ClientController extends $OBSERVER {
         canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
     }
     private hallwayConfig: MapConfigI = {
-        gameObjects: [],
+        gameObjects: new Array<GameObject>(),
         activeCharacters: null,
         name: MapNames.Hallway,
         mapMinHeight: 0,
@@ -148,6 +148,7 @@ export class ClientController extends $OBSERVER {
     async init() {
         // @ts-ignore
 
+
         this.connectSocket().then(() => {
             // this.socket.on("startOverworld", this.startOverworldOnConnection);
             this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
@@ -207,12 +208,13 @@ export class ClientController extends $OBSERVER {
 
     connect(_client) {
         let clientController = ClientController.ClientControllerInstance;
+        clientController.createOverworld();
         clientController.client = _client;
         console.log(`User: ${clientController.client.username} is online. \n`);
         this.socket.emit($socketRoutes.REQUEST_CLIENT_ONLINE, this.clientID);
         clientController.characters = clientController.client.characters;
         clientController.sendViewCharacterSelection(clientController.client.characters);
-        clientController.createOverworld();
+
         //TODO call startOverworldOnConnection with character.location
         clientController.startOverworldOnConnection();
         /* if (this.client.characters.at(0)) {
@@ -246,7 +248,7 @@ export class ClientController extends $OBSERVER {
         let clientController = ClientController.ClientControllerInstance;
         clientController.OVERWORLD.Maps.forEach(map => {
             if (map.getMapName == updatedMap) {
-                map.gameObjects = gameObjects;
+                map.syncGameObjects(gameObjects);
             }
         });
     }
@@ -291,15 +293,61 @@ export class ClientController extends $OBSERVER {
      * 
      */
 
-    syncOverworld(overworld) {
+    syncOverworld(overworld: $syncOverworld) {
         let matchFound = false;
         /*come up with a framework to do interpolation
           dependency injection or visitor pattern
           vector from server > visitor pattern that implements interpolation
           based on current direction continue moving non player controlled characters in that direction until you receive an update from the server
         */
-        //sss
+        this.OVERWORLD.Maps.forEach((map) => {
+            if (map.getMapName == MapNames.GrassyField) {
+                let drawNewCharacters = this.FindRecentlyAddedCharacters(map.activeCharacters, overworld.grassyfield.activePlayers)
+                drawNewCharacters.forEach(character => {
+                    this.addCharacterToOverworld(character, MapNames.GrassyField);
+                });
+
+
+                map.syncActiveCharacters(overworld.grassyfield.activePlayers);
+                if (!Array.isArray(overworld.grassyfield.gameObjects)) {
+                    console.log("GameObjects hallway: ", overworld.grassyfield.gameObjects, " Type: ", typeof overworld.grassyfield.gameObjects)
+                    let syncedOverworldGameObjects = Object.values(overworld.grassyfield.gameObjects);
+                    map.syncGameObjects(syncedOverworldGameObjects as GameObject[]);
+                }
+                //map.syncGameObjects(overworld.grassyfield.gameObjects);
+            }
+            if (map.getMapName == MapNames.Hallway) {
+                let drawNewCharacters = this.FindRecentlyAddedCharacters(map.activeCharacters, overworld.hallway.activePlayers)
+                drawNewCharacters.forEach(character => {
+                    this.addCharacterToOverworld(character, MapNames.Hallway);
+                });
+                map.syncActiveCharacters(overworld.hallway.activePlayers);
+                if (!Array.isArray(overworld.hallway.gameObjects)) {
+                    console.log("GameObjects hallway: ", overworld.hallway.gameObjects, " Type: ", typeof overworld.hallway.gameObjects)
+                    let syncedOverworldGameObjects = Object.values(overworld.hallway.gameObjects)
+                    map.syncGameObjects(syncedOverworldGameObjects as GameObject[]);
+                }
+                //map.syncGameObjects(overworld.hallway.gameObjects);
+            }
+        })
+
         console.log("Received sync overworld response from the server.");
+    }
+    FindRecentlyAddedCharacters(currentPlayers: Map<string, Character>, newPlayers: Map<string, Character>): Array<Character> {
+        let newPlayersList = new Array<Character>();
+        console.log("newPlayers: ", newPlayers, " Type: ", typeof newPlayers);
+
+        if (typeof newPlayers === 'object' && !(newPlayers instanceof Map)) {
+            newPlayers = new Map(Object.entries(newPlayers));
+        }
+
+        for (let player of newPlayers.values()) {
+            if (!currentPlayers.has(player.name)) {
+                console.log(player.name);
+                newPlayersList.push(player);
+            }
+        }
+        return newPlayersList;
     }
 
     /* syncOverworld(overworld) {
@@ -333,17 +381,19 @@ export class ClientController extends $OBSERVER {
 
     addCharacterToOverworld(character: $Character, map: MapNames = MapNames.GrassyField) {
         let clientController = ClientController.ClientControllerInstance;
+
         switch (map) {
 
             case MapNames.GrassyField:
                 //  let gameObjects = this.OverworldMaps.grassyField.gameObjects;
                 let gameObjects = null;
 
-                gameObjects = clientController.findOverWorldMapByName(map).gameObjects;
-
-                if (!gameObjects) {
-                    console.log("Map not found");
-                    return;
+                let selectedMap = clientController.findOverWorldMapByName(map);
+                if (selectedMap) {
+                    gameObjects = selectedMap.GameObjects;
+                } else {
+                    gameObjects = clientController.OVERWORLD.Maps.at(0).GameObjects;
+                    console.log("Unable to find map");
                 }
 
                 gameObjects.forEach((object: GameObject) => {
