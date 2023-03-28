@@ -73,6 +73,8 @@ export class Character extends GameObject implements characterDataInterface {
         this.width = config.width || 32;
         this.height = config.height || 32;
         this.walking = config.walking || false;
+        this.xVelocity = 2;
+        this.yVelocity = 2;
     }
 
     toJSON() {

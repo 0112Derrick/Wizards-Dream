@@ -53,6 +53,8 @@ export class ClientController extends $OBSERVER {
         gameObjects: [],
         activeCharacters: null,
         name: MapNames.GrassyField,
+        mapMinHeight: 500,
+        mapMinWidth: 20,
         lowerImageSrc: '/images/maps/Battleground1.png',
         upperImageSrc: '/images/maps/Battleground1.png',
         element: document.querySelector(".game-container"),
@@ -62,6 +64,8 @@ export class ClientController extends $OBSERVER {
         gameObjects: [],
         activeCharacters: null,
         name: MapNames.Hallway,
+        mapMinHeight: 0,
+        mapMinWidth: 20,
         lowerImageSrc: '/images/maps/Battleground2.png',
         upperImageSrc: '/images/maps/Battleground2.png',
         element: document.querySelector(".game-container"),
@@ -405,6 +409,14 @@ export class ClientController extends $OBSERVER {
         //clientController.socket.emit("characterCreated", charJSON);
         let characterOBJ = ClientController.syncUsertoCharacter(clientController.character);
         clientController.socket.emit($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, characterOBJ, characterOBJ.location, this.clientID);
+        clientController.OVERWORLD.Maps.forEach(map => {
+            if (map.getMapName == clientController.character.location || clientController.character.location == null && map.getMapName == MapNames.GrassyField) {
+                if (!clientController.character.location) {
+                    clientController.character.location = MapNames.GrassyField;
+                }
+                map.setClientCharacter(clientController.character);
+            }
+        });
         clientController.addCharacterToOverworld(clientController.character, clientController.character.location);
     }
 
@@ -424,6 +436,9 @@ export class ClientController extends $OBSERVER {
             guild: obj.guild,
             items: obj.items,
             player: obj.player,
+            location: obj.location || MapNames.GrassyField,
+            xVelocity: obj.xVelocity || 5,
+            yVelocity: obj.yVelocity || 5,
         });
         ClientController.ClientControllerInstance.SETCharacter(char);
         return char;

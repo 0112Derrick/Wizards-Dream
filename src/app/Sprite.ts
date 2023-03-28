@@ -109,11 +109,32 @@ export class Sprite {
         }
     }
 
-    draw(ctx): void {
-        const ObjectPositionXCoordinate = this.gameObject.x - 8;
-        const ObjectPositionYCoordinate = this.gameObject.y - 18;
-        const NamePositionXCoordinate = this.gameObject.x + 7;
-        const NamePositionYCoordinate = this.gameObject.y - 10;
+    draw(ctx: CanvasRenderingContext2D, characterX?, characterY?): void {
+        let ObjectPositionXCoordinate;
+        let ObjectPositionYCoordinate;
+        let NamePositionXCoordinate;
+        let NamePositionYCoordinate;
+
+        const offsetX = this.gameObject.width;
+        const offsetY = this.gameObject.height;
+
+        if (characterX && characterY) {
+            ObjectPositionXCoordinate = characterX - offsetX;
+            ObjectPositionYCoordinate = characterY - offsetY;
+            NamePositionXCoordinate = characterX;
+            NamePositionYCoordinate = characterY;
+        } else {
+            ObjectPositionXCoordinate = this.gameObject.x - offsetX;
+            ObjectPositionYCoordinate = this.gameObject.y - offsetY;
+            //ObjectPositionXCoordinate = (this.gameObject.x - 8) - offsetX;
+            //ObjectPositionYCoordinate = (this.gameObject.y - 18) - offsetY;
+            NamePositionXCoordinate = this.gameObject.x + 7;
+            NamePositionYCoordinate = this.gameObject.y - 10;
+        }
+
+
+
+
         const CharacterSpriteSheetSize = 32;
         this.isShadowLoaded && ctx.drawImage(this.shadow, ObjectPositionXCoordinate, ObjectPositionYCoordinate
         );

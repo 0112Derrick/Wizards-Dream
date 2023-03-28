@@ -4,6 +4,8 @@ import { GameMap } from "../../app/GameMap";
 import { MapNames } from "../../constants/MapNames.js";
 
 export interface MapConfigI {
+    mapMinWidth: number;
+    mapMinHeight: number;
     gameObjects: GameObject[];
     activeCharacters: Map<string, Character> | null,
     lowerImageSrc: string | null;
