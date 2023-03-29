@@ -86,7 +86,7 @@ export class GameMap implements MapI {
         this.character = character;
     }
 
-    draw(character) {
+    draw() {
         this.clearCanvas(this.ctx);
 
         const backgroundX = Math.max(0, this.camera.x);
@@ -98,22 +98,27 @@ export class GameMap implements MapI {
 
         this.ctx.drawImage(this.lowerImage, backgroundX, backgroundY, imageWidth, imageHeight, offsetX, offsetY, imageWidth, imageHeight);
 
-        let characterX = character.x - this.camera.x;
-        let characterY = character.y - this.camera.y;
-        character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
-        console.log("x: ", characterX, " y: ", characterY);
-        character.sprite.draw(this.ctx, characterX, characterY);
+        // let characterX = this.character.x - this.camera.x;
+        // let characterY = this.character.y - this.camera.y;
+        // this.character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
+        //console.log("x: ", characterX, " y: ", characterY);
+        //this.character.sprite.draw(this.ctx, characterX, characterY);
 
 
-        /* this.gameObjects.forEach((gameObject) => {
+        this.gameObjects.forEach((gameObject) => {
             let character = (gameObject as Character);
 
-            //if (this.character.name == character.name)
-            character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction, mapMinHeight: this.mapMinHeight, mapMinWidth: this.mapMinWidth, worldWidth: this.worldWidth, worldHeight: this.worldHeight, camera: this.camera })
+
+            character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction })
             let characterX = character.x - this.camera.x;
             let characterY = character.y - this.camera.y;
+
+            /* if (character.name == this.character.name) {
+                characterX = this.character.x - this.camera.x;
+                characterY = this.character.y - this.camera.y;
+            } */
             character.sprite.draw(this.ctx, characterX, characterY);
-        }); */
+        });
     }
     /*      
             let characterX = this.character.x - this.camera.x;
@@ -129,15 +134,16 @@ export class GameMap implements MapI {
 
                 if ((gameObject instanceof Character)) {
                     if ((gameObject as Character).player == this.character.player) {
-                        // this.character = gameObject
-                        this.updateCharacter(gameObject);
+                        this.character = gameObject;
+                        this.updateCharacter(this.character);
+
                     } else {
                         // this.updateNpcCharacter((gameObject as Character));
                     }
                 }
             })
             this.updateCamera(this.character);
-            this.draw(this.character);
+            this.draw();
         }
         window.requestAnimationFrame(() => this.animate2());
     }

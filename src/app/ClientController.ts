@@ -353,7 +353,13 @@ export class ClientController extends $OBSERVER {
                 } else {
                     let updatedObjects = [];
                     overworld.grassyfield.gameObjects.forEach((character) => {
-                        updatedObjects.push(this.createCharacterFromCharacterDataI(character));
+                        if (character.name == ClientController.ClientControllerInstance.character) {
+                            ClientController.ClientControllerInstance.character = this.createCharacterFromCharacterDataI(character);
+                            map.setClientCharacter(ClientController.ClientControllerInstance.Character);
+                            updatedObjects.push(ClientController.ClientControllerInstance.Character);
+                        } else {
+                            updatedObjects.push(this.createCharacterFromCharacterDataI(character));
+                        }
                     })
                     map.syncGameObjects(updatedObjects);
                 }
@@ -378,6 +384,7 @@ export class ClientController extends $OBSERVER {
                     let updatedObjects = [];
                     syncedOverworldGameObjects.forEach((character) => {
                         updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
+
                     });
 
                     map.syncGameObjects(updatedObjects);
