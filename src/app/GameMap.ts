@@ -4,11 +4,12 @@ import { Direction, DirectionInput } from "./DirectionInput.js";
 import { ClientController as $ClientController } from "./ClientController.js";
 import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
+import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
 import Camera from "./Camera.js";
 
 export class GameMap implements MapI {
     private gameObjects: Array<GameObject>;
-    activeCharacters: Map<string, Character> = new Map<string, Character>();
+    activeCharacters: Map<string, $characterDataInterface> = new Map<string, $characterDataInterface>();
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
     private name: MapNames;
@@ -25,7 +26,7 @@ export class GameMap implements MapI {
     private directionInput = new DirectionInput();
     private mapMinHeight: number = 0;
     mapMinWidth: number = 0;
-
+    private mapLoaded: boolean = false;
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
         this.lowerImage = new Image();
@@ -34,8 +35,11 @@ export class GameMap implements MapI {
         this.upperImage.src = config.upperImageSrc;
         this.element = config.element || null;
         this.name = config.name;
-        this.worldHeight = this.lowerImage.height;
-        this.worldWidth = this.lowerImage.width;
+        this.lowerImage.onload = (() => {
+            this.worldHeight = this.lowerImage.height;
+            this.worldWidth = this.lowerImage.width;
+            this.mapLoaded = true;
+        })
         this.mapMinHeight = config.mapMinHeight;
         this.mapMinWidth = config.mapMinWidth;
         this.directionInput.init();
@@ -46,7 +50,6 @@ export class GameMap implements MapI {
         }
         if (this.canvas)
             this.ctx = this.canvas.getContext("2d");
-
     }
 
     get GameObjects(): Array<GameObject> {
@@ -75,35 +78,15 @@ export class GameMap implements MapI {
         //throw new Error("Method not implemented.");
     }
 
-    updateCamera() {
-        this.camera.updateCamera(this.character);
-    }
-
-    drawBackground() {
-        const tileWidth = this.lowerImage.width;
-        const tileHeight = this.lowerImage.height;
-
-        const startX = Math.floor(this.camera.x / tileWidth);
-        const startY = Math.floor(this.camera.y / tileHeight);
-        const endX = Math.ceil((this.camera.x + this.camera.width) / tileWidth);
-        const endY = Math.ceil((this.camera.y + this.camera.height) / tileHeight);
-
-        for (let x = startX; x < endX; x++) {
-            for (let y = startY; y < endY; y++) {
-                this.ctx.drawImage(
-                    this.lowerImage,
-                    x * tileWidth - this.camera.x,
-                    y * tileHeight - this.camera.y
-                );
-            }
-        }
+    updateCamera(player) {
+        this.camera.updateCamera(player);
     }
 
     setClientCharacter(character: Character) {
         this.character = character;
     }
 
-    draw() {
+    draw(character) {
         this.clearCanvas(this.ctx);
 
         const backgroundX = Math.max(0, this.camera.x);
@@ -114,39 +97,52 @@ export class GameMap implements MapI {
         const imageHeight = Math.min(this.camera.height, this.lowerImage.height - backgroundY);
 
         this.ctx.drawImage(this.lowerImage, backgroundX, backgroundY, imageWidth, imageHeight, offsetX, offsetY, imageWidth, imageHeight);
-        //this.ctx.drawImage(this.lowerImage, -this.camera.x, -this.camera.y, this.canvas.width, this.canvas.height);
-        this.character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
 
-        let characterX = this.character.x - this.camera.x;
-        let characterY = this.character.y - this.camera.y;
-        //characterX, characterY
-        this.character.sprite.draw(this.ctx, characterX, characterY);
+        let characterX = character.x - this.camera.x;
+        let characterY = character.y - this.camera.y;
+        character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
+        console.log("x: ", characterX, " y: ", characterY);
+        character.sprite.draw(this.ctx, characterX, characterY);
 
 
+        /* this.gameObjects.forEach((gameObject) => {
+            let character = (gameObject as Character);
+
+            //if (this.character.name == character.name)
+            character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction, mapMinHeight: this.mapMinHeight, mapMinWidth: this.mapMinWidth, worldWidth: this.worldWidth, worldHeight: this.worldHeight, camera: this.camera })
+            let characterX = character.x - this.camera.x;
+            let characterY = character.y - this.camera.y;
+            character.sprite.draw(this.ctx, characterX, characterY);
+        }); */
     }
+    /*      
+            let characterX = this.character.x - this.camera.x;
+            let characterY = this.character.y - this.camera.y;
+            this.character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
+            this.character.sprite.draw(this.ctx, characterX, characterY); 
+    */
 
     animate2(): void {
-        if (this.character) {
+        if (this.character && this.mapLoaded) {
 
             this.gameObjects.forEach((gameObject) => {
 
                 if ((gameObject instanceof Character)) {
                     if ((gameObject as Character).player == this.character.player) {
-                        this.updateCharacter(this.character);
+                        // this.character = gameObject
+                        this.updateCharacter(gameObject);
                     } else {
-                        this.updateNpcCharacter((gameObject as Character));
+                        // this.updateNpcCharacter((gameObject as Character));
                     }
                 }
             })
-            this.updateCamera();
-            this.draw();
+            this.updateCamera(this.character);
+            this.draw(this.character);
         }
         window.requestAnimationFrame(() => this.animate2());
     }
 
     updateNpcCharacter(gameOBJ: GameObject) {
-
-
 
     }
 
@@ -174,9 +170,31 @@ export class GameMap implements MapI {
             default:
                 break;
         }
-        console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
-        console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
+        character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
+        character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
+        // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
+        //console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
 
+    }
+
+    drawBackground() {
+        const tileWidth = this.lowerImage.width;
+        const tileHeight = this.lowerImage.height;
+
+        const startX = Math.floor(this.camera.x / tileWidth);
+        const startY = Math.floor(this.camera.y / tileHeight);
+        const endX = Math.ceil((this.camera.x + this.camera.width) / tileWidth);
+        const endY = Math.ceil((this.camera.y + this.camera.height) / tileHeight);
+
+        for (let x = startX; x < endX; x++) {
+            for (let y = startY; y < endY; y++) {
+                this.ctx.drawImage(
+                    this.lowerImage,
+                    x * tileWidth - this.camera.x,
+                    y * tileHeight - this.camera.y
+                );
+            }
+        }
     }
 
     animate(): void {
@@ -198,6 +216,7 @@ export class GameMap implements MapI {
         // }, 16);
         window.requestAnimationFrame(() => this.animate());
     }
+
 
     drawLowerImage(ctx: CanvasRenderingContext2D): void {
         ctx.drawImage(this.lowerImage, 0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -240,17 +259,36 @@ export class GameMap implements MapI {
             }
         }
     }
+
     removeAllCharacters(): void {
         this.gameObjects = [];
         this.activeCharacters.clear();
     }
-    viewCharacters(): IterableIterator<Character> {
+
+    removeCharactersFromGameObjectsList(newCharacters: Map<string, $characterDataInterface>, map: GameMap) {
+        let characterNames = this.activeCharacters.keys();
+
+        for (let name of characterNames) {
+            if (newCharacters.has(name)) {
+                break;
+            }
+
+            map.GameObjects.forEach((obj, i) => {
+                if (obj.name == name) {
+                    console.log("Removed gameObject ", map.GameObjects.splice(i, 1));
+                }
+            })
+        }
+    }
+
+    viewCharacters(): IterableIterator<$characterDataInterface> {
         return this.activeCharacters.values();
     }
     findCharacter(character: Character): Boolean {
         throw new Error("Method not implemented.");
     }
     syncGameObjects(playersList: Array<GameObject>): void {
+        console.log("Synced game objects: " + playersList + "\nType: " + typeof playersList)
         if (!Array.isArray(playersList)) {
             //console.log("Attempted to set gameObjects to a non array.");
             const error = new Error("Attempted to set gameObjects to a non array.");
@@ -259,10 +297,12 @@ export class GameMap implements MapI {
             console.log('Caller: ', callerLine);
             return;
         }
+
         this.setGameObjects(playersList);
     }
 
-    syncActiveCharacters(activeCharactersList: Map<string, Character>): void {
+    syncActiveCharacters(activeCharactersList: Map<string, $characterDataInterface>): void {
+        console.log("Synced characters: " + activeCharactersList + "\nType: " + typeof activeCharactersList);
         this.activeCharacters = activeCharactersList;
     }
     updateCharacterLocation(character: Character): void {

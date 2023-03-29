@@ -20,4 +20,14 @@ export enum StatNames {
     VIT = 3,
     MEN = 4,
     DEX = 5,
-}  
+}
+
+export const CharacterSize = {
+    width: 32,
+    height: 32,
+}
+
+export const CharacterVelocity = {
+    xVelocity: 2,
+    yVelocity: 2,
+}

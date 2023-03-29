@@ -1,6 +1,6 @@
 import SyntheticEventEmitter from "../framework/SyntheticEventEmitter.js";
 import { LANDING_HTML_IDS as $id } from "../constants/HTMLElementIds.js";
-import { playerSignupDataInterface as $playerSignupDataInterface } from "./interfaces/PlayerDataInterface.js"
+import { playerSignupDataInterface as $playerSignupDataInterface } from "./interfaces/CharacterDataInterface.js"
 import { EventConstants as $event } from "../constants/EventConstants.js";
 import $ClientSyntheticEventEmitter from "../framework/ClientSyntheticEventEmitter.js";
 

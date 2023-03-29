@@ -1,8 +1,9 @@
-import $playerDataInterface, { characterDataInterface } from "./interfaces/PlayerDataInterface.js";
-import IcharacterDocument from './interfaces/PlayerDataInterface.js';
+import $playerDataInterface, { characterDataInterface } from "./interfaces/CharacterDataInterface.js";
+import IcharacterDocument from './interfaces/CharacterDataInterface.js';
 import $SyntheticEventEmitter from '../framework/SyntheticEventEmitter.js';
 import { EventConstants as $EventConstants } from '../constants/EventConstants.js';
 import { MapNames } from "../constants/MapNames.js";
+import { CharacterSize as $CharacterSize, CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js"
 
 export class Player {
 
@@ -21,8 +22,8 @@ export class Player {
                 username: 'username',
                 characterGender: '',
                 player: '',
-                width: 32,
-                height: 32,
+                width: $CharacterSize.width,
+                height: $CharacterSize.height,
                 gameObjectID: 0,
                 location: MapNames.GrassyField,
                 attributes: {
@@ -46,11 +47,14 @@ export class Player {
                 x: 0,
                 y: 0,
                 friends: [],
-                equipment: { head: [], chest: [], legs: [], weapon: [] },
-                sprite: undefined,
+                equipment: { head: null, chest: null, legs: null, weapon: null },
+                sprite: 'png',
                 direction: 'right',
                 class: '',
                 guild: '',
+                xVelocity: $CharacterVelocity.xVelocity,
+                yVelocity: $CharacterVelocity.yVelocity,
+                name: 'name',
                 items: [],
             }],
             playerID: '',

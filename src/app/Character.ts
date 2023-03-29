@@ -1,26 +1,33 @@
 import { idText } from "typescript";
-import { characterDataInterface } from "../players/interfaces/PlayerDataInterface.js";
-import { SpriteAnimations } from "./Sprite.js";
-import { GameObject } from "./GameObject.js";
-import { Direction } from "./DirectionInput.js";
-import { CharacterAttributes } from "./CharacterAttributes.js";
-import { MapNames } from "../constants/MapNames.js";
+import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { SpriteAnimations as $SpriteAnimations } from "./Sprite.js";
+import { GameObject as $GameObject } from "./GameObject.js";
+import { Direction as $Direction } from "./DirectionInput.js";
+import { CharacterAttributes as $CharacterAttributes } from "./CharacterAttributes.js";
+import { MapNames as $MapNames } from "../constants/MapNames.js";
+import { CharacterSize as $CharacterSize, CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js"
+import Camera from "./Camera.js";
 
 interface CharacterMovementStateI {
-    arrow?: Direction | null;
+    arrow?: $Direction | null;
+    mapMinHeight?: number;
+    mapMinWidth?: number;
+    worldHeight?: number;
+    worldWidth?: number;
+    camera?: Camera;
 }
-export class Character extends GameObject implements characterDataInterface {
+export class Character extends $GameObject implements $characterDataInterface {
     movingProgressRemaining: number;
     directionUpdate: {};
     isPlayerControlled: any;
-    lastDirection: Direction;
+    lastDirection: $Direction;
     username: string;
     class: string;
     characterGender: string;
     width: number;
     height: number;
     walking: boolean;
-    location: MapNames;
+    location: $MapNames;
 
     attributes: {
         level: number,//Determines players stat attributes
@@ -53,28 +60,29 @@ export class Character extends GameObject implements characterDataInterface {
         this.isPlayerControlled = config.isPlayerControlled || false;
 
         this.directionUpdate = {
-            [Direction.UP]: ["y", -0.5],
-            [Direction.DOWN]: ["y", 0.5],
-            [Direction.LEFT]: ["x", -0.7],
-            [Direction.RIGHT]: ["x", 0.7],
-            [Direction.JUMP]: ["y", 0],
+            [$Direction.UP]: ["y", - $CharacterVelocity.yVelocity],
+            [$Direction.DOWN]: ["y", + $CharacterVelocity.yVelocity],
+            [$Direction.LEFT]: ["x", - $CharacterVelocity.xVelocity],
+            [$Direction.RIGHT]: ["x", + $CharacterVelocity.xVelocity],
+            [$Direction.JUMP]: ["y", 0],
         }
 
-        //this.gameObjectID = config.characterID || 1;
         this.gameObjectID = config.gameObjectID || 1;
         this.username = config.username || 'newCharacter';
-        this.attributes = config.atrributes || new CharacterAttributes();
+        this.player = config.player;
+        this.attributes = config.attributes || new $CharacterAttributes();
         this.characterGender = config.characterGender || 'male';
         this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
-        this.player = config.player;
-        this.name = config.username;
-        this.width = config.width || 32;
-        this.height = config.height || 32;
+        this.name = config.name = 'newCharacter';
+        this.width = config.width || $CharacterSize.width;
+        this.height = config.height || $CharacterSize.height;
         this.walking = config.walking || false;
-        this.xVelocity = 2;
-        this.yVelocity = 2;
+        this.xVelocity = $CharacterVelocity.xVelocity;
+        this.yVelocity = $CharacterVelocity.yVelocity;
+        this.equipment = config.equipment || {};
+        this.friends = config.friends || [];
     }
 
     toJSON() {
@@ -93,31 +101,35 @@ export class Character extends GameObject implements characterDataInterface {
             xVelocity: this.xVelocity,
             yVelocity: this.yVelocity,
             lastDirection: this.lastDirection,
+            name: this.name,
+            width: this.width,
+            height: this.height,
+            walking: this.walking,
+            sprite: this.sprite.src,
         }
     }
-
     /**
      * 
      * @param characterMovementState Should contain an attribute named arrow of type Direction.
      */
     updateCharacterLocationAndAppearance(characterMovementState: CharacterMovementStateI): void {
-        //this.updatePosition();
+        // this.updatePosition(characterMovementState);
         console.log(characterMovementState);
         const GridBlockSize = 16;
         this.movingProgressRemaining = 0;
 
-
+        //this.isPlayerControlled &&
         //if player is not moving and controlled it reassigns their direction to their last button clicked
-        if (this.isPlayerControlled && this.movingProgressRemaining === 0 && characterMovementState.arrow) {
+        if (this.movingProgressRemaining === 0 && characterMovementState.arrow) {
             this.direction = characterMovementState.arrow;
             this.movingProgressRemaining = GridBlockSize;
         }
         //if player is moving and controlled it reassigns their direction to their last button clicked and updates the movement gauge
         if (characterMovementState.arrow) {
 
-            if (characterMovementState.arrow == Direction.STANDSTILL) {
+            if (characterMovementState.arrow == $Direction.STANDSTILL) {
                 this.movingProgressRemaining = 0;
-                this.direction = this.lastDirection || Direction.RIGHT;
+                this.direction = this.lastDirection || $Direction.RIGHT;
                 characterMovementState.arrow = null;
                 this.updateSpriteAnimation(characterMovementState);
                 return;
@@ -130,19 +142,21 @@ export class Character extends GameObject implements characterDataInterface {
         //if player is not moving it reassigns their animation to the idle ver. of the last direction they were moving in or defaults to right. 
         else if (!characterMovementState.arrow) {
             this.movingProgressRemaining = 0;
-            this.direction = this.lastDirection || Direction.RIGHT;
+            this.direction = this.lastDirection || $Direction.RIGHT;
         }
 
         this.updateSpriteAnimation(characterMovementState);
 
     }
 
-    updatePosition() {
+    updatePosition(characterMovementState?) {
         if (this.movingProgressRemaining > 0) {
             const [property, change] = this.directionUpdate[this.direction];
             this[property] += change;
             this.movingProgressRemaining -= 1;
         }
+
+        console.log("updatePosition called ", this.direction, this.x, this.y);
     }
 
     /**
@@ -154,22 +168,22 @@ export class Character extends GameObject implements characterDataInterface {
             let animation = null;
             switch (this.direction) {
                 case 'up':
-                    animation = SpriteAnimations.idle_up;
+                    animation = $SpriteAnimations.idle_up;
                     break;
                 case 'down':
-                    animation = SpriteAnimations.idle_down;
+                    animation = $SpriteAnimations.idle_down;
                     break;
                 case 'left':
-                    animation = SpriteAnimations.idle_left;
+                    animation = $SpriteAnimations.idle_left;
                     break;
                 case 'right':
-                    animation = SpriteAnimations.idle_right;
+                    animation = $SpriteAnimations.idle_right;
                     break;
                 case 'jump':
-                    animation = SpriteAnimations.idle_jump;
+                    animation = $SpriteAnimations.idle_jump;
                     break;
                 default:
-                    animation = SpriteAnimations.idle_right;
+                    animation = $SpriteAnimations.idle_right;
                     break;
             }
 
@@ -183,22 +197,22 @@ export class Character extends GameObject implements characterDataInterface {
 
             switch (this.direction) {
                 case 'up':
-                    animation = SpriteAnimations.walking_up;
+                    animation = $SpriteAnimations.walking_up;
                     break;
                 case 'down':
-                    animation = SpriteAnimations.walking_down;
+                    animation = $SpriteAnimations.walking_down;
                     break;
                 case 'left':
-                    animation = SpriteAnimations.walking_left;
+                    animation = $SpriteAnimations.walking_left;
                     break;
                 case 'right':
-                    animation = SpriteAnimations.walking_right;
+                    animation = $SpriteAnimations.walking_right;
                     break;
                 case 'jump':
-                    animation = SpriteAnimations.walking_jump;
+                    animation = $SpriteAnimations.walking_jump;
                     break;
                 default:
-                    animation = SpriteAnimations.idle_right;
+                    animation = $SpriteAnimations.idle_right;
                     break;
             }
 

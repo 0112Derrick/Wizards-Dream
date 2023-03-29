@@ -1,6 +1,6 @@
 import { ServerSizeConstants as $serverSize, SocketConstants as $socketRoutes } from "../constants/ServerConstants.js";
 import { OverworldMap } from "../app/OverworldMap.js";
-import { Character } from "../app/Character.js";
+import { Character as $Character } from "../app/Character.js";
 import { Overworld } from "../app/Overworld.js";
 import { GameObject } from "../app/GameObject.js"
 import { Utils } from "../app/Utils.js";
@@ -11,6 +11,8 @@ import { MovementContants } from "../constants/Constants.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
 import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
+import { characterDataInterface } from "./interfaces/CharacterDataInterface.js";
+
 export enum ClientMapSlot {
     ClientSocket = 0,
     ClientOBJ = 1,
@@ -169,7 +171,7 @@ export class GameRouter {
         //test events
 
         _socket.on($socketRoutes.REQUEST_CHARACTER_MOVEMENT, gameRouter.addCharacterMoveRequestsToQueue);
-        _socket.on($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, (character: Character, map: MapNames, clientID: string) => {
+        _socket.on($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, (character: $Character, map: MapNames, clientID: string) => {
             //sets the active character
             gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
             //Adds the character to the overworld
@@ -208,12 +210,12 @@ export class GameRouter {
             grassyfield: {
                 name: MapNames.GrassyField,
                 activePlayers: Object.assign({}, overworld.grassyfield.activePlayers),
-                gameObjects: Object.assign({}, overworld.grassyfield.gameObjects),
+                gameObjects: [...overworld.grassyfield.gameObjects],
             },
             hallway: {
                 name: MapNames.Hallway,
                 activePlayers: Object.assign({}, overworld.hallway.activePlayers),
-                gameObjects: Object.assign({}, overworld.hallway.gameObjects),
+                gameObjects: [...overworld.hallway.gameObjects],
             }
         }
         console.log("Synced Overworld maps data with client");
@@ -321,7 +323,7 @@ export class GameRouter {
     }
 
     //TODO update all clients and server to remove the character from active characters
-    playerLogout(id, character: Character) {
+    playerLogout(id, character: $Character) {
         let gameRouter = GameRouter.GameRouterInstance;
         console.log(`${character.username} has logged out.`);
         gameRouter.clientSocket.emit($socketRoutes.RESPONSE_OFFLINE_CLIENT);
@@ -381,7 +383,7 @@ export class GameRouter {
      * @returns none
      */
     //TODO - controller function which then decides what to do with the data
-    addCharacterToOverworld(character: Character, overworldMap = MapNames.GrassyField): void {
+    addCharacterToOverworld(character: $Character, overworldMap = MapNames.GrassyField): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let overworld: Overworld_Server = gameRouter.getOverworld();
         if (!overworldMap) {
@@ -391,6 +393,7 @@ export class GameRouter {
         if (!overworld.maps.get(overworldMap).activePlayers.has(character.name)) {
             overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
         } else {
+            gameRouter.syncOverworld();
             return;
         }
 
@@ -399,8 +402,8 @@ export class GameRouter {
         character.location = overworldMap;
 
         overworld.maps.get(overworldMap).gameObjects.forEach((gameObj, i) => {
-            if (gameObj instanceof Character) {
-                if ((gameObj as Character).username == character.username) {
+            if (gameObj instanceof $Character) {
+                if ((gameObj as $Character).username == character.username) {
                     console.log(`${character.username} already exists in ${overworld.maps.get(overworldMap).name} map gameObjects list.`);
                     return;
                 }
@@ -413,7 +416,7 @@ export class GameRouter {
     }
 
     //TODO update characters class to have character location to speed this function up
-    removeCharacterFromOverworld(character: Character): void {
+    removeCharacterFromOverworld(character: $Character): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let overworld: Overworld_Server = gameRouter.getOverworld();
         let playerFound = false;
@@ -422,8 +425,8 @@ export class GameRouter {
         if (overworld.maps.get(character.location).activePlayers.delete(character.name)) {
             console.log("Character was successfully removed.");
             overworld.maps.get(character.location).gameObjects.forEach((gameObj, i) => {
-                if (gameObj instanceof Character) {
-                    if ((gameObj as Character).name == character.name) {
+                if (gameObj instanceof $Character) {
+                    if ((gameObj as $Character).name == character.name) {
                         console.log(overworld.maps.get(character.location).gameObjects.splice(i, 1) + " was successfully removed.");
                     }
                 }
@@ -457,7 +460,7 @@ export class GameRouter {
      */
 
     //research how to make a queue
-    addCharacterMoveRequestsToQueue(characterMovingDirection: Direction, characterObject: Character) {
+    addCharacterMoveRequestsToQueue(characterMovingDirection: Direction, characterObject: $Character) {
         let queue = GameRouter.GameRouterInstance.getMoveRequestQueue();
         queue.add({
             direction: characterMovingDirection,

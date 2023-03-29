@@ -1,8 +1,8 @@
 import mongoose, { Model } from 'mongoose';
 import pkg from 'mongoose';
-import playerDataInterface from './interfaces/PlayerDataInterface.js';
+import playerDataInterface from './interfaces/CharacterDataInterface.js';
 import { IplayerDocument, IcharacterDocument } from './interfaces/IPlayerDocument.js';
-import { characterDataInterface } from './interfaces/PlayerDataInterface.js';
+import { characterDataInterface } from './interfaces/CharacterDataInterface.js';
 import { Player } from './Player.js';
 import $player from './Player.js'
 import Observer from '../framework/Observer.js';
@@ -97,7 +97,10 @@ characterSchema.method('syncCharacter', function (character): void {
         x: docAsObject.x,
         y: docAsObject.y,
         sprite: docAsObject.sprite,
-        direction: docAsObject.direction
+        direction: docAsObject.direction,
+        xVelocity: docAsObject.xVelocity,
+        yVelocity: docAsObject.yVelocity,
+        name: docAsObject.name
     }
 
     character.setData(characterLocal);

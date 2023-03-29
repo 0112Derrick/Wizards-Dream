@@ -27,12 +27,14 @@ export class Sprite {
     animationFrameLimit: any;
     animationFrameProgress: any;
     usernames: boolean = true;
+    src: string = '';
 
     constructor(config) {
 
         //Set up the image
         this.image = new Image();
         this.image.src = config.src;
+        this.src = config.src;
         this.image.onload = () => {
             this.isLoaded = true;
         }
@@ -121,6 +123,7 @@ export class Sprite {
         if (characterX && characterY) {
             ObjectPositionXCoordinate = characterX - offsetX;
             ObjectPositionYCoordinate = characterY - offsetY;
+            console.log("Sprite being drawn at:\nx: ", ObjectPositionXCoordinate, " y: ", ObjectPositionYCoordinate);
             NamePositionXCoordinate = characterX;
             NamePositionYCoordinate = characterY;
         } else {

@@ -1,9 +1,12 @@
 import { HTML_IDS as $id } from "../constants/HTMLElementIds.js";
 import $ClientSyntheticEventEmitter from '../framework/ClientSyntheticEventEmitter.js'
 import { EventConstants as $events } from '../constants/EventConstants.js'
-import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/CharacterDataInterface.js'
 import { resolve } from "path";
-import { MapNames } from "../constants/MapNames.js";
+import { MapNames as $MapNames } from "../constants/MapNames.js";
+import { CharacterSize as $CharacterSize, CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js";
+import { Direction } from "./DirectionInput.js";
+
 class MissingElementError extends Error {
     constructor(message: string) {
         super(message);
@@ -197,18 +200,27 @@ class ClientView extends $ClientSyntheticEventEmitter {
     }
 
     characterCreateCallback() {
-
+        let png = null;
+        if ((<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value == 'male') {
+            png = "/images/characters/players/erio.png";
+        } else {
+            png = "/images/characters/players/erio.png";
+        }
         let formData: $characterSignup = {
             username: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
             characterGender: (<HTMLInputElement>document.querySelector('input[name="character-gender"]:checked')).value,
             player: "",
             x: 0,
             y: 0,
-            sprite: undefined,
-            direction: "right",
-            width: 32,
-            height: 32,
-            location: MapNames.GrassyField,
+            sprite: png,
+            direction: Direction.RIGHT,
+            width: $CharacterSize.width,
+            height: $CharacterSize.height,
+            location: $MapNames.GrassyField,
+            xVelocity: $CharacterVelocity.xVelocity,
+            yVelocity: $CharacterVelocity.yVelocity,
+            gameObjectID: 0,
+            name: (<HTMLInputElement>this.DOM[$id.CHARACTER_NAME]).value,
         }
 
         console.log("Got new player account submission", formData);

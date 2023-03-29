@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import { userInfo } from "os";
 import PlayerModel from "../players/PlayerDBModel.js";
-import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/PlayerDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/CharacterDataInterface.js'
 import { CharacterModel as $CharacterModel } from '../players/PlayerDBModel.js'
 import { CharacterAttributes } from "../app/CharacterAttributes";
 import { CharacterAttributesConstants as $chAttr } from '../constants/CharacterAttributesConstants.js'
-import { characterDataInterface } from '../players/interfaces/PlayerDataInterface.js'
+import { characterDataInterface } from '../players/interfaces/CharacterDataInterface.js'
 import { Sprite } from '../app/Sprite.js';
 import { MapNames } from "../constants/MapNames.js";
 import { Direction } from "../app/DirectionInput.js";
@@ -36,6 +36,7 @@ async function addPlayer(playerInfo) {
 let id = 1;
 async function addCharacter(characterInfo: $characterSignup) {
     let png: string;
+    
     if (characterInfo.characterGender == 'male') {
         png = "/images/characters/players/erio.png";
     } else {
@@ -46,13 +47,13 @@ async function addCharacter(characterInfo: $characterSignup) {
         gameObjectID: id,
         username: characterInfo.username,
         characterGender: characterInfo.characterGender,
-        x: 5,
-        y: 5,
-        sprite: png || -1,
+        x: 0,
+        y: 0,
+        sprite: png || "/images/characters/players/erio.png",
         direction: Direction.RIGHT,
         location: MapNames.GrassyField,
-        width: 32,
-        height: 32,
+        width: characterInfo.width,
+        height: characterInfo.height,
         attributes: {
             level: 1,
             experience: $chAttr.experience,
@@ -76,11 +77,14 @@ async function addCharacter(characterInfo: $characterSignup) {
             legs: null,
             weapon: null,
         },
-        class: 'none',
-        friends: [''],
-        guild: 'none',
-        items: [''],
-        player: characterInfo.player
+        class: '',
+        friends: [],
+        guild: '',
+        items: [],
+        player: characterInfo.player,
+        xVelocity: characterInfo.xVelocity,
+        yVelocity: characterInfo.yVelocity,
+        name: characterInfo.name,
     }
     id += 1;
 
