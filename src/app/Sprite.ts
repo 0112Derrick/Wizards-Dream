@@ -123,7 +123,7 @@ export class Sprite {
         if (characterX && characterY) {
             ObjectPositionXCoordinate = characterX - offsetX;
             ObjectPositionYCoordinate = characterY - offsetY;
-            console.log("Sprite being drawn at:\nx: ", ObjectPositionXCoordinate, " y: ", ObjectPositionYCoordinate);
+            //console.log("Sprite being drawn at:\nx: ", ObjectPositionXCoordinate, " y: ", ObjectPositionYCoordinate);
             NamePositionXCoordinate = characterX;
             NamePositionYCoordinate = characterY;
         } else {

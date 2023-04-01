@@ -62,7 +62,7 @@ export class ClientController extends $OBSERVER {
         element: document.querySelector(".game-container"),
         canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
     }
-    
+
     private hallwayConfig: MapConfigI = {
         gameObjects: new Array<GameObject>(),
         activeCharacters: null,
@@ -358,12 +358,17 @@ export class ClientController extends $OBSERVER {
                 } else {
                     let updatedObjects = [];
                     overworld.grassyfield.gameObjects.forEach((character) => {
-                        if (character.name == ClientController.ClientControllerInstance.character) {
-                            ClientController.ClientControllerInstance.character = this.createCharacterFromCharacterDataI(character);
-                            map.setClientCharacter(ClientController.ClientControllerInstance.Character);
+
+                        if (character.username == ClientController.ClientControllerInstance.character.username) {
+
+                            //  ClientController.ClientControllerInstance.character = this.createCharacterFromCharacterDataI(character);
+                            //  map.setClientCharacter(ClientController.ClientControllerInstance.Character);
                             updatedObjects.push(ClientController.ClientControllerInstance.Character);
+
                         } else {
+
                             updatedObjects.push(this.createCharacterFromCharacterDataI(character));
+
                         }
                     })
                     map.syncGameObjects(updatedObjects);

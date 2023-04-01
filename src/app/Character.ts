@@ -75,7 +75,7 @@ export class Character extends $GameObject implements $characterDataInterface {
         this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
-        this.name = config.name = 'newCharacter';
+        this.name = config.name || 'newCharacter';
         this.width = config.width || $CharacterSize.width;
         this.height = config.height || $CharacterSize.height;
         this.walking = config.walking || false;
@@ -114,7 +114,7 @@ export class Character extends $GameObject implements $characterDataInterface {
      */
     updateCharacterLocationAndAppearance(characterMovementState: CharacterMovementStateI): void {
         // this.updatePosition(characterMovementState);
-        console.log(characterMovementState);
+        // console.log(characterMovementState);
         const GridBlockSize = 16;
         this.movingProgressRemaining = 0;
 

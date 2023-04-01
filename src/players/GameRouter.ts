@@ -390,8 +390,8 @@ export class GameRouter {
             overworldMap = MapNames.GrassyField;
         }
 
-        if (!overworld.maps.get(overworldMap).activePlayers.has(character.name)) {
-            overworld.maps.get(overworldMap).activePlayers.set(character.name, character);
+        if (!overworld.maps.get(overworldMap).activePlayers.has(character.username)) {
+            overworld.maps.get(overworldMap).activePlayers.set(character.username, character);
         } else {
             gameRouter.syncOverworld();
             return;

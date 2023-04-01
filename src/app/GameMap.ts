@@ -46,6 +46,7 @@ export class GameMap implements MapI {
         this.mapMinHeight = config.mapMinHeight;
         this.mapMinWidth = config.mapMinWidth;
         this.directionInput.init();
+
         if (this.element) {
             this.canvas = this.element.querySelector(".game-canvas") || config.canvas;
             this.camera = new Camera(this.canvas.width, this.canvas.height, this.worldHeight, this.worldWidth);
@@ -53,6 +54,10 @@ export class GameMap implements MapI {
         }
         if (this.canvas)
             this.ctx = this.canvas.getContext("2d");
+
+        setInterval(() => {
+            console.log("Character location: X:", this.character.x, ", Y:", this.character.y, " Direction: ", this.character.lastDirection, ", Map:", this.character.location)
+        }, 3000)
     }
 
     get GameObjects(): Array<GameObject> {
@@ -72,7 +77,6 @@ export class GameMap implements MapI {
     }
 
     startGameLoop(): void {
-        ;
         if (!this.stopLoop) {
             //temporarily set to a testing function
             this.animate2();
@@ -111,12 +115,19 @@ export class GameMap implements MapI {
         this.gameObjects.forEach((gameObject) => {
             let character = (gameObject as Character);
 
-
-            character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction })
+            if (character.username == this.character.username) {
+                character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction })
+            } else {
+                character.updateCharacterLocationAndAppearance({})
+            }
             let characterX = character.x - this.camera.x;
             let characterY = character.y - this.camera.y;
 
-            character.sprite.draw(this.ctx, characterX, characterY);
+            if (this.camera.isInsideOfView(characterX, characterY)) {
+                character.sprite.draw(this.ctx, characterX, characterY);
+            }
+
+            //character.sprite.draw(this.ctx, characterX, characterY);
         });
     }
 
@@ -141,7 +152,7 @@ export class GameMap implements MapI {
                         this.updateNpcCharacter((gameObject as Character));
                     }
                 }
-                this.updateCamera(this.character);
+                //this.updateCamera(this.character);
             });
 
             this.draw();
@@ -157,19 +168,19 @@ export class GameMap implements MapI {
         switch (this.directionInput.direction) {
             case Direction.UP:
                 character.y -= character.yVelocity;
-                console.log(character.y)
+                // console.log(character.y)
                 break;
             case Direction.DOWN:
                 character.y += character.yVelocity;
-                console.log(character.y)
+                // console.log(character.y)
                 break;
             case Direction.LEFT:
                 character.x -= character.xVelocity;
-                console.log(character.x)
+                //  console.log(character.x)
                 break;
             case Direction.RIGHT:
                 character.x += character.xVelocity;
-                console.log(character.x)
+                //console.log(character.x)
                 break;
             case Direction.JUMP:
                 console.log('character did a jump')
@@ -182,6 +193,7 @@ export class GameMap implements MapI {
         character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
         // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
         //console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
+        this.updateCamera(this.character);
     }
 
     drawBackground() {
@@ -234,7 +246,8 @@ export class GameMap implements MapI {
     }
 
     clearCanvas(ctx: CanvasRenderingContext2D): void {
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
+        ctx ? ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height) : this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 
     addCharacter(character: Character): void {

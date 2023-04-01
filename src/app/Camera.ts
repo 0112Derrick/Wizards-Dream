@@ -29,6 +29,14 @@ export default class Camera {
         this.y = Math.max(0, Math.min(this.y, this.worldHeight - this.height));
     }
 
+    isInsideOfView(x: number, y: number, width: number = 32, height: number = 32): boolean {
+        if (x + width >= 0 && x <= this.width &&
+            y + height >= 0 && y <= this.height) {
+            return true;
+        }
+        return false;
+    }
+
     setWorldHeight(height: number) {
         this.worldHeight = height;
     }
