@@ -55,13 +55,14 @@ export class ClientController extends $OBSERVER {
         gameObjects: new Array<GameObject>(),
         activeCharacters: null,
         name: MapNames.GrassyField,
-        mapMinHeight: 500,
+        mapMinHeight: 0,
         mapMinWidth: 20,
         lowerImageSrc: '/images/maps/Battleground1.png',
         upperImageSrc: '/images/maps/Battleground1.png',
         element: document.querySelector(".game-container"),
         canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
     }
+    
     private hallwayConfig: MapConfigI = {
         gameObjects: new Array<GameObject>(),
         activeCharacters: null,
@@ -345,8 +346,12 @@ export class ClientController extends $OBSERVER {
                     let syncedOverworldGameObjects = Object.values(overworld.grassyfield.gameObjects);
                     let updatedObjects = [];
 
-                    syncedOverworldGameObjects.forEach((character) => {
-                        updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
+                    syncedOverworldGameObjects.forEach((character: $characterDataInterface) => {
+                        if (character.name == this.Character.name || character.player == this.Character.player) {
+                            updatedObjects.push(this.Character);
+                        } else {
+                            updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
+                        }
                     });
                     map.syncGameObjects(updatedObjects);
 
@@ -384,7 +389,6 @@ export class ClientController extends $OBSERVER {
                     let updatedObjects = [];
                     syncedOverworldGameObjects.forEach((character) => {
                         updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
-
                     });
 
                     map.syncGameObjects(updatedObjects);
@@ -446,11 +450,15 @@ export class ClientController extends $OBSERVER {
     } */
 
     createCharacterFromCharacterDataI(character: $characterDataInterface): Character {
+        if (character.y >= 400) {
+            character.y = 100;
+        }
+
         let createdCharacter = new $Character({
             isPlayerControlled: false,
             x: character.x,
             y: character.y,
-            name: character.name,
+            name: character.name || character.username,
             xVelocity: $CharacterVelocity.xVelocity,
             yVelocity: $CharacterVelocity.yVelocity,
             width: character.width,
@@ -523,7 +531,7 @@ export class ClientController extends $OBSERVER {
             name: obj.username,
             x: Utils.withGrid(6),
             y: Utils.withGrid(6),
-            src: "/images/characters/players/erio.png",
+            sprite: new Sprite({ src: obj.src || "/images/characters/players/erio.png" }),
             width: obj.width,
             height: obj.height,
             direction: obj.direction || 'right',

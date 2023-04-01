@@ -29,4 +29,10 @@ export default class Camera {
         this.y = Math.max(0, Math.min(this.y, this.worldHeight - this.height));
     }
 
+    setWorldHeight(height: number) {
+        this.worldHeight = height;
+    }
+    setWorldWidth(width: number) {
+        this.worldWidth = width;
+    }
 }

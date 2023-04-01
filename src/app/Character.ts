@@ -190,6 +190,8 @@ export class Character extends $GameObject implements $characterDataInterface {
             this.sprite.setAnimation(animation);
         }
 
+
+
         //Determines the walking animation to be played based on input direction
         if (this.movingProgressRemaining > 0) {
 
@@ -219,6 +221,32 @@ export class Character extends $GameObject implements $characterDataInterface {
             this.sprite.setAnimation(animation);
         }
 
+    }
+
+    playIdleAnimation() {
+        let animation = null;
+        switch (this.lastDirection) {
+            case 'up':
+                animation = $SpriteAnimations.idle_up;
+                break;
+            case 'down':
+                animation = $SpriteAnimations.idle_down;
+                break;
+            case 'left':
+                animation = $SpriteAnimations.idle_left;
+                break;
+            case 'right':
+                animation = $SpriteAnimations.idle_right;
+                break;
+            case 'jump':
+                animation = $SpriteAnimations.idle_jump;
+                break;
+            default:
+                animation = $SpriteAnimations.idle_right;
+                break;
+        }
+
+        this.sprite.setAnimation(animation);
     }
 }
 

@@ -38,14 +38,17 @@ export class GameMap implements MapI {
         this.lowerImage.onload = (() => {
             this.worldHeight = this.lowerImage.height;
             this.worldWidth = this.lowerImage.width;
+            this.camera.setWorldHeight(this.worldHeight);
+            this.camera.setWorldWidth(this.worldWidth);
             this.mapLoaded = true;
         })
+
         this.mapMinHeight = config.mapMinHeight;
         this.mapMinWidth = config.mapMinWidth;
         this.directionInput.init();
         if (this.element) {
             this.canvas = this.element.querySelector(".game-canvas") || config.canvas;
-            this.camera = new Camera(this.canvas.width, this.canvas.height, this.worldHeight, this.worldWidth)
+            this.camera = new Camera(this.canvas.width, this.canvas.height, this.worldHeight, this.worldWidth);
             //this.camera = { x: 0, y: 0, width: this.canvas.width, height: this.canvas.height };
         }
         if (this.canvas)
@@ -98,11 +101,11 @@ export class GameMap implements MapI {
 
         this.ctx.drawImage(this.lowerImage, backgroundX, backgroundY, imageWidth, imageHeight, offsetX, offsetY, imageWidth, imageHeight);
 
-        // let characterX = this.character.x - this.camera.x;
-        // let characterY = this.character.y - this.camera.y;
-        // this.character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
-        //console.log("x: ", characterX, " y: ", characterY);
-        //this.character.sprite.draw(this.ctx, characterX, characterY);
+        /* let characterX = this.character.x - this.camera.x;
+        let characterY = this.character.y - this.camera.y;
+        this.character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
+        console.log("x: ", characterX, " y: ", characterY);
+        this.character.sprite.draw(this.ctx, characterX, characterY); */
 
 
         this.gameObjects.forEach((gameObject) => {
@@ -113,13 +116,10 @@ export class GameMap implements MapI {
             let characterX = character.x - this.camera.x;
             let characterY = character.y - this.camera.y;
 
-            /* if (character.name == this.character.name) {
-                characterX = this.character.x - this.camera.x;
-                characterY = this.character.y - this.camera.y;
-            } */
             character.sprite.draw(this.ctx, characterX, characterY);
         });
     }
+
     /*      
             let characterX = this.character.x - this.camera.x;
             let characterY = this.character.y - this.camera.y;
@@ -135,14 +135,15 @@ export class GameMap implements MapI {
                 if ((gameObject instanceof Character)) {
                     if ((gameObject as Character).player == this.character.player) {
                         this.character = gameObject;
-                        this.updateCharacter(this.character);
+                        this.updateCharacter((gameObject as Character));
 
                     } else {
-                        // this.updateNpcCharacter((gameObject as Character));
+                        this.updateNpcCharacter((gameObject as Character));
                     }
                 }
-            })
-            this.updateCamera(this.character);
+                this.updateCamera(this.character);
+            });
+
             this.draw();
         }
         window.requestAnimationFrame(() => this.animate2());
@@ -174,13 +175,13 @@ export class GameMap implements MapI {
                 console.log('character did a jump')
                 break;
             default:
+                character.playIdleAnimation();
                 break;
         }
         character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
         character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
         // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
         //console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
-
     }
 
     drawBackground() {
