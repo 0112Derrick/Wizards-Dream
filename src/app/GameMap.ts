@@ -6,6 +6,7 @@ import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
 import Camera from "./Camera.js";
+import e from "express";
 
 export class GameMap implements MapI {
     private gameObjects: Array<GameObject>;
@@ -56,7 +57,12 @@ export class GameMap implements MapI {
             this.ctx = this.canvas.getContext("2d");
 
         setInterval(() => {
-            console.log("Character location: X:", this.character.x, ", Y:", this.character.y, " Direction: ", this.character.lastDirection, ", Map:", this.character.location)
+            try {
+                console.log("Character location: X:", this.character.x, ", Y:", this.character.y, " Direction: ", this.character.lastDirection, ", Map:", this.character.location)
+            } catch (error) {
+                //console.log(error)
+            }
+
         }, 3000)
     }
 
@@ -127,7 +133,6 @@ export class GameMap implements MapI {
                 character.sprite.draw(this.ctx, characterX, characterY);
             }
 
-            //character.sprite.draw(this.ctx, characterX, characterY);
         });
     }
 
@@ -165,6 +170,7 @@ export class GameMap implements MapI {
     }
 
     updateCharacter(character: Character) {
+
         switch (this.directionInput.direction) {
             case Direction.UP:
                 character.y -= character.yVelocity;
@@ -192,7 +198,7 @@ export class GameMap implements MapI {
         character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
         character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
         // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
-        //console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
+        // console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
         this.updateCamera(this.character);
     }
 

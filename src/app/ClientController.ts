@@ -163,10 +163,12 @@ export class ClientController extends $OBSERVER {
                     window.location.reload();
                 }
             });
+
             // this.socket.on("newServerWorld", () => { this.createOverworld });
             this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
                 this.updateGameObjects;
             });
+            
             //this.socket.emit('connection');
 
             //proof of concept events

@@ -59,10 +59,12 @@ export class GameRouter {
         }
     }; */
 
+    private currentServerTick: number = 1;
     private Overworld: Overworld_Server = null;
 
     private constructor() {
 
+        this.serverTick();
     }
 
     public static get GameRouterInstance(): GameRouter {
@@ -147,6 +149,7 @@ export class GameRouter {
     public getMoveRequestIntervalTime() {
         return this.moveRequestTimer;
     }
+
     /**
      * This function is called by server.js to initialize a new game instance.
      *
@@ -154,6 +157,7 @@ export class GameRouter {
      * @param clientSocket The socket object for the connected client.
      * 
      */
+
     initGame(_socket, _ip: string) {
         let gameRouter = GameRouter.GameRouterInstance;
 
@@ -165,7 +169,7 @@ export class GameRouter {
         _socket.on($socketRoutes.REQUEST_MESSAGE, this.checkMessage);
         _socket.on($socketRoutes.REQUEST_OVERWORLD_GAME_OBJECTS, this.updateGameObjects);
         // _socket.on("requestOverworld", this.startServerRoom);
-        //_socket.on("connection");
+        // _socket.on("connection");
 
         _socket.on($socketRoutes.REQUEST_ACTIVE_SERVERS, this.sendServersList);
         //test events
@@ -181,6 +185,9 @@ export class GameRouter {
 
         this.createServerRooms();
 
+
+
+
         //Move characters at a set interval.
         setInterval(() => {
             if (!GameRouter.GameRouterInstance.moveRequestQue.isEmpty()) {
@@ -190,6 +197,18 @@ export class GameRouter {
         }, GameRouter.GameRouterInstance.getMoveRequestIntervalTime());
 
     }
+
+    serverTick() {
+        // Server Tick
+        setInterval(() => {
+            //Send current request que to clients
+
+            //empty request que
+            this.currentServerTick++;
+        }, 20 / 1000);
+
+    }
+
     //sends an array of arrays with server names
     sendServersList() {
         let gameRouter = GameRouter.GameRouterInstance;
