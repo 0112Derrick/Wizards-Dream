@@ -4,6 +4,8 @@ export const ServerSizeConstants = {
 
 export enum SocketConstants {
     SERVER_ROOM_FULL = 'server-room-full',
+    REQUEST_PING = 'request-ping',
+    RESPONSE_PONG = 'response-ping',
     REQUEST_CLIENT_ONLINE = 'request-client-online',
     REQUEST_CLIENT_LOGOUT = 'request-client-logout',
     REQUEST_MESSAGE = 'request-message',

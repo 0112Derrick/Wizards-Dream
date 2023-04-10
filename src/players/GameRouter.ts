@@ -12,6 +12,7 @@ import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
 import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
 import { characterDataInterface } from "./interfaces/CharacterDataInterface.js";
+import { Socket } from "socket.io";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -31,6 +32,7 @@ interface Coordniate {
 
 
 export class GameRouter {
+
     private static gameRouter: GameRouter;
     // private server: Map<number, Array<Map<string, Object>>> | null = null;
     private io: any;
@@ -60,6 +62,9 @@ export class GameRouter {
     }; */
 
     private currentServerTick: number = 1;
+
+    private serverTickRate: number = 20 / 1000;
+
     private Overworld: Overworld_Server = null;
 
     private constructor() {
@@ -158,7 +163,7 @@ export class GameRouter {
      * 
      */
 
-    initGame(_socket, _ip: string) {
+    initGame(_socket: Socket, _ip: string) {
         let gameRouter = GameRouter.GameRouterInstance;
 
         this.setClientSocket(_socket);
@@ -168,6 +173,7 @@ export class GameRouter {
         _socket.on($socketRoutes.REQUEST_CLIENT_LOGOUT, this.playerLogout);
         _socket.on($socketRoutes.REQUEST_MESSAGE, this.checkMessage);
         _socket.on($socketRoutes.REQUEST_OVERWORLD_GAME_OBJECTS, this.updateGameObjects);
+        _socket.on($socketRoutes.REQUEST_PING, () => { _socket.emit($socketRoutes.RESPONSE_PONG) });
         // _socket.on("requestOverworld", this.startServerRoom);
         // _socket.on("connection");
 
@@ -184,8 +190,6 @@ export class GameRouter {
         // end
 
         this.createServerRooms();
-
-
 
 
         //Move characters at a set interval.
@@ -205,7 +209,7 @@ export class GameRouter {
 
             //empty request que
             this.currentServerTick++;
-        }, 20 / 1000);
+        }, this.serverTickRate);
 
     }
 

@@ -1,5 +1,6 @@
 import { Direction } from "./DirectionInput.js";
 import { Character } from "./Character.js";
+import { CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js";
 
 class MovementSystem {
 
@@ -7,18 +8,19 @@ class MovementSystem {
 
         switch (direction) {
             case Direction.UP:
-                character.y -= character.yVelocity;
+                character.y -= $CharacterVelocity.yVelocity;
                 break;
+
             case Direction.DOWN:
-                character.y += character.yVelocity;
-
+                character.y += $CharacterVelocity.yVelocity;
                 break;
+
             case Direction.LEFT:
-                character.x -= character.xVelocity;
-
+                character.x -= $CharacterVelocity.xVelocity;
                 break;
+            
             case Direction.RIGHT:
-                character.x += character.xVelocity;
+                character.x += $CharacterVelocity.xVelocity;
                 break;
 
             default:

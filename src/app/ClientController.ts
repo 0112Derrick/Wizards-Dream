@@ -21,6 +21,7 @@ import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
 import { Socket } from "socket.io-client";
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
 import { Sprite } from "./Sprite.js";
+import Queue from "../framework/Queue.js";
 
 
 interface ClientToServerEvents {
@@ -32,12 +33,6 @@ interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
 }
 
-/* (function () {
-    const OVERWORLD = new Overworld({
-        element: document.querySelector(".game-container")
-    });
-    OVERWORLD.init();
-}); */
 
 
 export class ClientController extends $OBSERVER {
@@ -50,6 +45,11 @@ export class ClientController extends $OBSERVER {
     private characters: Array<any> = [];
     private static clientController: ClientController = null;
     private activeServer: string = null;
+    private clientTickRate: number = 20 / 1000;
+    private currentClientTick: number = 1;
+    private clientInputHistory: Array<{ x: number, y: number }> = [];
+    private clientMovementBuffer: Queue<Direction> = new Queue();
+    private client_server_latency: number = 0;
 
     private grassyfieldConfig: MapConfigI = {
         gameObjects: new Array<GameObject>(),
@@ -135,12 +135,45 @@ export class ClientController extends $OBSERVER {
         return this.clientController;
     }
 
+    clientTick() {
+        setTimeout(() => {
+
+            //predict clients movement
+            //based on clients input direction 
+            //add movement to buffer
+            //pop client off of buffer and begin processing
+            //update clients movement on screen and x / y coordinate
+            //update clients movement history
+            //clients position, current tick, and confirmed position (which is false until the server agrees)
+
+            //update server with clients movement
+            //clients direction / tick iteration number
+
+            //receive the actual position of the character from the server
+            /*check the adjustmentIteration number (current tick) and compare it to clients
+                movement history and update the clients confirmed position to true if they match.
+            */
+            //Fix any discrepancy from clients predicted position and characters actual position sent by the server
+            //if any discrepancy is found then move the client to the position sent by the server.
+
+            //receive update from the server about clients current tick 
+            //adjust current tick if need be
+            //if current tick is behind the server adjust my current tick forward and process all messages 
+            //resend previous message 
+            /*if current tick is too far ahead then dont process any more ticks for 
+                x ticks then begin to process clients movements again*/
+            //if tick did not need to be adjusted then continue processing ticks as normal    
+
+            this.currentClientTick++
+        }, this.clientTickRate)
+    }
+
     async connectSocket() {
         //@ts-ignore
         this.socket = await io();
         this.socket.on('connect', () => {
             console.log('Socket connected:' + this.socket.id);
-            this.clientID = this.socket.id;
+            this.setID(this.socket.id);
         });
 
         this.socket.on('disconnect', () => {
@@ -153,23 +186,21 @@ export class ClientController extends $OBSERVER {
 
 
         this.connectSocket().then(() => {
-            // this.socket.on("startOverworld", this.startOverworldOnConnection);
+
+            ClientController.ClientControllerInstance.getLatency();
             this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
             this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
             this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
-            //this.socket.on($socketRoutes.RESPONSE_CLIENT_ID, (id) => { this.setID(id) });
             this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => {
                 if (!document.hidden) {
                     window.location.reload();
                 }
             });
 
-            // this.socket.on("newServerWorld", () => { this.createOverworld });
             this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
                 this.updateGameObjects;
             });
-            
-            //this.socket.emit('connection');
+
 
             //proof of concept events
             //this.socket.on('movePlayer', () => { this.updatePlayer });
@@ -183,9 +214,6 @@ export class ClientController extends $OBSERVER {
             });
 
         });
-
-        //this.OVERWORLD.init();
-
         //end concepts
 
         /*  document.querySelector('#joinServer')?.addEventListener('click', () => {
@@ -196,7 +224,18 @@ export class ClientController extends $OBSERVER {
              this.socket.emit('playerJoinServer', data);
          }); */
         //TODO: setInterval(){(character) => {save character} ,time}
+    }
 
+    getLatency() {
+        let startTime: number;
+        startTime = Date.now();
+        this.socket.emit($socketRoutes.REQUEST_PING);
+
+        this.socket.on($socketRoutes.RESPONSE_PONG, () => {
+            const rtt = Date.now() - startTime;
+            this.client_server_latency = rtt;
+            console.log(`Round Trip time: ${rtt} ms`);
+        });
     }
 
     public get Character() {
@@ -208,6 +247,7 @@ export class ClientController extends $OBSERVER {
     }
 
     public setID(id: string): void {
+        console.log("ID has been changed to: ", id);
         this.clientID = id;
     }
 
@@ -255,7 +295,7 @@ export class ClientController extends $OBSERVER {
         let grassyfield = new GameMap(clientController.grassyfieldConfig);
         let hallway = new GameMap(clientController.hallwayConfig);
 
-        console.log("overworld created.")
+        console.log("overworld created.");
         clientController.OVERWORLD = new Overworld_Test();
         clientController.OVERWORLD.addMap(grassyfield);
         clientController.OVERWORLD.addMap(hallway);
