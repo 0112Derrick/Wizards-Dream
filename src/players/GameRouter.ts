@@ -63,7 +63,7 @@ export class GameRouter {
 
     private currentServerTick: number = 1;
 
-    private serverTickRate: number = 20 / 1000;
+    private serverTickRate: number = 50;
 
     private Overworld: Overworld_Server = null;
 
@@ -173,7 +173,8 @@ export class GameRouter {
         _socket.on($socketRoutes.REQUEST_CLIENT_LOGOUT, this.playerLogout);
         _socket.on($socketRoutes.REQUEST_MESSAGE, this.checkMessage);
         _socket.on($socketRoutes.REQUEST_OVERWORLD_GAME_OBJECTS, this.updateGameObjects);
-        _socket.on($socketRoutes.REQUEST_PING, () => { _socket.emit($socketRoutes.RESPONSE_PONG) });
+        _socket.on($socketRoutes.REQUEST_PING, (id) => { console.log("request from:", id); GameRouter.GameRouterInstance.io.to(id).emit($socketRoutes.RESPONSE_PONG) });
+        _socket.on($socketRoutes.REQUEST_CURRENT_TICK, (id) => { console.log("request from:", id); GameRouter.GameRouterInstance.io.to(id).emit($socketRoutes.RESPONSE_CURRENT_TICK, this.currentServerTick); console.log(this.currentServerTick) })
         // _socket.on("requestOverworld", this.startServerRoom);
         // _socket.on("connection");
 

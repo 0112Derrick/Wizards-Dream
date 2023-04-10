@@ -22,6 +22,7 @@ import { Socket } from "socket.io-client";
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
 import { Sprite } from "./Sprite.js";
 import Queue from "../framework/Queue.js";
+import { error } from "console";
 
 
 interface ClientToServerEvents {
@@ -45,7 +46,7 @@ export class ClientController extends $OBSERVER {
     private characters: Array<any> = [];
     private static clientController: ClientController = null;
     private activeServer: string = null;
-    private clientTickRate: number = 20 / 1000;
+    private clientTickRate: number = 50;
     private currentClientTick: number = 1;
     private clientInputHistory: Array<{ x: number, y: number }> = [];
     private clientMovementBuffer: Queue<Direction> = new Queue();
@@ -119,7 +120,6 @@ export class ClientController extends $OBSERVER {
             if (document.visibilityState === 'visible') {
                 if (!this.socket || this.socket.disconnected) {
                     console.log('Reconnecting socket...');
-                    //this.connectSocket();
                     this.init();
                 }
             }
@@ -135,38 +135,6 @@ export class ClientController extends $OBSERVER {
         return this.clientController;
     }
 
-    clientTick() {
-        setTimeout(() => {
-
-            //predict clients movement
-            //based on clients input direction 
-            //add movement to buffer
-            //pop client off of buffer and begin processing
-            //update clients movement on screen and x / y coordinate
-            //update clients movement history
-            //clients position, current tick, and confirmed position (which is false until the server agrees)
-
-            //update server with clients movement
-            //clients direction / tick iteration number
-
-            //receive the actual position of the character from the server
-            /*check the adjustmentIteration number (current tick) and compare it to clients
-                movement history and update the clients confirmed position to true if they match.
-            */
-            //Fix any discrepancy from clients predicted position and characters actual position sent by the server
-            //if any discrepancy is found then move the client to the position sent by the server.
-
-            //receive update from the server about clients current tick 
-            //adjust current tick if need be
-            //if current tick is behind the server adjust my current tick forward and process all messages 
-            //resend previous message 
-            /*if current tick is too far ahead then dont process any more ticks for 
-                x ticks then begin to process clients movements again*/
-            //if tick did not need to be adjusted then continue processing ticks as normal    
-
-            this.currentClientTick++
-        }, this.clientTickRate)
-    }
 
     async connectSocket() {
         //@ts-ignore
@@ -174,6 +142,8 @@ export class ClientController extends $OBSERVER {
         this.socket.on('connect', () => {
             console.log('Socket connected:' + this.socket.id);
             this.setID(this.socket.id);
+            ClientController.ClientControllerInstance.getLatency();
+            ClientController.ClientControllerInstance.setCurrentTick().then(() => { ClientController.ClientControllerInstance.clientTick(); });
         });
 
         this.socket.on('disconnect', () => {
@@ -185,9 +155,8 @@ export class ClientController extends $OBSERVER {
         // @ts-ignore
 
 
-        this.connectSocket().then(() => {
+        this.connectSocket().then(async () => {
 
-            ClientController.ClientControllerInstance.getLatency();
             this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
             this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
             this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
@@ -227,15 +196,83 @@ export class ClientController extends $OBSERVER {
     }
 
     getLatency() {
-        let startTime: number;
-        startTime = Date.now();
-        this.socket.emit($socketRoutes.REQUEST_PING);
+        if (this.getID()) {
+            let startTime: number;
+            startTime = Date.now();
+            this.socket.emit($socketRoutes.REQUEST_PING, this.clientID);
 
-        this.socket.on($socketRoutes.RESPONSE_PONG, () => {
-            const rtt = Date.now() - startTime;
-            this.client_server_latency = rtt;
-            console.log(`Round Trip time: ${rtt} ms`);
+            this.socket.on($socketRoutes.RESPONSE_PONG, () => {
+                const rtt = Date.now() - startTime;
+                this.client_server_latency = rtt;
+                console.log(`Round Trip time: ${rtt} ms`);
+            });
+        } else {
+            setTimeout(() => { this.getLatency() }, 500)
+        }
+    }
+
+    getID(): string {
+        if (this.clientID != "")
+            return this.clientID;
+        throw new error("ID not set");
+    }
+
+    setCurrentTick() {
+        console.log("Getting current tick ", Date.now());
+
+        this.socket.emit($socketRoutes.REQUEST_CURRENT_TICK, this.clientID);
+        console.log("id: ", this.clientID);
+
+        this.socket.on($socketRoutes.RESPONSE_CURRENT_TICK, (tick) => {
+            console.log("server tick: ", tick);
+            this.currentClientTick = tick + 3;
+
+            if (this.client_server_latency >= 16) {
+                this.currentClientTick++;
+            }
+            console.log("client tick: ", this.currentClientTick);
         });
+
+        return new Promise((resolve) => { resolve(true); });
+    }
+
+    adjustCurrentTick(adjustmentAmount: number) {
+        this.currentClientTick += adjustmentAmount;
+        console.log(`current client tick: ${this.currentClientTick}`);
+    }
+
+
+    clientTick() {
+        setInterval(() => {
+
+            /*predict clients movement
+                based on clients input direction */
+            //add movement to buffer
+            //pop client off of buffer and begin processing
+            //update clients movement on screen and x / y coordinate
+            //update clients movement history
+            //clients position, current tick, and confirmed position (which is false until the server agrees)
+
+            //update server with clients movement
+            //clients direction / tick iteration number
+
+            //receive the actual position of the character from the server
+            /*check the adjustmentIteration number (current tick) and compare it to clients
+                movement history and update the clients confirmed position to true if they match.
+            */
+            //Fix any discrepancy from clients predicted position and characters actual position sent by the server
+            //if any discrepancy is found then move the client to the position sent by the server.
+
+            //receive update from the server about clients current tick 
+            //adjust current tick if need be
+            //if current tick is behind the server adjust my current tick forward and process all messages 
+            //resend previous message 
+            /*if current tick is too far ahead then dont process any more ticks for 
+                x ticks then begin to process clients movements again*/
+            //if tick did not need to be adjusted then continue processing ticks as normal    
+
+            this.currentClientTick++
+        }, this.clientTickRate);
     }
 
     public get Character() {
@@ -373,12 +410,12 @@ export class ClientController extends $OBSERVER {
 
             if (map.getMapName == MapNames.GrassyField) {
                 /* let newCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.grassyfield.activePlayers)
-
+    
                 newCharacters.forEach(character => {
                     let createdCharacter = this.createCharacterFromCharacterDataI(character)
                     this.addCharacterToOverworld(createdCharacter, MapNames.GrassyField);
                 });
-
+    
                 map.removeCharactersFromGameObjectsList(overworld.grassyfield.activePlayers, map) */
 
                 map.syncActiveCharacters(overworld.grassyfield.activePlayers);
@@ -420,12 +457,12 @@ export class ClientController extends $OBSERVER {
             if (map.getMapName == MapNames.Hallway) {
 
                 /* let drawNewCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.hallway.activePlayers)
-
+    
                 drawNewCharacters.forEach(character => {
                     let createdCharacter = this.createCharacterFromCharacterDataI(character);
                     this.addCharacterToOverworld(createdCharacter, MapNames.Hallway);
                 });
-
+    
                 map.removeCharactersFromGameObjectsList(overworld.hallway.activePlayers, map); */
 
                 map.syncActiveCharacters(overworld.hallway.activePlayers);

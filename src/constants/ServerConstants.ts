@@ -6,6 +6,8 @@ export enum SocketConstants {
     SERVER_ROOM_FULL = 'server-room-full',
     REQUEST_PING = 'request-ping',
     RESPONSE_PONG = 'response-ping',
+    REQUEST_CURRENT_TICK = 'request-current-tick',
+    RESPONSE_CURRENT_TICK = 'response-current-tick',
     REQUEST_CLIENT_ONLINE = 'request-client-online',
     REQUEST_CLIENT_LOGOUT = 'request-client-logout',
     REQUEST_MESSAGE = 'request-message',
