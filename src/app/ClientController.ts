@@ -22,7 +22,7 @@ import { Socket } from "socket.io-client";
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
 import { Sprite } from "./Sprite.js";
 import Queue from "../framework/Queue.js";
-import { error } from "console";
+
 
 
 interface ClientToServerEvents {
@@ -34,7 +34,11 @@ interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
 }
 
-
+interface inputHistory {
+    location: { x: number, y: number },
+    tick: number,
+    confirmedPosition: boolean,
+}
 
 export class ClientController extends $OBSERVER {
     private view = $MainAppView;
@@ -48,9 +52,11 @@ export class ClientController extends $OBSERVER {
     private activeServer: string = null;
     private clientTickRate: number = 50;
     private currentClientTick: number = 1;
-    private clientInputHistory: Array<{ x: number, y: number }> = [];
-    private clientMovementBuffer: Queue<Direction> = new Queue();
     private client_server_latency: number = 0;
+    private latency_count = 3;
+    private clientInputHistory: Array<inputHistory> = new Array<inputHistory>();
+    private clientMovementBuffer: Queue<Direction> = new Queue();
+
 
     private grassyfieldConfig: MapConfigI = {
         gameObjects: new Array<GameObject>(),
@@ -214,7 +220,7 @@ export class ClientController extends $OBSERVER {
     getID(): string {
         if (this.clientID != "")
             return this.clientID;
-        throw new error("ID not set");
+        throw new Error("ID not set");
     }
 
     setCurrentTick() {
@@ -225,10 +231,11 @@ export class ClientController extends $OBSERVER {
 
         this.socket.on($socketRoutes.RESPONSE_CURRENT_TICK, (tick) => {
             console.log("server tick: ", tick);
-            this.currentClientTick = tick + 3;
+            this.currentClientTick = tick + this.latency_count;
 
             if (this.client_server_latency >= 16) {
                 this.currentClientTick++;
+                this.latency_count++;
             }
             console.log("client tick: ", this.currentClientTick);
         });
@@ -238,6 +245,7 @@ export class ClientController extends $OBSERVER {
 
     adjustCurrentTick(adjustmentAmount: number) {
         this.currentClientTick += adjustmentAmount;
+        this.latency_count += adjustmentAmount;
         console.log(`current client tick: ${this.currentClientTick}`);
     }
 

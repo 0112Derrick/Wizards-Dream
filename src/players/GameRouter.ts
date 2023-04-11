@@ -4,20 +4,22 @@ import { Character as $Character } from "../app/Character.js";
 import { Overworld } from "../app/Overworld.js";
 import { GameObject } from "../app/GameObject.js"
 import { Utils } from "../app/Utils.js";
-import { DirectionInput, Direction } from "../app/DirectionInput.js";
+import { Direction as $Direction } from "../app/DirectionInput.js";
 import { CharacterMovementData, CharacterData_Direction } from "./interfaces/CharacterInterfaces.js";
-import Queue from ".././framework/Queue.js";
+import $Queue from ".././framework/Queue.js";
 import { MovementContants } from "../constants/Constants.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
 import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
 import { characterDataInterface } from "./interfaces/CharacterDataInterface.js";
 import { Socket } from "socket.io";
+import { ClientObject as $ClientObject } from "./ClientObject.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
     ClientOBJ = 1,
     ClientActiveCharacter = 2,
+    ClientInputQue = 3,
 }
 
 export interface ClientDATA {
@@ -29,14 +31,12 @@ interface Coordniate {
     x: MovementContants.West_East,
     y: MovementContants.North_South,
 }
-
-
 export class GameRouter {
 
     private static gameRouter: GameRouter;
     // private server: Map<number, Array<Map<string, Object>>> | null = null;
     private io: any;
-    private moveRequestQue: Queue<CharacterData_Direction> = new Queue();
+    private moveRequestQue: $Queue<CharacterData_Direction> = new $Queue();
     private moveRequestTimer: number = 100;
     // temporary map storing client info until we can verify and connect that info to a clientsocket
     private clientInitMap: Map<string, Object> = new Map();
@@ -46,7 +46,7 @@ export class GameRouter {
     //passed from server on connection
     private clientSocket: any;
     //Set by server once a client connects
-    private clientMap: Map<string, Array<any>> = new Map();
+    private clientMap: Map<string, $ClientObject> = new Map();
     //Set by req obj 
     private clientIP: string;
 
@@ -115,18 +115,25 @@ export class GameRouter {
      * slot should be equal to ClientMapSlot to ensure the data is always the same for every player.
      */
     public setClientMap(_data: ClientDATA, slot: ClientMapSlot) {
-
+        //const deletedElement = 1;
         if (this.clientMap.has(_data.id)) {
+
             switch (slot) {
                 case ClientMapSlot.ClientSocket:
-                    this.clientMap.get(_data.id)?.splice(0, 1, _data.arg);
+                    this.clientMap.get(_data.id)?.setClientSocket(_data.arg as Socket)
+                    //this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientSocket, deletedElement, _data.arg);
                     break;
                 case ClientMapSlot.ClientOBJ:
-                    this.clientMap.get(_data.id)?.splice(1, 1, _data.arg);
+                    this.clientMap.get(_data.id)?.setClientOBJ(_data.arg);
+                    // this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientOBJ, deletedElement, _data.arg);
                     break;
                 case ClientMapSlot.ClientActiveCharacter:
-                    this.clientMap.get(_data.id)?.splice(2, 1, _data.arg);
+                    this.clientMap.get(_data.id)?.setActiveCharacter(_data.arg as $Character);
+                    //this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientActiveCharacter, deletedElement, _data.arg as $Character);
                     break;
+                case ClientMapSlot.ClientInputQue:
+                    this.clientMap.get(_data.id)?.addInput(_data.arg.tick, _data.arg.input)
+                //this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientInputQue, deletedElement, (_data.arg as $Queue<$Direction>));
             }
         }
     }
@@ -206,7 +213,31 @@ export class GameRouter {
     serverTick() {
         // Server Tick
         setInterval(() => {
-            //Send current request que to clients
+
+            //Receive clients messages and que them
+            //receive client id
+            // GameRouter.GameRouterInstance.setClientMap({ id: id, arg: { tick: Message.tick, input: Message.input } }, ClientMapSlot.ClientInputQue)
+
+            //message headers would need the clients id to send them the updates about their tick
+            //then all messages for that tick should be sent to the client
+
+            /**
+             * For every active player create a new message header
+             * detailing wheter or not their message was received on time of if a message 
+             *  timing needs to be adjusted.
+             * In the case of a message timing needing to be adjusted 
+             * forward: tell the client the message was dropped and then tell them to process 
+             *  the previous ticks to catch up append an iteration number so the client can tell
+             *  when they have completed this process.
+             * 
+             * case backwards: tell the client to not process anymore ticks for x amount of ticks
+             *  so that way its not too far ahead of the server tick.
+             */
+            let activePlayers = this.clientMap.keys();
+
+
+            //Send clients messages
+            //messages should contain
 
             //empty request que
             this.currentServerTick++;
@@ -316,7 +347,7 @@ export class GameRouter {
     playerJoinServer(playerID: string, server: string) {
         let gameRouter = GameRouter.GameRouterInstance;
         try {
-            let socket = gameRouter.clientMap.get(playerID).at(ClientMapSlot.ClientSocket)
+            let socket = gameRouter.clientMap.get(playerID).getClientSocket();
             console.log(`User ${socket.id} joined room ${server}`);
             socket.join(server);
             let room = gameRouter.io.sockets.adapter.rooms.get(server);
@@ -484,7 +515,7 @@ export class GameRouter {
      */
 
     //research how to make a queue
-    addCharacterMoveRequestsToQueue(characterMovingDirection: Direction, characterObject: $Character) {
+    addCharacterMoveRequestsToQueue(characterMovingDirection: $Direction, characterObject: $Character) {
         let queue = GameRouter.GameRouterInstance.getMoveRequestQueue();
         queue.add({
             direction: characterMovingDirection,
@@ -495,7 +526,7 @@ export class GameRouter {
 
     //TODO Movement system will be updated to be client side using interpolation and periodic updates by the server and anti cheat checks on the server.
     //characterMovingDirection: Direction, characterObject: Character
-    moveCharacter(characterMoveRequests: Queue<CharacterData_Direction>) {
+    moveCharacter(characterMoveRequests: $Queue<CharacterData_Direction>) {
 
         /*  while (!characterMoveRequests.isEmpty()) {
              let currentCharacterMoveRequest = characterMoveRequests.dequeue();

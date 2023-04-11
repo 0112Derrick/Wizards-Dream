@@ -32,6 +32,9 @@ import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
 
 import fsModule from 'fs';
 import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
+import Queue from './src/framework/Queue.js';
+import { Direction } from './src/app/DirectionInput.js';
+import { ClientObject as $ClientObject } from './src/players/ClientObject.js';
 
 //import { a, b } from './testDB.js';
 
@@ -155,27 +158,22 @@ const fs = fsModule.promises;
             */
 
             if (!gameRouter.getClientMap().has(clientSocket.handshake.address)) {
-                let mapArr: Array<any> = [];
+                let mapArr: $ClientObject = new $ClientObject();
                 console.log('new Client Added: ', clientSocket.handshake.address);
                 gameRouter.getClientMap().set(clientSocket.id, mapArr);
-                //gameRouter.getClientMap().set(clientSocket.handshake.address, mapArr);
             }
 
             /*
             * Check to see if client socket data is set in our map
             * If client socket data does not exist in client map then add the data to the map
             */
-            // if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientSocket)) {
-            if (!gameRouter.getClientMap().get(clientSocket.id).at(ClientMapSlot.ClientSocket)) {
-                /* let clientSocketOBJ = {
-                    id: clientSocket.handshake.address,
-                    arg: clientSocket
-                } */
+            if (!gameRouter.getClientMap().get(clientSocket.id).getClientSocket()) {
+
                 let clientSocketOBJ = {
                     id: clientSocket.id,
                     arg: clientSocket,
                 }
-                // console.log("Client socket set", clientSocket.handshake.address)
+
                 console.log("Client socket set", clientSocket.id);
                 gameRouter.setClientMap(clientSocketOBJ, ClientMapSlot.ClientSocket);
             }
@@ -185,21 +183,21 @@ const fs = fsModule.promises;
             * If client Obj does not exist in client map then add the data to the map
             */
             // if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientOBJ)) {
-            if (!gameRouter.getClientMap().get(clientSocket.id).at(ClientMapSlot.ClientOBJ)) {
+            if (!gameRouter.getClientMap().get(clientSocket.id).getClientOBJ()) {
+
                 let clientOBJ = {
-                    //id: clientSocket.handshake.address,
                     id: clientSocket.id,
+                    //client obj is set through express then saved in a map in gameRouter obj
+                    //this checks to see if that information is set and then adds it to our client map
                     arg: gameRouter.getClient(clientSocket.handshake.address),
                 }
 
                 gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
             }
 
-            //clientSocket.emit($SocketConstants.RESPONSE_CLIENT_ID, clientSocket.handshake.address);
 
-            //console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.handshake.address)?.at(ClientMapSlot.ClientOBJ)));
-            console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.id)?.at(ClientMapSlot.ClientOBJ)));
-            gameRouter.setIO(io);
+            console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.id)?.getClientOBJ()));
+            // gameRouter.setIO(io);
             gameRouter.initGame(clientSocket, clientSocket.handshake.address);
 
         } else {
