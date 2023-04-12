@@ -14,6 +14,9 @@ export interface MapConfigI {
     canvas: HTMLCanvasElement | null;
     element: HTMLElement | undefined;
     name: $MapNames;
+    targetFPS: number;
+    targerInterval: number;
+    lastFrameTime: number;
 }
 
 export interface OverworldMapsI {

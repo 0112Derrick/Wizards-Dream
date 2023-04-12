@@ -28,6 +28,10 @@ export class GameMap implements MapI {
     private mapMinHeight: number = 0;
     mapMinWidth: number = 0;
     private mapLoaded: boolean = false;
+    targetFPS: number = 20;
+    targetInterval = 1000 / this.targetFPS; // in milliseconds
+    lastFrameTime = 0;
+
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
         this.lowerImage = new Image();
@@ -85,7 +89,8 @@ export class GameMap implements MapI {
     startGameLoop(): void {
         if (!this.stopLoop) {
             //temporarily set to a testing function
-            this.animate2();
+            window.requestAnimationFrame((time) => this.animate2(time));
+            //this.animate2();
             // window.requestAnimationFrame(() => this.animate);
         }
         //throw new Error("Method not implemented.");
@@ -100,6 +105,7 @@ export class GameMap implements MapI {
     }
 
     draw() {
+
         this.clearCanvas(this.ctx);
 
         const backgroundX = Math.max(0, this.camera.x);
@@ -110,12 +116,6 @@ export class GameMap implements MapI {
         const imageHeight = Math.min(this.camera.height, this.lowerImage.height - backgroundY);
 
         this.ctx.drawImage(this.lowerImage, backgroundX, backgroundY, imageWidth, imageHeight, offsetX, offsetY, imageWidth, imageHeight);
-
-        /* let characterX = this.character.x - this.camera.x;
-        let characterY = this.character.y - this.camera.y;
-        this.character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction });
-        console.log("x: ", characterX, " y: ", characterY);
-        this.character.sprite.draw(this.ctx, characterX, characterY); */
 
 
         this.gameObjects.forEach((gameObject) => {
@@ -143,26 +143,35 @@ export class GameMap implements MapI {
             this.character.sprite.draw(this.ctx, characterX, characterY); 
     */
 
-    animate2(): void {
-        if (this.character && this.mapLoaded) {
+    animate2(currentTime: number): void {
+        const timeSinceLastFrame = currentTime - this.lastFrameTime;
 
-            this.gameObjects.forEach((gameObject) => {
+        if (timeSinceLastFrame >= this.targetInterval) {
+            this.lastFrameTime = currentTime;
 
-                if ((gameObject instanceof Character)) {
-                    if ((gameObject as Character).player == this.character.player) {
-                        this.character = gameObject;
-                        this.updateCharacter((gameObject as Character));
+            if (this.character && this.mapLoaded) {
 
-                    } else {
-                        this.updateNpcCharacter((gameObject as Character));
+                this.gameObjects.forEach((gameObject) => {
+
+                    if ((gameObject instanceof Character)) {
+                        if ((gameObject as Character).player == this.character.player) {
+                            this.character = gameObject;
+                            //send message to server with the clients direction.
+                            this.updateCharacter((gameObject as Character));
+
+                        } else {
+                            this.updateNpcCharacter((gameObject as Character));
+                        }
                     }
-                }
-                //this.updateCamera(this.character);
-            });
 
-            this.draw();
+                });
+
+                this.draw();
+            }
+
         }
-        window.requestAnimationFrame(() => this.animate2());
+
+        window.requestAnimationFrame((time) => this.animate2(time));
     }
 
     updateNpcCharacter(gameOBJ: GameObject) {

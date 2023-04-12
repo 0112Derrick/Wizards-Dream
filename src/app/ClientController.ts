@@ -68,6 +68,9 @@ export class ClientController extends $OBSERVER {
         upperImageSrc: '/images/maps/Battleground1.png',
         element: document.querySelector(".game-container"),
         canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
+        targetFPS: 20,
+        targerInterval: 1000 / 20,
+        lastFrameTime: 0
     }
 
     private hallwayConfig: MapConfigI = {
@@ -80,6 +83,9 @@ export class ClientController extends $OBSERVER {
         upperImageSrc: '/images/maps/Battleground2.png',
         element: document.querySelector(".game-container"),
         canvas: document.querySelector(".game-container").querySelector(".game-canvas"),
+        targetFPS: 20,
+        targerInterval: 1000 / 20,
+        lastFrameTime: 0
     }
     /* private OverworldMaps = {
         grassyField: {
@@ -154,7 +160,7 @@ export class ClientController extends $OBSERVER {
 
         this.socket.on('disconnect', () => {
             console.log('Socket disconnected');
-        })
+        });
     }
 
     async init() {

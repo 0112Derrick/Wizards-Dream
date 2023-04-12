@@ -219,6 +219,7 @@ export class GameRouter {
             // GameRouter.GameRouterInstance.setClientMap({ id: id, arg: { tick: Message.tick, input: Message.input } }, ClientMapSlot.ClientInputQue)
 
             //message headers would need the clients id to send them the updates about their tick
+
             //then all messages for that tick should be sent to the client
 
             /**
@@ -233,6 +234,7 @@ export class GameRouter {
              * case backwards: tell the client to not process anymore ticks for x amount of ticks
              *  so that way its not too far ahead of the server tick.
              */
+
             let activePlayers = this.clientMap.keys();
 
 
@@ -240,6 +242,7 @@ export class GameRouter {
             //messages should contain
 
             //empty request que
+            
             this.currentServerTick++;
         }, this.serverTickRate);
 
