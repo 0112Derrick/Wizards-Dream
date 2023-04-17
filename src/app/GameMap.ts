@@ -1,7 +1,7 @@
 import { GameObject } from "./GameObject.js";
 import { Character } from "./Character.js";
 import { Direction, DirectionInput } from "./DirectionInput.js";
-import { ClientController as $ClientController } from "./ClientController.js";
+import { ClientController as $ClientController, ServerMessages as $ServerMessages } from "./ClientController.js";
 import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
@@ -179,8 +179,10 @@ export class GameMap implements MapI {
     }
 
     updateCharacter(character: Character) {
+        let currentDirection = this.directionInput.direction;
+        $ClientController.ClientControllerInstance.notifyServer($ServerMessages.Movement, currentDirection)
 
-        switch (this.directionInput.direction) {
+        switch (currentDirection) {
             case Direction.UP:
                 character.y -= character.yVelocity;
                 // console.log(character.y)
@@ -206,6 +208,8 @@ export class GameMap implements MapI {
         }
         character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
         character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
+
+
         // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
         // console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
         this.updateCamera(this.character);

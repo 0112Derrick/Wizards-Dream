@@ -11,7 +11,7 @@ import { Character as $Character, Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
 import { Overworld } from "./Overworld.js";
 import { GameObject } from "GameObject.js";
-import { DirectionInput, Direction } from "./DirectionInput.js";
+import { DirectionInput, Direction as $Direction } from "./DirectionInput.js";
 import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
 import { GameMap } from "./GameMap.js";
 import { Overworld_Test } from "./Overworld_Test.js";
@@ -19,6 +19,7 @@ import { MapNames } from "../constants/MapNames.js";
 import { MapConfigI, syncOverworld as $syncOverworld } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
 import { Socket } from "socket.io-client";
+import { MessageHeader as $MessageHeader, Message as $Message } from "../framework/MessageHeader.js"
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
 import { Sprite } from "./Sprite.js";
 import Queue from "../framework/Queue.js";
@@ -28,6 +29,11 @@ import Queue from "../framework/Queue.js";
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
     basicEmit: (a: number, b: string, c: number[]) => void;
+}
+
+export enum ServerMessages {
+    Attack = "attack",
+    Movement = "movement"
 }
 
 interface ServerToClientEvents {
@@ -41,6 +47,7 @@ interface inputHistory {
 }
 
 export class ClientController extends $OBSERVER {
+
     private view = $MainAppView;
     private networkProxy: NetworkProxy;
     private socket: Socket;
@@ -53,9 +60,11 @@ export class ClientController extends $OBSERVER {
     private clientTickRate: number = 50;
     private currentClientTick: number = 1;
     private client_server_latency: number = 0;
-    private latency_count = 3;
+    private latency_count: number = 3;
+    private adjustmentIteration: number = 0;
     private clientInputHistory: Array<inputHistory> = new Array<inputHistory>();
-    private clientMovementBuffer: Queue<Direction> = new Queue();
+    private clientMovementBuffer: Queue<$Direction> = new Queue();
+    private messageHistory: Array<$MessageHeader> = [];
 
 
     private grassyfieldConfig: MapConfigI = {
@@ -177,7 +186,7 @@ export class ClientController extends $OBSERVER {
                     window.location.reload();
                 }
             });
-
+            this.socket.on($socketRoutes.RESPONSE_UPDATE_CLIENTS_TICK, (tick: number, iteration: number) => { this.adjustCurrentTick(tick, iteration) })
             this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
                 this.updateGameObjects;
             });
@@ -249,12 +258,47 @@ export class ClientController extends $OBSERVER {
         return new Promise((resolve) => { resolve(true); });
     }
 
-    adjustCurrentTick(adjustmentAmount: number) {
+    adjustCurrentTick(adjustmentAmount: number, adjustmentIteration: number) {
+        if (adjustmentIteration == this.adjustmentIteration) {
+            return;
+        }
+
         this.currentClientTick += adjustmentAmount;
         this.latency_count += adjustmentAmount;
-        console.log(`current client tick: ${this.currentClientTick}`);
+        this.adjustmentIteration++;
+        console.log(`current client tick: ${this.currentClientTick}, iteration: ${this.adjustmentIteration}`);
     }
 
+    notifyServer(type: ServerMessages, currentDirection: any) {
+        let messageCount = 1;
+        switch (type) {
+            case ServerMessages.Attack:
+                //  this.createMessage(currentDirection,attack, type);
+                break;
+
+            case ServerMessages.Movement:
+                let message = this.createMessage(currentDirection, type, this.adjustmentIteration, messageCount, this.currentClientTick, this.getID());
+                if (!message) {
+                    return;
+                }
+                this.socket.emit($socketRoutes.REQUEST_CLIENT_MESSAGE_UPDATE, message)
+                break;
+        }
+
+        throw new Error("Method not implemented.");
+    }
+
+    createMessage(action: string, type: ServerMessages, adjustmentIteration: number, messageCount: number, tick: number, id: string,) {
+        if (!id) {
+            console.log("Socket connection not established.");
+            return null;
+        }
+
+        let message = new $Message(type, action, tick, id);
+        let clientMessage = new $MessageHeader(adjustmentIteration, messageCount, message, id);
+        this.messageHistory.push(clientMessage);
+        return clientMessage;
+    }
 
     clientTick() {
         setInterval(() => {
@@ -653,7 +697,7 @@ export class ClientController extends $OBSERVER {
      * @param character See parameter name
      * @param moveDirection See parameter name
      */
-    public serverRequestMoveCharacter(character: $Character, moveDirection: Direction) {
+    public serverRequestMoveCharacter(character: $Character, moveDirection: $Direction) {
         //If moveDirection is valid than move the character in the given direction and change their sprite direction
         // console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
         //TODO: The check needs to be for Character Ids which are currently being assigned to 1.
@@ -664,7 +708,7 @@ export class ClientController extends $OBSERVER {
                 console.log(character.gameObjectID + " " + "movement req")
                 clientController.moveCharacter(moveDirection, character);
             } else {
-                clientController.moveCharacter(Direction.STANDSTILL, character);
+                clientController.moveCharacter($Direction.STANDSTILL, character);
             }
 
             //console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
@@ -679,43 +723,43 @@ export class ClientController extends $OBSERVER {
      * @param gameOBJ 
     */
 
-    public moveCharacter(direction: Direction, gameOBJ: $Character) {
+    public moveCharacter(direction: $Direction, gameOBJ: $Character) {
         let clientController = ClientController.ClientControllerInstance;
         switch (direction) {
-            case Direction.UP:
+            case $Direction.UP:
                 if (gameOBJ.y - 0.5 <= 10) {
                     return;
                 } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.UP, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.UP, gameOBJ);
                 }
                 break;
 
-            case Direction.DOWN:
+            case $Direction.DOWN:
                 if (gameOBJ.y + 0.5 >= 200) {
                     return;
                 } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.DOWN, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.DOWN, gameOBJ);
                 }
                 break;
 
-            case Direction.LEFT:
+            case $Direction.LEFT:
                 if (gameOBJ.x - 0.5 <= 0) {
                     return;
                 } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.LEFT, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.LEFT, gameOBJ);
                 }
                 break;
 
-            case Direction.RIGHT:
+            case $Direction.RIGHT:
                 if (gameOBJ.x + 0.5 >= 250) {
                     return;
                 } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.RIGHT, gameOBJ);
+                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.RIGHT, gameOBJ);
                 }
                 break;
 
             default:
-                clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, Direction.STANDSTILL, gameOBJ);
+                clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.STANDSTILL, gameOBJ);
         }
     }
 
@@ -783,7 +827,7 @@ export class ClientController extends $OBSERVER {
                 player: "",
                 x: 0,
                 y: 0,
-                direction: Direction.RIGHT,
+                direction: $Direction.RIGHT,
                 sprite: data.detail.sprite,
                 height: $CharacterSize.height,
                 width: $CharacterSize.width,

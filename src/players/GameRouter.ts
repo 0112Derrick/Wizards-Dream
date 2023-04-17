@@ -14,6 +14,7 @@ import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } fr
 import { characterDataInterface } from "./interfaces/CharacterDataInterface.js";
 import { Socket } from "socket.io";
 import { ClientObject as $ClientObject } from "./ClientObject.js";
+import { MessageHeader as $MessageHeader, Message as $Message } from "../framework/MessageHeader.js"
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -31,6 +32,7 @@ interface Coordniate {
     x: MovementContants.West_East,
     y: MovementContants.North_South,
 }
+
 export class GameRouter {
 
     private static gameRouter: GameRouter;
@@ -182,6 +184,7 @@ export class GameRouter {
         _socket.on($socketRoutes.REQUEST_OVERWORLD_GAME_OBJECTS, this.updateGameObjects);
         _socket.on($socketRoutes.REQUEST_PING, (id) => { console.log("request from:", id); GameRouter.GameRouterInstance.io.to(id).emit($socketRoutes.RESPONSE_PONG) });
         _socket.on($socketRoutes.REQUEST_CURRENT_TICK, (id) => { console.log("request from:", id); GameRouter.GameRouterInstance.io.to(id).emit($socketRoutes.RESPONSE_CURRENT_TICK, this.currentServerTick); console.log(this.currentServerTick) })
+        _socket.on($socketRoutes.REQUEST_CLIENT_MESSAGE_UPDATE, (message: $MessageHeader) => { this.checkClientActionMessages(message) })
         // _socket.on("requestOverworld", this.startServerRoom);
         // _socket.on("connection");
 
@@ -214,8 +217,6 @@ export class GameRouter {
         // Server Tick
         setInterval(() => {
 
-            //Receive clients messages and que them
-            //receive client id
             // GameRouter.GameRouterInstance.setClientMap({ id: id, arg: { tick: Message.tick, input: Message.input } }, ClientMapSlot.ClientInputQue)
 
             //message headers would need the clients id to send them the updates about their tick
@@ -242,10 +243,63 @@ export class GameRouter {
             //messages should contain
 
             //empty request que
-            
+
             this.currentServerTick++;
         }, this.serverTickRate);
 
+    }
+
+    checkClientActionMessages(message: $MessageHeader) {
+        /**
+         * TODO
+         * Receive client id
+         * Search through active clients for a matching ID
+         * Check clients tick and flag it for an adjustment if needed.
+         * Update clients Messages e.g: GameRouter.GameRouterInstance.setClientMap({ id: id, arg: { tick: Message.tick, input: Message.input } }, ClientMapSlot.ClientInputQue)
+         * Que clients message 
+         */
+        const clientTickAdjustment = 4;
+
+        if (!message) {
+            console.log("Something went wrong with receiving the message.")
+            return;
+        }
+
+        let clientId = message.id
+        if (!this.getClientMap().get(clientId)) {
+            console.log("Client does not exist.");
+            return;
+        }
+
+        let client = this.getClientMap().get(clientId);
+        let clientTick = message.contents.at(0).tick;
+
+        if (clientTick < this.currentServerTick) {
+            console.log("Message was dropped by the server. Tick was behind schedule. " + "\n client tick:" + clientTick + " server tick: " + this.currentServerTick);
+            this.adjustClientsTick((this.currentServerTick + clientTickAdjustment) - clientTick, clientId);
+        }
+
+        if (clientTick > this.currentServerTick + clientTickAdjustment) {
+            this.adjustClientsTick((this.currentServerTick + clientTickAdjustment) - clientTick, clientId);
+        }
+
+        if (client.getAdjustmentIteration() != message.adjustmentIteration) {
+            //send updated iteration number in response message
+            //iteration number correlates to a tick amount needing to be changed
+        }
+
+    }
+
+    addCharacterActionRequestToQueue(message: $Message, character: $Character) {
+        //Receive clients messages and que them
+
+    }
+
+    adjustClientsTick(tickAdjustmentAmount: number, id: string) {
+        let gameRouter = GameRouter.GameRouterInstance;
+        let client = this.getClientMap().get(id);
+        client.incrementAdjustmentIteration();
+        gameRouter.io.to(id).emit($socketRoutes.RESPONSE_UPDATE_CLIENTS_TICK, tickAdjustmentAmount, client.getAdjustmentIteration());
     }
 
     //sends an array of arrays with server names
@@ -339,12 +393,6 @@ export class GameRouter {
         throw new Error("Method not implemented"); */
     }
 
-
-
-    /* startOverworld() {
-        GameRouter.GameRouterInstance.io.emit('startOverworld');
-        console.log("Sent startOverworld.");
-    } */
 
 
     playerJoinServer(playerID: string, server: string) {
@@ -517,7 +565,6 @@ export class GameRouter {
      * @param characterObject See name
      */
 
-    //research how to make a queue
     addCharacterMoveRequestsToQueue(characterMovingDirection: $Direction, characterObject: $Character) {
         let queue = GameRouter.GameRouterInstance.getMoveRequestQueue();
         queue.add({

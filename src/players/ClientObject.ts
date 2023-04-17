@@ -8,15 +8,29 @@ export class ClientObject {
     private clientOBJ: any = null;
     private activeCharacter: $Character = null;
     private inputHistory: $Queue<[number, string]> = new $Queue();
+    private adjustmentIteration: number = 0;
+    private clientTickAdjustment: Map<number, number> = new Map<number, number>();
     constructor() { }
 
     //this function adds a tick and direction to the inputHistory
-    addInput(tick: number, input: string) {
+    addInput(tick: number, input: string): void {
         this.inputHistory.add([tick, input]);
     }
 
+    setAdjustmentIteration(iteration: number): void {
+        this.adjustmentIteration = iteration;
+    }
+
+    getAdjustmentIteration(): number {
+        return this.adjustmentIteration;
+    }
+
+    incrementAdjustmentIteration(): void {
+        this.adjustmentIteration++;
+    }
+
     //Warning this function permanently deletes input history
-    resetInputHistory() {
+    resetInputHistory(): void {
         this.inputHistory.emptyQueue();
         console.log("input history was emptied");
     }
@@ -48,5 +62,17 @@ export class ClientObject {
     setClientSocket(socket: Socket): void {
         if (socket instanceof Socket)
             this.socket = socket;
+    }
+
+    setAdjustedTick(adjustmentIteration: number, tickAdjustment: number): void {
+        if (this.clientTickAdjustment.has(adjustmentIteration)) {
+            console.log("Iteration value already set - ClientObject.js");
+            return;
+        }
+        this.clientTickAdjustment.set(adjustmentIteration, tickAdjustment);
+    }
+
+    getAdjustedTick(iteration: number) {
+        return this.clientTickAdjustment.get(iteration);
     }
 }
