@@ -1,4 +1,4 @@
-import { ServerMessages as $ServerMessages } from "../app/ClientController.js"
+import { ServerMessages as $ServerMessages } from "../constants/ServerMessages.js"
 export class MessageHeader {
     adjustmentIteration: number = 0;
     tickAdjustment: number = 0;
@@ -6,20 +6,33 @@ export class MessageHeader {
     contents: Array<Message>;
     id: string | null
 
-    constructor(adjustmentIteration: number, messageCount: number, contents: Message | Array<Message>, id: string | null, tickAdjustment?: number) {
+    constructor(adjustmentIteration: number, contents: Message | Array<Message> | null, id: string | null, tickAdjustment?: number) {
         this.adjustmentIteration = adjustmentIteration;
-        this.messageCount = messageCount;
+        // this.messageCount = messageCount;
 
         if (id) {
             this.id = id;
         }
-
-        if (Array.isArray(contents)) {
-            this.contents = [...contents];
-        } else {
-            this.contents = [contents];
+        if (contents) {
+            if (Array.isArray(contents)) {
+                this.contents = [...contents];
+            } else {
+                this.contents = [contents];
+            }
         }
+        this.messageCount = this.contents.length;
     }
+
+    updateContents(messages: Array<Message> | Message) {
+        if (Array.isArray(messages)) {
+            this.contents = [...messages];
+        } else {
+            this.contents = [messages];
+        }
+
+        this.messageCount = this.contents.length;
+    }
+
 
 }
 

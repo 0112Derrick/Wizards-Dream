@@ -23,7 +23,7 @@ import { MessageHeader as $MessageHeader, Message as $Message } from "../framewo
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
 import { Sprite } from "./Sprite.js";
 import Queue from "../framework/Queue.js";
-
+import { ServerMessages } from '../constants/ServerMessages.js'
 
 
 interface ClientToServerEvents {
@@ -31,10 +31,7 @@ interface ClientToServerEvents {
     basicEmit: (a: number, b: string, c: number[]) => void;
 }
 
-export enum ServerMessages {
-    Attack = "attack",
-    Movement = "movement"
-}
+
 
 interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
@@ -281,7 +278,7 @@ export class ClientController extends $OBSERVER {
                 if (!message) {
                     return;
                 }
-                this.socket.emit($socketRoutes.REQUEST_CLIENT_MESSAGE_UPDATE, message)
+                this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message)
                 break;
         }
 
@@ -295,7 +292,7 @@ export class ClientController extends $OBSERVER {
         }
 
         let message = new $Message(type, action, tick, id);
-        let clientMessage = new $MessageHeader(adjustmentIteration, messageCount, message, id);
+        let clientMessage = new $MessageHeader(adjustmentIteration, message, id);
         this.messageHistory.push(clientMessage);
         return clientMessage;
     }

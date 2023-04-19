@@ -1,12 +1,13 @@
 import { GameObject } from "./GameObject.js";
 import { Character } from "./Character.js";
 import { Direction, DirectionInput } from "./DirectionInput.js";
-import { ClientController as $ClientController, ServerMessages as $ServerMessages } from "./ClientController.js";
+import { ClientController as $ClientController } from "./ClientController.js";
 import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
 import Camera from "./Camera.js";
 import e from "express";
+import { ServerMessages as $serverMessages } from '../constants/ServerMessages.js'
 
 export class GameMap implements MapI {
     private gameObjects: Array<GameObject>;
@@ -180,7 +181,7 @@ export class GameMap implements MapI {
 
     updateCharacter(character: Character) {
         let currentDirection = this.directionInput.direction;
-        $ClientController.ClientControllerInstance.notifyServer($ServerMessages.Movement, currentDirection)
+        $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection)
 
         switch (currentDirection) {
             case Direction.UP:

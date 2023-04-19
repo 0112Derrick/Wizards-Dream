@@ -4,7 +4,7 @@ import { CharacterVelocity as $CharacterVelocity } from "../constants/CharacterA
 
 class MovementSystem {
 
-    updateCharacterPosition(character: Character, direction: Direction) {
+    updateCharacterPosition(character: Character, direction: Direction): { x: number, y: number } {
 
         switch (direction) {
             case Direction.UP:
@@ -18,15 +18,17 @@ class MovementSystem {
             case Direction.LEFT:
                 character.x -= $CharacterVelocity.xVelocity;
                 break;
-            
+
             case Direction.RIGHT:
                 character.x += $CharacterVelocity.xVelocity;
                 break;
 
             default:
+                console.log(`Direction is invalid: ${direction}`);
                 break;
         }
 
+        return { x: character.x, y: character.y }
     }
 }
 
