@@ -87,6 +87,7 @@ export class GameMap implements MapI {
         this.gameObjects = value;
     }
 
+
     startGameLoop(): void {
         if (!this.stopLoop) {
             //temporarily set to a testing function
@@ -181,7 +182,7 @@ export class GameMap implements MapI {
 
     updateCharacter(character: Character) {
         let currentDirection = this.directionInput.direction;
-        $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection)
+        // $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection)
 
         switch (currentDirection) {
             case Direction.UP:

@@ -218,12 +218,43 @@ export class GameRouter {
             let serverMessageHeaders = [];
             let serverMessages: $Message[] = new Array<$Message>();
 
-            let messages = this.clientMessageQueue.values();
+            //let messages = this.clientMessageQueue.values();
             //Track when the queue is empty for this 20 hertz interval
 
 
+            while (!this.clientMessageQueue.isEmpty()) {
+                let messageHeader = this.clientMessageQueue.dequeue();
+                this.checkClientActionMessages(messageHeader);
+                let client = this.getClientMap().get(messageHeader.id);
+                let iter = client.getAdjustmentIteration();
+                let clientCharacter = client.getActiveCharacter();
 
-            for (let message of messages) {
+                if (iter != messageHeader.adjustmentIteration) {
+                    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(iter, null, null, client.getAdjustedTick(iter))]);
+                } else {
+                    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(iter, null, null, null)]);
+                }
+
+
+                if (messageHeader.contents.at(0).type == $serverMessages.Movement) {
+
+                    let action = null;
+                    let message: $Message;
+                    message = messageHeader.contents.at(0);
+                    if (message.action) {
+                        action = message.action;
+                    }
+
+                    let coords = $MovementSystem.updateCharacterPosition(clientCharacter, action);
+
+                    serverMessages.push(new $Message($serverMessages.Movement, [clientCharacter.username, coords], message.tick, null));
+
+                } else {
+                    //write code for tracking attacks here.
+                }
+            }
+
+            /* for (let message of messages) {
                 this.checkClientActionMessages(message);
                 let client = this.getClientMap().get(message.id);
                 let iter = client.getAdjustmentIteration();
@@ -251,12 +282,12 @@ export class GameRouter {
                 } else {
                     //write code for tracking attacks here.
                 }
-            }
+            } */
 
             serverMessageHeaders.forEach((messageHeader: [string, $MessageHeader]) => {
                 let id: string;
                 let header: $MessageHeader;
-                if (messageHeader.at(0) instanceof String) {
+                if ((typeof messageHeader.at(0)) == 'string') {
                     id = messageHeader.at(0) as string;
                 }
 

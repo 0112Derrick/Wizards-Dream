@@ -9,8 +9,7 @@ import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup, characterDataInterface as $characterDataInterface } from '../players/interfaces/CharacterDataInterface.js'
 import { Character as $Character, Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
-import { Overworld } from "./Overworld.js";
-import { GameObject } from "GameObject.js";
+import { GameObject as $GameObject } from "./GameObject.js";
 import { DirectionInput, Direction as $Direction } from "./DirectionInput.js";
 import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
 import { GameMap } from "./GameMap.js";
@@ -24,6 +23,9 @@ import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSiz
 import { Sprite } from "./Sprite.js";
 import Queue from "../framework/Queue.js";
 import { ServerMessages } from '../constants/ServerMessages.js'
+import $MapManager from "./MapManager.js";
+import $CharacterManager from "./CharacterManager.js";
+import $MessageManager from "./MessageManager.js";
 
 
 interface ClientToServerEvents {
@@ -59,13 +61,13 @@ export class ClientController extends $OBSERVER {
     private client_server_latency: number = 0;
     private latency_count: number = 3;
     private adjustmentIteration: number = 0;
-    private clientInputHistory: Array<inputHistory> = new Array<inputHistory>();
+    private clientInputHistory: Map<number, inputHistory> = new Map<number, inputHistory>();
     private clientMovementBuffer: Queue<$Direction> = new Queue();
     private messageHistory: Array<$MessageHeader> = [];
 
 
     private grassyfieldConfig: MapConfigI = {
-        gameObjects: new Array<GameObject>(),
+        gameObjects: new Array<$GameObject>(),
         activeCharacters: null,
         name: MapNames.GrassyField,
         mapMinHeight: 0,
@@ -80,7 +82,7 @@ export class ClientController extends $OBSERVER {
     }
 
     private hallwayConfig: MapConfigI = {
-        gameObjects: new Array<GameObject>(),
+        gameObjects: new Array<$GameObject>(),
         activeCharacters: null,
         name: MapNames.Hallway,
         mapMinHeight: 0,
@@ -93,18 +95,9 @@ export class ClientController extends $OBSERVER {
         targerInterval: 1000 / 20,
         lastFrameTime: 0
     }
-    /* private OverworldMaps = {
-        grassyField: {
-            lowerSrc: "/images/maps/Battleground1.png",
-            upperSrc: "/images/maps/Battleground1.png",
-            gameObjects: [],
-            borders: [],
-        }
-    }; */
-
-    /* private OVERWORLD = new Overworld({
-        element: document.querySelector(".game-container")
-    }); */
+    private MapManger = new $MapManager();
+    private MessageManager = new $MessageManager();
+    private CharacterManager = new $CharacterManager();
 
     private OVERWORLD: Overworld_Test = null;
 
@@ -116,8 +109,19 @@ export class ClientController extends $OBSERVER {
 
         //this.listenForEvent($events.START_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = false; this.OVERWORLD.startGameLoop(); }, this.view);
         //this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
+
         this.listenForEvent($events.SELECT_CHARACTER, (e) => { ClientController.ClientControllerInstance.characterSelectionCallback(e) }, this.view);
-        this.listenForEvent($events.CHARACTER_CREATE, (e) => { this.createCharacter(CharacterCreateRoute, e); }, this.view);
+        this.listenForEvent($events.CHARACTER_CREATE, async (e) => {
+            let result = null;
+            console.log("Processing...");
+            result = await this.createCharacter(CharacterCreateRoute, e);
+            if (result) {
+                alert("Character created successfully.");
+            } else {
+                alert("Failed to create character.");
+            }
+        }, this.view);
+
         this.listenForEvent($events.LOGOUT, (e) => {
             this.playerLogout();
         }, this.view);
@@ -183,19 +187,23 @@ export class ClientController extends $OBSERVER {
                     window.location.reload();
                 }
             });
-            this.socket.on($socketRoutes.RESPONSE_UPDATE_CLIENTS_TICK, (tick: number, iteration: number) => { this.adjustCurrentTick(tick, iteration) })
+            //this.socket.on($socketRoutes.RESPONSE_UPDATE_CLIENTS_TICK, (tick: number, iteration: number) => { this.adjustCurrentTick(tick, iteration) })
             this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
-                this.updateGameObjects;
+                this.updateGameObjects(gameObjects, map);
             });
 
 
             //proof of concept events
             //this.socket.on('movePlayer', () => { this.updatePlayer });
-            // this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
+            //this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
             this.socket.on($socketRoutes.RESPONSE_SYNC_OVERWORLD, (overworld) => { this.syncOverworld(overworld) })
             this.socket.on($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
             this.socket.on($socketRoutes.RESPONSE_MESSAGE, (message: string, username: string) => { this.postMessage(message, username) })
-            this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') })
+            this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') });
+            this.socket.on($socketRoutes.RESPONSE_CLIENT_ACTION_MESSAGE, (messages: $MessageHeader) => {
+                this.processServerActionMessages(messages);
+            });
+
             this.socket.on($socketRoutes.RESPONSE_ACTIVE_SERVERS, (servers: Array<string>) => {
                 this.receiveActiveServers(servers);
             });
@@ -262,7 +270,7 @@ export class ClientController extends $OBSERVER {
 
         this.currentClientTick += adjustmentAmount;
         this.latency_count += adjustmentAmount;
-        this.adjustmentIteration++;
+        this.adjustmentIteration == adjustmentIteration;
         console.log(`current client tick: ${this.currentClientTick}, iteration: ${this.adjustmentIteration}`);
     }
 
@@ -330,6 +338,64 @@ export class ClientController extends $OBSERVER {
         }, this.clientTickRate);
     }
 
+    /**
+    * Receives a message header from the server
+    * Adds the message to the message history
+    * Checks iteration number and then process any tick updates.
+    * Confirms if the interpolated positions are accurate and updates their status to true if they match the server values. 
+    * If interpolated positions are incorrect then it performs the corrections.
+    */
+
+    processServerActionMessages(serverMessageHeader: $MessageHeader) {
+        let messages: $Message[];
+        if (!(serverMessageHeader instanceof $MessageHeader)) {
+            console.log("No message header found.");
+            return;
+        }
+
+        this.messageHistory.push(serverMessageHeader);
+
+        if (serverMessageHeader.adjustmentIteration != this.adjustmentIteration) {
+            this.adjustCurrentTick(serverMessageHeader.tickAdjustment, serverMessageHeader.adjustmentIteration);
+        }
+
+        messages = serverMessageHeader.contents;
+        messages.forEach((message: $Message) => {
+            let [name, action] = message.action;
+            if (name == this.character.name) {
+                this.checkInterpolatedPositions(message);
+            }
+        });
+    }
+
+    /**
+     * Check the message array to make sure its the correct typing.
+     * Check the messages in the array
+     */
+    checkInterpolatedPositions(serverMessage: $Message) {
+        if (!(serverMessage instanceof $Message)) {
+            console.log("Message is not the correct type. " + typeof (serverMessage));
+            return;
+        }
+        if (!this.clientInputHistory.has(serverMessage.tick)) {
+            console.log("Tick was not added to input history.")
+            return;
+        }
+        let inputHistory: inputHistory;
+        inputHistory = this.clientInputHistory.get(serverMessage.tick);
+        let [name, position] = serverMessage.action;
+        if (position.x == inputHistory.location.x && position.y == inputHistory.location.y) {
+            inputHistory.confirmedPosition = true;
+        } else {
+            //update the input history to match the servers line of events.
+            //call a method to correct inputs when the client interpolated incorrectly.
+        }
+    }
+
+    fixIncorrectPredections() {
+
+    }
+
     public get Character() {
         return this.character;
     }
@@ -350,7 +416,9 @@ export class ClientController extends $OBSERVER {
         console.log(`User: ${clientController.client.username} is online. \n`);
         this.socket.emit($socketRoutes.REQUEST_CLIENT_ONLINE, this.clientID);
         clientController.characters = clientController.client.characters;
-        clientController.sendViewCharacterSelection(clientController.client.characters);
+        this.CharacterManager.setListOfCharacter(clientController.client.characters);
+        clientController.sendViewCharacterSelection(this.CharacterManager.getListOfCharacters());
+        //clientController.sendViewCharacterSelection(clientController.client.characters);
 
         //TODO call startOverworldOnConnection with character.location
         clientController.startOverworldOnConnection();
@@ -367,19 +435,29 @@ export class ClientController extends $OBSERVER {
     characterSelectionCallback(data) {
         let clientController = ClientController.ClientControllerInstance;
         let characterPosition: number = data.detail;
-        clientController.SETCharacter(clientController.characters.at(characterPosition));
-        console.log(`User: ${clientController.client.username} is playing on ${clientController.character.username}`);
-        let characterOBJ = ClientController.syncUsertoCharacter(clientController.character);
-        clientController.socket.emit($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, characterOBJ, characterOBJ.location, this.clientID);
-        clientController.OVERWORLD.Maps.forEach(map => {
+        // clientController.SETCharacter(clientController.characters.at(characterPosition));
+        //let characterOBJ = clientController.syncUsertoCharacter(clientController.character);
+        let char = clientController.CharacterManager.selectCharacterByIndex(characterPosition);
+        let characterOBJ = clientController.CharacterManager.syncUsertoCharacter(char)
+        console.log(`User: ${clientController.client.username} is playing on ${clientController.CharacterManager.Character.username}`);
+        clientController.socket.emit($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, characterOBJ, characterOBJ.location, clientController.clientID);
+
+        if (clientController.CharacterManager.Character.location == null) {
+            clientController.CharacterManager.Character.location = MapNames.GrassyField;
+        }
+
+        clientController.MapManger.setClientsCharacterOnMap(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location)
+
+        /* clientController.OVERWORLD.Maps.forEach(map => {
             if (map.getMapName == clientController.character.location || clientController.character.location == null && map.getMapName == MapNames.GrassyField) {
                 if (!clientController.character.location) {
                     clientController.character.location = MapNames.GrassyField;
                 }
                 map.setClientCharacter(clientController.character);
             }
-        });
-        clientController.addCharacterToOverworld(clientController.character, clientController.character.location);
+        }); */
+        clientController.MapManger.addCharacterToOverworld(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location);
+        //clientController.addCharacterToOverworld(clientController.character, clientController.character.location);
     }
 
     createOverworld() {
@@ -396,21 +474,23 @@ export class ClientController extends $OBSERVER {
     //TODO LOAD IN MAP
     startOverworldOnConnection(startMap: MapNames = MapNames.GrassyField) {
         let clientController = ClientController.ClientControllerInstance;
-        if (clientController.OVERWORLD == null) {
+        /* if (clientController.OVERWORLD == null) {
             clientController.createOverworld();
-        }
+        } */
         clientController.socket.emit("requestOverworldGameObjects", startMap);
-        console.log('Starting new Oveworld map');
-        clientController.OVERWORLD.init(startMap);
+        console.log('Starting new Oveworld map: ' + startMap);
+        this.MapManger.startOverWorld(startMap);
+        // clientController.OVERWORLD.init(startMap);
     }
 
-    updateGameObjects(gameObjects, updatedMap: MapNames) {
-        let clientController = ClientController.ClientControllerInstance;
+    updateGameObjects(gameObjects: $GameObject[], updatedMap: MapNames) {
+        /* let clientController = ClientController.ClientControllerInstance;
         clientController.OVERWORLD.Maps.forEach(map => {
             if (map.getMapName == updatedMap) {
                 map.syncGameObjects(gameObjects);
             }
-        });
+        }); */
+        this.MapManger.updateGameObjects(gameObjects, updatedMap);
     }
 
     requestActiveServers() {
@@ -436,7 +516,8 @@ export class ClientController extends $OBSERVER {
 
     changeGameMap(map: MapNames) {
         let clientController = ClientController.ClientControllerInstance;
-        clientController.OVERWORLD.init(map);
+        // clientController.OVERWORLD.init(map);
+        clientController.MapManger.changeGameMap(map);
     }
 
     /**
@@ -454,92 +535,102 @@ export class ClientController extends $OBSERVER {
      */
 
     syncOverworld(overworld: $syncOverworld) {
+        let clientController = ClientController.ClientControllerInstance;
+        clientController.MapManger.syncOverworld(overworld, clientController.CharacterManager);
+
         //let matchFound = false;
-        /*come up with a framework to do interpolation
-          dependency injection or visitor pattern
-          vector from server > visitor pattern that implements interpolation
-          based on current direction continue moving non player controlled characters in that direction until you receive an update from the server
-        */
-        console.log("Received sync overworld data: " + overworld);
-        this.OVERWORLD.Maps.forEach((map) => {
+        // /*come up with a framework to do interpolation
+        //  dependency injection or visitor pattern
+        //  vector from server > visitor pattern that implements interpolation
+        //   based on current direction continue moving non player controlled characters in that direction until you receive an update from the server
+        // */
 
-            if (map.getMapName == MapNames.GrassyField) {
-                /* let newCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.grassyfield.activePlayers)
-    
-                newCharacters.forEach(character => {
-                    let createdCharacter = this.createCharacterFromCharacterDataI(character)
-                    this.addCharacterToOverworld(createdCharacter, MapNames.GrassyField);
-                });
-    
-                map.removeCharactersFromGameObjectsList(overworld.grassyfield.activePlayers, map) */
+        //  /* let newCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.grassyfield.activePlayers)
 
-                map.syncActiveCharacters(overworld.grassyfield.activePlayers);
+        // newCharacters.forEach(character => {
+        //     let createdCharacter = this.createCharacterFromCharacterDataI(character)
+        //      this.addCharacterToOverworld(createdCharacter, MapNames.GrassyField);
+        //  });
 
-                if (!Array.isArray(overworld.grassyfield.gameObjects)) {
-                    console.log("GameObjects grassyfield: ", overworld.grassyfield.gameObjects, " Type: ", typeof overworld.grassyfield.gameObjects)
-                    let syncedOverworldGameObjects = Object.values(overworld.grassyfield.gameObjects);
-                    let updatedObjects = [];
+        // map.removeCharactersFromGameObjectsList(overworld.grassyfield.activePlayers, map) */
 
-                    syncedOverworldGameObjects.forEach((character: $characterDataInterface) => {
-                        if (character.name == this.Character.name || character.player == this.Character.player) {
-                            updatedObjects.push(this.Character);
-                        } else {
-                            updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
-                        }
-                    });
-                    map.syncGameObjects(updatedObjects);
+        //  ClientController.ClientControllerInstance.character = this.createCharacterFromCharacterDataI(character);
+        //  map.setClientCharacter(ClientController.ClientControllerInstance.Character);
 
-                } else {
-                    let updatedObjects = [];
-                    overworld.grassyfield.gameObjects.forEach((character) => {
+        // /* let drawNewCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.hallway.activePlayers)
 
-                        if (character.username == ClientController.ClientControllerInstance.character.username) {
+        // drawNewCharacters.forEach(character => {
+        //     let createdCharacter = this.createCharacterFromCharacterDataI(character);
+        //     this.addCharacterToOverworld(createdCharacter, MapNames.Hallway);
+        // });
 
-                            //  ClientController.ClientControllerInstance.character = this.createCharacterFromCharacterDataI(character);
-                            //  map.setClientCharacter(ClientController.ClientControllerInstance.Character);
-                            updatedObjects.push(ClientController.ClientControllerInstance.Character);
-
-                        } else {
-
-                            updatedObjects.push(this.createCharacterFromCharacterDataI(character));
-
-                        }
-                    })
-                    map.syncGameObjects(updatedObjects);
-                }
-            }
-
-            if (map.getMapName == MapNames.Hallway) {
-
-                /* let drawNewCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.hallway.activePlayers)
-    
-                drawNewCharacters.forEach(character => {
-                    let createdCharacter = this.createCharacterFromCharacterDataI(character);
-                    this.addCharacterToOverworld(createdCharacter, MapNames.Hallway);
-                });
-    
-                map.removeCharactersFromGameObjectsList(overworld.hallway.activePlayers, map); */
-
-                map.syncActiveCharacters(overworld.hallway.activePlayers);
-
-                if (!Array.isArray(overworld.hallway.gameObjects)) {
-                    console.log("GameObjects hallway: ", overworld.hallway.gameObjects, " Type: ", typeof overworld.hallway.gameObjects)
-                    let syncedOverworldGameObjects = Object.values(overworld.hallway.gameObjects);
-                    let updatedObjects = [];
-                    syncedOverworldGameObjects.forEach((character) => {
-                        updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
-                    });
-
-                    map.syncGameObjects(updatedObjects);
-                } else {
-                    let updatedObjects = [];
-                    overworld.hallway.gameObjects.forEach((character) => {
-                        updatedObjects.push(this.createCharacterFromCharacterDataI(character));
-                    })
-                    map.syncGameObjects(updatedObjects);
-                }
-            }
-        })
+        /*  console.log("Received sync overworld data: " + overworld);
+         this.OVERWORLD.Maps.forEach((map) => {
+ 
+             if (map.getMapName == MapNames.GrassyField) {
+                 
+ 
+                 map.syncActiveCharacters(overworld.grassyfield.activePlayers);
+ 
+                 if (!Array.isArray(overworld.grassyfield.gameObjects)) {
+                     console.log("GameObjects grassyfield: ", overworld.grassyfield.gameObjects, " Type: ", typeof overworld.grassyfield.gameObjects)
+                     let syncedOverworldGameObjects = Object.values(overworld.grassyfield.gameObjects);
+                     let updatedObjects = [];
+ 
+                     syncedOverworldGameObjects.forEach((character: $characterDataInterface) => {
+                         if (character.name == this.Character.name || character.player == this.Character.player) {
+                             updatedObjects.push(this.Character);
+                         } else {
+                             updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
+                         }
+                     });
+                     map.syncGameObjects(updatedObjects);
+ 
+                 } else {
+                     let updatedObjects = [];
+                     overworld.grassyfield.gameObjects.forEach((character) => {
+ 
+                         if (character.username == ClientController.ClientControllerInstance.character.username) {
+ 
+                            
+                             updatedObjects.push(ClientController.ClientControllerInstance.Character);
+ 
+                         } else {
+ 
+                             updatedObjects.push(this.createCharacterFromCharacterDataI(character));
+ 
+                         }
+                     })
+                     map.syncGameObjects(updatedObjects);
+                 }
+             }
+ 
+             if (map.getMapName == MapNames.Hallway) {
+ 
+                 
+ 
+               //  map.removeCharactersFromGameObjectsList(overworld.hallway.activePlayers, map); 
+ 
+                 map.syncActiveCharacters(overworld.hallway.activePlayers);
+ 
+                 if (!Array.isArray(overworld.hallway.gameObjects)) {
+                     console.log("GameObjects hallway: ", overworld.hallway.gameObjects, " Type: ", typeof overworld.hallway.gameObjects)
+                     let syncedOverworldGameObjects = Object.values(overworld.hallway.gameObjects);
+                     let updatedObjects = [];
+                     syncedOverworldGameObjects.forEach((character) => {
+                         updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
+                     });
+ 
+                     map.syncGameObjects(updatedObjects);
+                 } else {
+                     let updatedObjects = [];
+                     overworld.hallway.gameObjects.forEach((character) => {
+                         updatedObjects.push(this.createCharacterFromCharacterDataI(character));
+                     })
+                     map.syncGameObjects(updatedObjects);
+                 }
+             }
+         }) */
 
         //console.log("Received sync overworld response from the server.");
     }
@@ -589,38 +680,39 @@ export class ClientController extends $OBSERVER {
     } */
 
     createCharacterFromCharacterDataI(character: $characterDataInterface): Character {
-        if (character.y >= 400) {
-            character.y = 100;
-        }
-
-        let createdCharacter = new $Character({
-            isPlayerControlled: false,
-            x: character.x,
-            y: character.y,
-            name: character.name || character.username,
-            xVelocity: $CharacterVelocity.xVelocity,
-            yVelocity: $CharacterVelocity.yVelocity,
-            width: character.width,
-            height: character.height,
-            sprite: new Sprite({
-                gameObject: this,
-                src: character.sprite.src || "/images/characters/players/erio.png"
-            }),
-            username: character.username,
-            attributes: character.attributes,
-            characterGender: character.characterGender,
-            player: character.player,
-            class: character.class,
-            guild: character.guild,
-            characterID: character.gameObjectID,
-            items: character.items,
-            direction: character.direction || "right",
-        });
+        /*  if (character.y >= 400) {
+             character.y = 100;
+         }
+ 
+         let createdCharacter = new $Character({
+             isPlayerControlled: false,
+             x: character.x,
+             y: character.y,
+             name: character.name || character.username,
+             xVelocity: $CharacterVelocity.xVelocity,
+             yVelocity: $CharacterVelocity.yVelocity,
+             width: character.width,
+             height: character.height,
+             sprite: new Sprite({
+                 gameObject: this,
+                 src: character.sprite.src || "/images/characters/players/erio.png"
+             }),
+             username: character.username,
+             attributes: character.attributes,
+             characterGender: character.characterGender,
+             player: character.player,
+             class: character.class,
+             guild: character.guild,
+             characterID: character.gameObjectID,
+             items: character.items,
+             direction: character.direction || "right",
+         }); */
+        let createdCharacter = ClientController.ClientControllerInstance.CharacterManager.createCharacterFromCharacterDataI(character);
         return createdCharacter;
     }
 
     addCharacterToOverworld(character: $Character, map: MapNames = MapNames.GrassyField) {
-        let clientController = ClientController.ClientControllerInstance;
+        /* let clientController = ClientController.ClientControllerInstance;
 
 
         let gameObjects = null;
@@ -647,45 +739,48 @@ export class ClientController extends $OBSERVER {
             }
         });
 
-        gameObjects.push(character);
-
+        gameObjects.push(character); */
+        ClientController.ClientControllerInstance.MapManger.addCharacterToOverworld(character, map);
     }
 
     private findOverWorldMapByName(searchingMap: MapNames): GameMap | null {
-        let clientController = ClientController.ClientControllerInstance;
-        let maps = clientController.OVERWORLD.Maps;
-
-        for (let i = 0; i < maps.length; i++) {
-            if (maps[i].getMapName == searchingMap) {
-                return maps[i];
-            }
-        }
-        return null;
+        /*  let clientController = ClientController.ClientControllerInstance;
+         let maps = clientController.OVERWORLD.Maps;
+ 
+         for (let i = 0; i < maps.length; i++) {
+             if (maps[i].getMapName == searchingMap) {
+                 return maps[i];
+             }
+         }
+         return null; */
+        return ClientController.ClientControllerInstance.MapManger.findOverworldMapByName(searchingMap);
     }
 
     //create an interface for obj
-    static syncUsertoCharacter(obj) {
-        let char = new $Character({
-            isPlayerControlled: true,
-            name: obj.username,
-            x: Utils.withGrid(6),
-            y: Utils.withGrid(6),
-            sprite: new Sprite({ src: obj.src || "/images/characters/players/erio.png" }),
-            width: obj.width,
-            height: obj.height,
-            direction: obj.direction || 'right',
-            characterID: obj._id,
-            username: obj.username,
-            attributes: obj.attributes,
-            class: obj.class,
-            guild: obj.guild,
-            items: obj.items,
-            player: obj.player,
-            location: obj.location || MapNames.GrassyField,
-            xVelocity: $CharacterVelocity.xVelocity,
-            yVelocity: $CharacterVelocity.yVelocity,
-        });
-        ClientController.ClientControllerInstance.SETCharacter(char);
+    syncUsertoCharacter(obj) {
+        /*  let char = new $Character({
+             isPlayerControlled: true,
+             name: obj.username,
+             x: Utils.withGrid(6),
+             y: Utils.withGrid(6),
+             sprite: new Sprite({ src: obj.src || "/images/characters/players/erio.png" }),
+             width: obj.width,
+             height: obj.height,
+             direction: obj.direction || 'right',
+             characterID: obj._id,
+             username: obj.username,
+             attributes: obj.attributes,
+             class: obj.class,
+             guild: obj.guild,
+             items: obj.items,
+             player: obj.player,
+             location: obj.location || MapNames.GrassyField,
+             xVelocity: $CharacterVelocity.xVelocity,
+             yVelocity: $CharacterVelocity.yVelocity,
+         });
+ 
+         ClientController.ClientControllerInstance.SETCharacter(char); */
+        let char = ClientController.ClientControllerInstance.CharacterManager.syncUsertoCharacter(obj);
         return char;
     }
 
@@ -765,7 +860,7 @@ export class ClientController extends $OBSERVER {
         let characterCreated: boolean = false;
 
         charactersMovementData.forEach((character) => {
-            window.OverworldMaps.grassyField.gameObjects.forEach((char: GameObject) => {
+            window.OverworldMaps.grassyField.gameObjects.forEach((char: $GameObject) => {
                 if (char instanceof $Character) {
                     console.log("username: " + character.characterObj.username + " searching username: " + char.username);
                     if (character.characterObj.username == char.username) {
@@ -816,6 +911,7 @@ export class ClientController extends $OBSERVER {
     }
 
     async createCharacter(route: string, data: any): Promise<boolean> {
+
         try {
             console.log("sending data to server -ClientController");
             let characterData: $characterSignup = {
@@ -841,7 +937,10 @@ export class ClientController extends $OBSERVER {
 
             if (response && response.ok) {
                 this.view.resetSignupForm();
-                return Promise.resolve(true)
+                // Promise.resolve(true);
+                return new Promise((resolve) => {
+                    resolve(true);
+                });
             }
             else {
                 console.log("Something went wrong writing character, status: ", response?.status);
