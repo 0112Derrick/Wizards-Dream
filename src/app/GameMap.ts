@@ -208,6 +208,7 @@ export class GameMap implements MapI {
                 character.playIdleAnimation();
                 break;
         }
+        
         character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
         character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
 
