@@ -6,8 +6,9 @@ import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
 import Camera from "./Camera.js";
-import e from "express";
-import { ServerMessages as $serverMessages } from '../constants/ServerMessages.js'
+import { ServerMessages as $serverMessages } from '../constants/ServerMessages.js';
+import $Movement_System from "./MovementSystem.js";
+
 
 export class GameMap implements MapI {
     private gameObjects: Array<GameObject>;
@@ -32,6 +33,7 @@ export class GameMap implements MapI {
     targetFPS: number = 20;
     targetInterval = 1000 / this.targetFPS; // in milliseconds
     lastFrameTime = 0;
+    private movementSystem = $Movement_System;
 
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
@@ -182,40 +184,82 @@ export class GameMap implements MapI {
 
     updateCharacter(character: Character) {
         let currentDirection = this.directionInput.direction;
-        // $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection)
+        if (!currentDirection) {
+            currentDirection = Direction.STANDSTILL;
+        } else {
+            $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight)
+            let pos = this.movementSystem.updateCharacterPosition(character, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight)
+            character.x = pos.x;
+            character.y = pos.y;
 
-        switch (currentDirection) {
-            case Direction.UP:
-                character.y -= character.yVelocity;
-                // console.log(character.y)
-                break;
-            case Direction.DOWN:
-                character.y += character.yVelocity;
-                // console.log(character.y)
-                break;
-            case Direction.LEFT:
-                character.x -= character.xVelocity;
-                //  console.log(character.x)
-                break;
-            case Direction.RIGHT:
-                character.x += character.xVelocity;
-                //console.log(character.x)
-                break;
-            case Direction.JUMP:
-                console.log('character did a jump')
-                break;
-            default:
-                character.playIdleAnimation();
-                break;
+            /*  switch (currentDirection) {
+                 case Direction.UP:
+                     character.y -= character.yVelocity;
+                     // console.log(character.y)
+                     break;
+                 case Direction.DOWN:
+                     character.y += character.yVelocity;
+                     // console.log(character.y)
+                     break;
+                 case Direction.LEFT:
+                     character.x -= character.xVelocity;
+                     //  console.log(character.x)
+                     break;
+                 case Direction.RIGHT:
+                     character.x += character.xVelocity;
+                     //console.log(character.x)
+                     break;
+                 case Direction.JUMP:
+                     console.log('character did a jump')
+                     break;
+                 default:
+                     character.playIdleAnimation();
+                     break;
+             } */
+
+            /*  character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
+             character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
+      */
+
+            // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
+            // console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
         }
-        
-        character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
-        character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
-
-
-        // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
-        // console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
         this.updateCamera(this.character);
+    }
+
+    setCharacterPosition(character: Character, updatedX: number, updatedY: number) {
+        let foundCharacter = this.findCharacterByName(character.name);
+
+        if (foundCharacter) {
+            foundCharacter.x = updatedX;
+            foundCharacter.y = updatedY;
+            console.log("Updated characters position:", foundCharacter.name, " new position: ", foundCharacter.x, foundCharacter.y);
+            this.updateCamera(foundCharacter);
+            return;
+        }
+        console.log("Character not found.");
+    }
+
+    findCharacterByName(name: string): Character | null {
+        for (let character of this.gameObjects) {
+            if (character instanceof Character) {
+                if (character.name == name) {
+                    return character as Character;
+                };
+            }
+        }
+        return null;
+    }
+
+    findCharacterByID(id: number): Character | null {
+        for (let character of this.gameObjects) {
+            if (character instanceof Character) {
+                if (character.gameObjectID == id) {
+                    return character;
+                };
+            }
+        }
+        return null;
     }
 
     drawBackground() {

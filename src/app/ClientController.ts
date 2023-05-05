@@ -95,6 +95,7 @@ export class ClientController extends $OBSERVER {
         targerInterval: 1000 / 20,
         lastFrameTime: 0
     }
+
     private MapManger = new $MapManager();
     private MessageManager = new $MessageManager();
     private CharacterManager = new $CharacterManager();
@@ -111,6 +112,7 @@ export class ClientController extends $OBSERVER {
         //this.listenForEvent($events.STOP_GAME_LOOP, (e) => { this.OVERWORLD.stopLoop = true; }, this.view);
 
         this.listenForEvent($events.SELECT_CHARACTER, (e) => { ClientController.ClientControllerInstance.characterSelectionCallback(e) }, this.view);
+
         this.listenForEvent($events.CHARACTER_CREATE, async (e) => {
             let result = null;
             console.log("Processing...");
@@ -134,7 +136,7 @@ export class ClientController extends $OBSERVER {
             ClientController.ClientControllerInstance.joinServer(data)
         }, this.view);
 
-        this.listenForEvent($events.MESSAGE, (message) => { this.checkMessage(message) }, this.view);
+        this.listenForEvent($events.MESSAGE, (message) => { this.sendMessage(message, ClientController.ClientControllerInstance.CharacterManager.Character.username) }, this.view);
 
 
         document.addEventListener('visibilitychange', () => {
@@ -267,33 +269,47 @@ export class ClientController extends $OBSERVER {
         if (adjustmentIteration == this.adjustmentIteration) {
             return;
         }
-
-        this.currentClientTick += adjustmentAmount;
         this.latency_count += adjustmentAmount;
+        this.currentClientTick += adjustmentAmount + this.latency_count;
         this.adjustmentIteration == adjustmentIteration;
         console.log(`current client tick: ${this.currentClientTick}, iteration: ${this.adjustmentIteration}`);
     }
 
-    notifyServer(type: ServerMessages, currentDirection: any) {
+    notifyServer(type: ServerMessages, _currentDirection: $Direction | undefined, _worldWidth: number, _worldHeight: number, _mapMinWidth: number, _mapMinHeight: number) {
+
         let messageCount = 1;
+        if (!_currentDirection) {
+            _currentDirection = $Direction.STANDSTILL;
+        }
         switch (type) {
             case ServerMessages.Attack:
                 //  this.createMessage(currentDirection,attack, type);
                 break;
 
             case ServerMessages.Movement:
-                let message = this.createMessage(currentDirection, type, this.adjustmentIteration, messageCount, this.currentClientTick, this.getID());
+                let movementParameters = {
+                    direction: _currentDirection,
+                    worldWidth: _worldWidth,
+                    worldHeight: _worldHeight,
+                    mapMinWidth: _mapMinWidth,
+                    mapMinHeight: _mapMinHeight,
+                }
+
+                let message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, this.currentClientTick, this.getID());
+
                 if (!message) {
+                    console.log("Failed to create message.");
                     return;
                 }
+                console.log("message being sent: ", message.contents.at(0), " ", message.contents.at(0).action);
                 this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message)
                 break;
         }
 
-        throw new Error("Method not implemented.");
+        //throw new Error("Method not implemented.");
     }
 
-    createMessage(action: string, type: ServerMessages, adjustmentIteration: number, messageCount: number, tick: number, id: string,) {
+    createMessage(action: any, type: ServerMessages, adjustmentIteration: number, messageCount: number, tick: number, id: string,) {
         if (!id) {
             console.log("Socket connection not established.");
             return null;
@@ -346,10 +362,10 @@ export class ClientController extends $OBSERVER {
     * If interpolated positions are incorrect then it performs the corrections.
     */
 
-    processServerActionMessages(serverMessageHeader: $MessageHeader) {
+    processServerActionMessages(serverMessageHeader: any) {
         let messages: $Message[];
         if (!(serverMessageHeader instanceof $MessageHeader)) {
-            console.log("No message header found.");
+            console.log("No message header found.", serverMessageHeader);
             return;
         }
 
@@ -361,9 +377,16 @@ export class ClientController extends $OBSERVER {
 
         messages = serverMessageHeader.contents;
         messages.forEach((message: $Message) => {
+            if (!(message instanceof $Message)) {
+                console.log("Message is not the correct typing.", message);
+                return;
+            }
             let [name, action] = message.action;
-            if (name == this.character.name) {
-                this.checkInterpolatedPositions(message);
+            if (name == ClientController.ClientControllerInstance.CharacterManager.Character.name) {
+                let predictedPositionsAreCorrect = ClientController.ClientControllerInstance.checkInterpolatedPositions(message);
+                if (!predictedPositionsAreCorrect) {
+                    ClientController.clientController.fixIncorrectPredections(message);
+                }
             }
         });
     }
@@ -372,28 +395,52 @@ export class ClientController extends $OBSERVER {
      * Check the message array to make sure its the correct typing.
      * Check the messages in the array
      */
-    checkInterpolatedPositions(serverMessage: $Message) {
+    checkInterpolatedPositions(serverMessage: $Message): boolean {
         if (!(serverMessage instanceof $Message)) {
             console.log("Message is not the correct type. " + typeof (serverMessage));
-            return;
+            return false;
         }
-        if (!this.clientInputHistory.has(serverMessage.tick)) {
-            console.log("Tick was not added to input history.")
-            return;
+
+        if (!ClientController.ClientControllerInstance.clientInputHistory.has(serverMessage.tick)) {
+
+            console.log("Tick was not found in input history.");
+
+            let x = serverMessage.action.coords.x;
+            let y = serverMessage.action.coords.y;
+            let tick = serverMessage.tick;
+
+            let input = {
+                location: { x, y },
+                tick: tick,
+                confirmedPosition: true,
+            }
+
+            ClientController.ClientControllerInstance.clientInputHistory.set(serverMessage.tick, input);
+            console.log("Tick was added to input history.");
+            return true;
         }
+
         let inputHistory: inputHistory;
         inputHistory = this.clientInputHistory.get(serverMessage.tick);
-        let [name, position] = serverMessage.action;
-        if (position.x == inputHistory.location.x && position.y == inputHistory.location.y) {
+
+        let [name, coords] = serverMessage.action;
+
+        if (coords.x == inputHistory.location.x && coords.y == inputHistory.location.y) {
             inputHistory.confirmedPosition = true;
-        } else {
-            //update the input history to match the servers line of events.
-            //call a method to correct inputs when the client interpolated incorrectly.
+            return true;
         }
+        return false;
     }
 
-    fixIncorrectPredections() {
-
+    fixIncorrectPredections(message: $Message) {
+        let inputHistory: inputHistory;
+        inputHistory = this.clientInputHistory.get(message.tick);
+        let x = message.action.coords.x;
+        let y = message.action.coords.y;
+        let pos = { x, y }
+        inputHistory.location = pos;
+        inputHistory.confirmedPosition = true;
+        ClientController.ClientControllerInstance.MapManger.updateCharacterPositionViaServerREQ(ClientController.ClientControllerInstance.Character, x, y);
     }
 
     public get Character() {
@@ -418,13 +465,9 @@ export class ClientController extends $OBSERVER {
         clientController.characters = clientController.client.characters;
         this.CharacterManager.setListOfCharacter(clientController.client.characters);
         clientController.sendViewCharacterSelection(this.CharacterManager.getListOfCharacters());
-        //clientController.sendViewCharacterSelection(clientController.client.characters);
 
         //TODO call startOverworldOnConnection with character.location
         clientController.startOverworldOnConnection();
-        /* if (this.client.characters.at(0)) {
-            console.log(`User: ${this.client.username} is playing on ${this.client.characters.at(0).username}`);
-        } */
     }
 
     sendViewCharacterSelection(ListOfCharacters: Array<any>) {
@@ -435,29 +478,19 @@ export class ClientController extends $OBSERVER {
     characterSelectionCallback(data) {
         let clientController = ClientController.ClientControllerInstance;
         let characterPosition: number = data.detail;
-        // clientController.SETCharacter(clientController.characters.at(characterPosition));
-        //let characterOBJ = clientController.syncUsertoCharacter(clientController.character);
+
         let char = clientController.CharacterManager.selectCharacterByIndex(characterPosition);
-        let characterOBJ = clientController.CharacterManager.syncUsertoCharacter(char)
+        let characterOBJ = clientController.CharacterManager.syncUsertoCharacter(char);
         console.log(`User: ${clientController.client.username} is playing on ${clientController.CharacterManager.Character.username}`);
+        console.log("Selected-character being sent to the server: ", characterOBJ);
         clientController.socket.emit($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, characterOBJ, characterOBJ.location, clientController.clientID);
 
         if (clientController.CharacterManager.Character.location == null) {
             clientController.CharacterManager.Character.location = MapNames.GrassyField;
         }
-
         clientController.MapManger.setClientsCharacterOnMap(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location)
 
-        /* clientController.OVERWORLD.Maps.forEach(map => {
-            if (map.getMapName == clientController.character.location || clientController.character.location == null && map.getMapName == MapNames.GrassyField) {
-                if (!clientController.character.location) {
-                    clientController.character.location = MapNames.GrassyField;
-                }
-                map.setClientCharacter(clientController.character);
-            }
-        }); */
         clientController.MapManger.addCharacterToOverworld(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location);
-        //clientController.addCharacterToOverworld(clientController.character, clientController.character.location);
     }
 
     createOverworld() {
@@ -479,18 +512,13 @@ export class ClientController extends $OBSERVER {
         } */
         clientController.socket.emit("requestOverworldGameObjects", startMap);
         console.log('Starting new Oveworld map: ' + startMap);
-        this.MapManger.startOverWorld(startMap);
-        // clientController.OVERWORLD.init(startMap);
+        clientController.MapManger.startOverWorld(startMap);
     }
 
     updateGameObjects(gameObjects: $GameObject[], updatedMap: MapNames) {
-        /* let clientController = ClientController.ClientControllerInstance;
-        clientController.OVERWORLD.Maps.forEach(map => {
-            if (map.getMapName == updatedMap) {
-                map.syncGameObjects(gameObjects);
-            }
-        }); */
-        this.MapManger.updateGameObjects(gameObjects, updatedMap);
+        let clientController = ClientController.ClientControllerInstance;
+
+        clientController.MapManger.updateGameObjects(gameObjects, updatedMap);
     }
 
     requestActiveServers() {
@@ -516,7 +544,6 @@ export class ClientController extends $OBSERVER {
 
     changeGameMap(map: MapNames) {
         let clientController = ClientController.ClientControllerInstance;
-        // clientController.OVERWORLD.init(map);
         clientController.MapManger.changeGameMap(map);
     }
 
@@ -537,102 +564,6 @@ export class ClientController extends $OBSERVER {
     syncOverworld(overworld: $syncOverworld) {
         let clientController = ClientController.ClientControllerInstance;
         clientController.MapManger.syncOverworld(overworld, clientController.CharacterManager);
-
-        //let matchFound = false;
-        // /*come up with a framework to do interpolation
-        //  dependency injection or visitor pattern
-        //  vector from server > visitor pattern that implements interpolation
-        //   based on current direction continue moving non player controlled characters in that direction until you receive an update from the server
-        // */
-
-        //  /* let newCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.grassyfield.activePlayers)
-
-        // newCharacters.forEach(character => {
-        //     let createdCharacter = this.createCharacterFromCharacterDataI(character)
-        //      this.addCharacterToOverworld(createdCharacter, MapNames.GrassyField);
-        //  });
-
-        // map.removeCharactersFromGameObjectsList(overworld.grassyfield.activePlayers, map) */
-
-        //  ClientController.ClientControllerInstance.character = this.createCharacterFromCharacterDataI(character);
-        //  map.setClientCharacter(ClientController.ClientControllerInstance.Character);
-
-        // /* let drawNewCharacters = this.findRecentlyAddedCharacters(map.activeCharacters, overworld.hallway.activePlayers)
-
-        // drawNewCharacters.forEach(character => {
-        //     let createdCharacter = this.createCharacterFromCharacterDataI(character);
-        //     this.addCharacterToOverworld(createdCharacter, MapNames.Hallway);
-        // });
-
-        /*  console.log("Received sync overworld data: " + overworld);
-         this.OVERWORLD.Maps.forEach((map) => {
- 
-             if (map.getMapName == MapNames.GrassyField) {
-                 
- 
-                 map.syncActiveCharacters(overworld.grassyfield.activePlayers);
- 
-                 if (!Array.isArray(overworld.grassyfield.gameObjects)) {
-                     console.log("GameObjects grassyfield: ", overworld.grassyfield.gameObjects, " Type: ", typeof overworld.grassyfield.gameObjects)
-                     let syncedOverworldGameObjects = Object.values(overworld.grassyfield.gameObjects);
-                     let updatedObjects = [];
- 
-                     syncedOverworldGameObjects.forEach((character: $characterDataInterface) => {
-                         if (character.name == this.Character.name || character.player == this.Character.player) {
-                             updatedObjects.push(this.Character);
-                         } else {
-                             updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
-                         }
-                     });
-                     map.syncGameObjects(updatedObjects);
- 
-                 } else {
-                     let updatedObjects = [];
-                     overworld.grassyfield.gameObjects.forEach((character) => {
- 
-                         if (character.username == ClientController.ClientControllerInstance.character.username) {
- 
-                            
-                             updatedObjects.push(ClientController.ClientControllerInstance.Character);
- 
-                         } else {
- 
-                             updatedObjects.push(this.createCharacterFromCharacterDataI(character));
- 
-                         }
-                     })
-                     map.syncGameObjects(updatedObjects);
-                 }
-             }
- 
-             if (map.getMapName == MapNames.Hallway) {
- 
-                 
- 
-               //  map.removeCharactersFromGameObjectsList(overworld.hallway.activePlayers, map); 
- 
-                 map.syncActiveCharacters(overworld.hallway.activePlayers);
- 
-                 if (!Array.isArray(overworld.hallway.gameObjects)) {
-                     console.log("GameObjects hallway: ", overworld.hallway.gameObjects, " Type: ", typeof overworld.hallway.gameObjects)
-                     let syncedOverworldGameObjects = Object.values(overworld.hallway.gameObjects);
-                     let updatedObjects = [];
-                     syncedOverworldGameObjects.forEach((character) => {
-                         updatedObjects.push(this.createCharacterFromCharacterDataI(character as $characterDataInterface))
-                     });
- 
-                     map.syncGameObjects(updatedObjects);
-                 } else {
-                     let updatedObjects = [];
-                     overworld.hallway.gameObjects.forEach((character) => {
-                         updatedObjects.push(this.createCharacterFromCharacterDataI(character));
-                     })
-                     map.syncGameObjects(updatedObjects);
-                 }
-             }
-         }) */
-
-        //console.log("Received sync overworld response from the server.");
     }
 
     findRecentlyAddedCharacters(currentPlayers: Map<string, $characterDataInterface>, newPlayers: Map<string, $characterDataInterface>): Array<$characterDataInterface> {
@@ -683,103 +614,21 @@ export class ClientController extends $OBSERVER {
         /*  if (character.y >= 400) {
              character.y = 100;
          }
- 
-         let createdCharacter = new $Character({
-             isPlayerControlled: false,
-             x: character.x,
-             y: character.y,
-             name: character.name || character.username,
-             xVelocity: $CharacterVelocity.xVelocity,
-             yVelocity: $CharacterVelocity.yVelocity,
-             width: character.width,
-             height: character.height,
-             sprite: new Sprite({
-                 gameObject: this,
-                 src: character.sprite.src || "/images/characters/players/erio.png"
-             }),
-             username: character.username,
-             attributes: character.attributes,
-             characterGender: character.characterGender,
-             player: character.player,
-             class: character.class,
-             guild: character.guild,
-             characterID: character.gameObjectID,
-             items: character.items,
-             direction: character.direction || "right",
-         }); */
+        */
         let createdCharacter = ClientController.ClientControllerInstance.CharacterManager.createCharacterFromCharacterDataI(character);
         return createdCharacter;
     }
 
     addCharacterToOverworld(character: $Character, map: MapNames = MapNames.GrassyField) {
-        /* let clientController = ClientController.ClientControllerInstance;
-
-
-        let gameObjects = null;
-
-        let selectedMap = clientController.findOverWorldMapByName(map);
-
-        if (selectedMap) {
-
-            gameObjects = selectedMap.GameObjects;
-
-        } else {
-
-            console.log("Unable to find map.\nDefaulted user to Grassyfield map. ");
-            gameObjects = clientController.findOverWorldMapByName(MapNames.GrassyField).GameObjects;
-
-        }
-
-        gameObjects.forEach((gameObject: GameObject) => {
-            if (gameObject instanceof $Character) {
-                if ((gameObject as $Character).username == character.username) {
-                    console.log("Character is already exists in this map.");
-                    return;
-                }
-            }
-        });
-
-        gameObjects.push(character); */
         ClientController.ClientControllerInstance.MapManger.addCharacterToOverworld(character, map);
     }
 
     private findOverWorldMapByName(searchingMap: MapNames): GameMap | null {
-        /*  let clientController = ClientController.ClientControllerInstance;
-         let maps = clientController.OVERWORLD.Maps;
- 
-         for (let i = 0; i < maps.length; i++) {
-             if (maps[i].getMapName == searchingMap) {
-                 return maps[i];
-             }
-         }
-         return null; */
         return ClientController.ClientControllerInstance.MapManger.findOverworldMapByName(searchingMap);
     }
 
     //create an interface for obj
     syncUsertoCharacter(obj) {
-        /*  let char = new $Character({
-             isPlayerControlled: true,
-             name: obj.username,
-             x: Utils.withGrid(6),
-             y: Utils.withGrid(6),
-             sprite: new Sprite({ src: obj.src || "/images/characters/players/erio.png" }),
-             width: obj.width,
-             height: obj.height,
-             direction: obj.direction || 'right',
-             characterID: obj._id,
-             username: obj.username,
-             attributes: obj.attributes,
-             class: obj.class,
-             guild: obj.guild,
-             items: obj.items,
-             player: obj.player,
-             location: obj.location || MapNames.GrassyField,
-             xVelocity: $CharacterVelocity.xVelocity,
-             yVelocity: $CharacterVelocity.yVelocity,
-         });
- 
-         ClientController.ClientControllerInstance.SETCharacter(char); */
         let char = ClientController.ClientControllerInstance.CharacterManager.syncUsertoCharacter(obj);
         return char;
     }
@@ -886,28 +735,21 @@ export class ClientController extends $OBSERVER {
     }
 
     checkMessage(message: string) {
-        let cleanMessage: any = '';
-        if (message) {
-            cleanMessage = message;
-        }
-        try {
-            ClientController.ClientControllerInstance.sendMessage(cleanMessage.detail, ClientController.ClientControllerInstance.character.username);
-        } catch (error) {
-            alert('No character selected');
-        }
-
+        return ClientController.ClientControllerInstance.MessageManager.checkMessage(message);
     }
 
-    sendMessage(message: string, user: string) {
+    sendMessage(message: any, user: string) {
         if (ClientController.ClientControllerInstance.activeServer) {
-            ClientController.ClientControllerInstance.socket.emit($socketRoutes.REQUEST_MESSAGE, this.activeServer, message, user);
+            ClientController.ClientControllerInstance.MessageManager.sendMessage(message.detail, user, this.socket, ClientController.ClientControllerInstance.activeServer);
             return;
         }
+
         alert("Select a server to send a message.");
     }
 
     postMessage(message: string, username: string) {
-        ClientController.ClientControllerInstance.view.postMessage(message, username);
+        let cleanMessage = ClientController.clientController.MessageManager.checkMessage(message, "");
+        ClientController.ClientControllerInstance.view.postMessage(cleanMessage, username);
     }
 
     async createCharacter(route: string, data: any): Promise<boolean> {

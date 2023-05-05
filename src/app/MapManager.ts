@@ -129,6 +129,11 @@ export default class MapManager {
         map.syncGameObjects(gameObjects);
     }
 
+    updateCharacterPositionViaServerREQ(character: $Character, x: number, y: number) {
+        let map = this.findOverworldMapByName(character.location);
+        map.setCharacterPosition(character, x, y);
+    }
+
     syncOverworld(overworld: $syncOverworld, characterManager: $CharacterManager) {
 
         //let matchFound = false;

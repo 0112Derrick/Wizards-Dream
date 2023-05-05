@@ -243,7 +243,7 @@ function registerStaticPaths(app) {
     app.use('/images', express.static(path.join(__dirname, './images/')));
     app.use('/', express.static(path.join(__dirname, '/')));
     app.use('/src/constants', express.static(path.join(__dirname, './src/constants')));
-
+    app.use('/test', express.static(path.join(__dirname, './test/')));
 }
 
 function configureRoutes(app, server?, io?, PORT?) {
@@ -256,32 +256,12 @@ function configureRoutes(app, server?, io?, PORT?) {
 
         if (req.isAuthenticated()) {
             //Already logged in, so display main app
-            //console.log('player: ' + req.user);
-
-            /*  async function requestUserInfo() {
-                 let clientOBJ = await req.user.populate('characters');
-                 console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
-                 $gameRouter.GameRouterInstance.setClientIP(req.ip);
-                 $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
-             } */
-
-            // requestUserInfo();
             res.redirect("/main");
         } else {
             res.render("signup", { layout: 'landing' });
         }
     });
 
-    /* const numCpu = os.cpus().length;
-
-    if (cluster.isPrimary) {
-        for (let i = 0; i < numCpu; i++) {
-            cluster.fork();
-        }
-    } else {
-        console.log("Server listening on port: " + PORT);
-        server.listen(PORT);
-    } */
 
     app.get('/main', (req, res) => {
 
@@ -292,7 +272,8 @@ function configureRoutes(app, server?, io?, PORT?) {
              *  Captures the user's IP address so that way we can verify the user later to set their client socket during game initilization
              *  @param data none
              * @param event When user refreshes the page             
-             * */
+            * */
+
             async function requestUserInfo() {
                 let clientOBJ = await req.user.populate('characters');
                 console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
@@ -317,5 +298,6 @@ function configureRoutes(app, server?, io?, PORT?) {
     });
 
     app.use('/player', playerRouter);
+
 }
 

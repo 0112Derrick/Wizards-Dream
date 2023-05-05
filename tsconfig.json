@@ -31,7 +31,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     // "noImplicitAny": true,                       /* Raise error on expressions and declarations with an implied 'any' type. */
-     "strictNullChecks": false,                    /* Enable strict null checks. */
+    "strictNullChecks": false, /* Enable strict null checks. */
     // "strictFunctionTypes": true,                 /* Enable strict checking of function types. */
     // "strictBindCallApply": true,                 /* Enable strict 'bind', 'call', and 'apply' methods on functions. */
     // "strictPropertyInitialization": true,        /* Enable strict checking of property initialization in classes. */
@@ -74,6 +74,7 @@
         "src/network/*",
         "src/framework/*",
         "src/constants/*",
+        "test/*",
         "node_modules/*"
       ],
       "include": [

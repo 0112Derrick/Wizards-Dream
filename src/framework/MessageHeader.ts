@@ -7,30 +7,40 @@ export class MessageHeader {
     id: string | null
 
     constructor(adjustmentIteration: number, contents: Message | Array<Message> | null, id: string | null, tickAdjustment?: number) {
-        this.adjustmentIteration = adjustmentIteration;
-        // this.messageCount = messageCount;
+        try {
+            this.adjustmentIteration = adjustmentIteration;
+            // this.messageCount = messageCount;
 
-        if (id) {
-            this.id = id;
-        }
-        if (contents) {
-            if (Array.isArray(contents)) {
-                this.contents = [...contents];
-            } else {
-                this.contents = [contents];
+            if (id) {
+                this.id = id;
             }
+            if (contents) {
+                if (Array.isArray(contents)) {
+                    this.contents = [...contents];
+                    this.messageCount = this.contents.length;
+                } else {
+                    this.contents = [contents];
+                    this.messageCount = 1;
+                }
+            }
+
+        } catch (error) {
+            this.messageCount = 0;
+            console.log(error);
         }
-        this.messageCount = this.contents.length;
+
     }
 
     updateContents(messages: Array<Message> | Message) {
+        let messageLen: number;
         if (Array.isArray(messages)) {
             this.contents = [...messages];
+            messageLen = messages.length;
         } else {
-            this.contents = [messages];
+            this.contents.push(messages);
+            messageLen = 1;
         }
-
-        this.messageCount = this.contents.length;
+        this.messageCount = messageLen;
     }
 
 
@@ -52,7 +62,7 @@ export class Message {
     toJSON() {
         return {
             type: this.type,
-            message: this.action,
+            action: this.action,
             tick: this.tick,
             id: this.id,
         }

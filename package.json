@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run compile && mocha --recursive './lib/test/*.test.js' --exit",
     "compile": "tsc --project tsconfig.json",
     "package": "cp -r package.json ./lib",
     "socket-io": "cp -r ./node_modules/socket.io-client/ ./lib/",
@@ -54,6 +53,9 @@
     "@types/express": "4.17.13",
     "@types/express-handlebars": "^5.3.1",
     "@types/express-session": "^1.17.5",
-    "@types/node": "18.0.0"
+    "@types/mocha": "^10.0.1",
+    "@types/node": "18.0.0",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0"
   }
 }

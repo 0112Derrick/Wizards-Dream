@@ -10,13 +10,13 @@ import $Queue from ".././framework/Queue.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
 import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
-import { characterDataInterface } from "./interfaces/CharacterDataInterface.js";
+import { characterDataInterface as $characterDataInterface } from "./interfaces/CharacterDataInterface.js";
 import { Socket } from "socket.io";
 import { ClientObject as $ClientObject } from "./ClientObject.js";
 import { MessageHeader as $MessageHeader, Message as $Message } from "../framework/MessageHeader.js"
 import $MovementSystem from "../app/MovementSystem.js"
 import { ServerMessages as $serverMessages } from "../constants/ServerMessages.js"
-
+import WordFilter from "../app/WordFilter.js";
 
 export enum ClientMapSlot {
     ClientSocket = 0,
@@ -191,9 +191,47 @@ export class GameRouter {
         //test events
 
         _socket.on($socketRoutes.REQUEST_CHARACTER_MOVEMENT, gameRouter.addCharacterMoveRequestsToQueue);
-        _socket.on($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, (character: $Character, map: MapNames, clientID: string) => {
+        _socket.on($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, (character: any, map: MapNames, clientID: string) => {
+            let implementsInterface = this.implementsCharacterDataInterface(character)
+            console.log(implementsInterface);
+            let char: $characterDataInterface = null;
+            //this data should not come from the client but instead should be set by the server using the data from the db.
+            if (implementsInterface) {
+                char = {
+                    name: character.name,
+                    x: character.x,
+                    y: character.y,
+                    sprite: character.sprite,
+                    width: character.width,
+                    height: character.height,
+                    direction: character.direction,
+                    gameObjectID: character.gameObjectID,
+                    username: character.username,
+                    attributes: character.attributes,
+                    class: character.class,
+                    guild: character.guild,
+                    items: character.items,
+                    player: character.player,
+                    location: character.location,
+                    xVelocity: character.xVelocity,
+                    yVelocity: character.yVelocity,
+                    friends: character.friends,
+                    equipment: character.equipment,
+                    characterGender: character.characterGender,
+                };
+            }
             //sets the active character
-            gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: character }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
+            if (char) {
+                gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: char }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
+
+                /*  if (!gameRouter.clientMap.get(clientID).getActiveCharacter()) {
+                     gameRouter.clientMap.get(clientID).setActiveCharacter(character);
+                 } */
+                console.log("id: ", clientID, " active character: ", gameRouter.clientMap.get(clientID).getActiveCharacter().username);
+            }
+
+            //console.log("character not type Character: ", character);
+
             //Adds the character to the overworld
             gameRouter.addCharacterToOverworld(character, map);
         });
@@ -212,92 +250,177 @@ export class GameRouter {
 
     }
 
+    implementsCharacterDataInterface(obj: Object): boolean {
+        let atrr: boolean, gender: boolean, guild: boolean, items: boolean, x: boolean, y: boolean, xVelocity: boolean, yVelocity: boolean, _class: boolean, _id: boolean, username: boolean, player: boolean, sprite: boolean, friends: boolean, equipment: boolean, location: boolean, height: boolean, width: boolean, name: boolean = false;
+
+        if ("attributes" in (obj as $characterDataInterface)) {
+            atrr = true;
+        }
+        if ("characterGender" in (obj as $characterDataInterface)) {
+            gender = true;
+        }
+        if ("class" in (obj as $characterDataInterface)) {
+            _class = true;
+        }
+        if ("x" in (obj as $characterDataInterface)) {
+            x = true;
+        }
+        if ("y" in (obj as $characterDataInterface)) {
+            y = true;
+        }
+        if ("xVelocity" in (obj as $characterDataInterface)) {
+            xVelocity = true;
+        }
+        if ("yVelocity" in (obj as $characterDataInterface)) {
+            yVelocity = true;
+        }
+        if ("gameObjectID" in (obj as $characterDataInterface)) {
+            _id = true;
+        }
+        if ("sprite" in (obj as $characterDataInterface)) {
+            sprite = true;
+        }
+        if ("username" in (obj as $characterDataInterface)) {
+            username = true;
+        }
+        if ("friends" in (obj as $characterDataInterface)) {
+            friends = true;
+        }
+        if ("equipment" in (obj as $characterDataInterface)) {
+            equipment = true;
+        }
+        if ("player" in (obj as $characterDataInterface)) {
+            player = true;
+        }
+        if ("location" in (obj as $characterDataInterface)) {
+            location = true;
+        }
+        if ("name" in (obj as $characterDataInterface)) {
+            name = true;
+        }
+        if ("height" in (obj as $characterDataInterface)) {
+            height = true;
+        }
+        if ("width" in (obj as $characterDataInterface)) {
+            width = true;
+        }
+
+        if (atrr && gender && _class && x && y && xVelocity && yVelocity && sprite && _id && username && name && friends && equipment && player && location && name && height && width) {
+            console.log(`${obj} satisfies characterDataInterface.`)
+            return true;
+        }
+        console.log(`${obj} does not satisfy the interface. It is missing \nname:${name} attributes:${atrr} gender:${gender} class:${_class} x:${x} y:${y} xVelocity:${xVelocity} yVelocity:${yVelocity} sprite:${sprite} id:${_id} username:${username} friends:${friends} equipment:${equipment} player:${player}  location:${location} height:${height}  width:${width}`)
+        return false;
+    }
+
+    createMessageHeaders() {
+        throw new Error("Method not implemented.")
+    }
+
+    createMessageHeadersForActiveClients(): Array<{ id: string, messageHeader: $MessageHeader }> {
+        let serverMessageHeaders: Array<{ id: string, messageHeader: $MessageHeader }> = [];
+        let tickAdjustments = new Map<string, number>();
+
+        if (!this.clientMessageQueue.isEmpty()) {
+            let que = this.clientMessageQueue.toArray();
+
+            que.forEach((client) => {
+                let foundClient = this.getClientMap().get(client.id);
+                let foundClientIterationNumb = this.getClientMap().get(client.id).getAdjustmentIteration();
+                if (!foundClient) {
+                    console.log("No client found.");
+                    return;
+                }
+                if (client.adjustmentIteration != foundClientIterationNumb) {
+                    tickAdjustments.set(client.id, foundClientIterationNumb);
+                }
+            });
+        }
+
+        for (let client of this.getClientMap().values()) {
+            let id = client.getClientSocket().id;
+            if (tickAdjustments.has(id)) {
+                let messageHeader = this.createMessageHeader(id, client.getAdjustmentIteration(), null, tickAdjustments.get(id))
+                serverMessageHeaders.push({ id: id, messageHeader: messageHeader })
+            } else {
+                let messageHeader = this.createMessageHeader(id, client.getAdjustmentIteration(), null, null);
+                serverMessageHeaders.push({ id: id, messageHeader: messageHeader })
+            }
+        }
+
+        return serverMessageHeaders;
+    }
+
+    createMessageHeader(id: string, adjustmentIteration: number, content: $Message[] | null, tickAdjustment: number): $MessageHeader {
+        return new $MessageHeader(adjustmentIteration, content, id, tickAdjustment);
+    }
+
     serverTick() {
         // Server Tick
         setInterval(() => {
-            let serverMessageHeaders = [];
+            let serverMessageHeaders: { id: string, messageHeader: $MessageHeader }[];
             let serverMessages: $Message[] = new Array<$Message>();
-
-            //let messages = this.clientMessageQueue.values();
-            //Track when the queue is empty for this 20 hertz interval
 
 
             while (!this.clientMessageQueue.isEmpty()) {
+                serverMessageHeaders = this.createMessageHeadersForActiveClients();
                 let messageHeader = this.clientMessageQueue.dequeue();
-                this.checkClientActionMessages(messageHeader);
+                // this.checkClientMessagesForIncorrectTickTiming(messageHeader);
                 let client = this.getClientMap().get(messageHeader.id);
-                let iter = client.getAdjustmentIteration();
+                //let adjustmentIteration = client.getAdjustmentIteration();
                 let clientCharacter = client.getActiveCharacter();
 
-                if (iter != messageHeader.adjustmentIteration) {
-                    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(iter, null, null, client.getAdjustedTick(iter))]);
-                } else {
-                    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(iter, null, null, null)]);
-                }
+                // if (adjustmentIteration != messageHeader.adjustmentIteration) {
+                //    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(adjustmentIteration, null, null, client.getAdjustedTick(adjustmentIteration))]);
+                // } else {
+                //    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(adjustmentIteration, null, null, null)]);
+                // }
 
 
                 if (messageHeader.contents.at(0).type == $serverMessages.Movement) {
 
-                    let action = null;
                     let message: $Message;
                     message = messageHeader.contents.at(0);
-                    if (message.action) {
-                        action = message.action;
+
+
+                    console.log("client action: ", message);
+
+                    if (!message.action) {
+                        break;
                     }
 
-                    let coords = $MovementSystem.updateCharacterPosition(clientCharacter, action);
+                    const { direction, worldWidth, worldHeight, mapMinWidth, mapMinHeight } = message.action;
+                    //console.log("client character:", clientCharacter);
 
-                    serverMessages.push(new $Message($serverMessages.Movement, [clientCharacter.username, coords], message.tick, null));
+                    let coords = $MovementSystem.updateCharacterPosition(clientCharacter, direction, worldWidth, worldHeight, mapMinWidth, mapMinHeight);
+
+                    let clientPosition = {
+                        username: clientCharacter.username,
+                        coords: coords,
+                    }
+                    serverMessages.push(new $Message($serverMessages.Movement, clientPosition, message.tick, null));
 
                 } else {
                     //write code for tracking attacks here.
                 }
             }
+            if (serverMessageHeaders)
+                serverMessageHeaders.forEach((messageHeader: { id: string, messageHeader: $MessageHeader }) => {
+                    let id: string = null;
+                    let header: $MessageHeader = null;
 
-            /* for (let message of messages) {
-                this.checkClientActionMessages(message);
-                let client = this.getClientMap().get(message.id);
-                let iter = client.getAdjustmentIteration();
-                let clientCharacter = client.getActiveCharacter();
-
-                if (iter != message.adjustmentIteration) {
-                    serverMessageHeaders.push([message.id, new $MessageHeader(iter, null, null, client.getAdjustedTick(iter))]);
-                } else {
-                    serverMessageHeaders.push([message.id, new $MessageHeader(iter, null, null, null)]);
-                }
-
-
-                if (message.contents.at(0).type == $serverMessages.Movement) {
-
-                    let action = null;
-
-                    if (message.contents.at(0).action) {
-                        action = message.contents.at(0).action;
+                    if ((typeof messageHeader.id) == 'string') {
+                        id = messageHeader.id as string;
                     }
 
-                    let coords = $MovementSystem.updateCharacterPosition(clientCharacter, action);
+                    if (messageHeader.messageHeader instanceof $MessageHeader) {
+                        header = messageHeader.messageHeader as $MessageHeader;
+                    }
 
-                    serverMessages.push(new $Message($serverMessages.Movement, [clientCharacter.username, coords], null, null));
+                    header.updateContents(serverMessages);
 
-                } else {
-                    //write code for tracking attacks here.
-                }
-            } */
-
-            serverMessageHeaders.forEach((messageHeader: [string, $MessageHeader]) => {
-                let id: string;
-                let header: $MessageHeader;
-                if ((typeof messageHeader.at(0)) == 'string') {
-                    id = messageHeader.at(0) as string;
-                }
-
-                if (messageHeader.at(1) instanceof $MessageHeader) {
-                    header = messageHeader.at(1) as $MessageHeader;
-                }
-
-                header.updateContents(serverMessages);
-                GameRouter.GameRouterInstance.io.to(id).emit($socketRoutes.RESPONSE_CLIENT_ACTION_MESSAGE, header);
-            });
+                    GameRouter.GameRouterInstance.io.to(id).emit($socketRoutes.RESPONSE_CLIENT_ACTION_MESSAGE, header);
+                });
 
             // GameRouter.GameRouterInstance.setClientMap({ id: id, arg: { tick: Message.tick, input: Message.input } }, ClientMapSlot.ClientInputQue)
 
@@ -318,20 +441,12 @@ export class GameRouter {
              *  so that way its not too far ahead of the server tick.
              */
 
-            let activePlayers = this.clientMap.keys();
-
-
-            //Send clients messages
-            //messages should contain
-
-            //empty request que
-
             this.currentServerTick++;
         }, this.serverTickRate);
 
     }
 
-    checkClientActionMessages(message: $MessageHeader) {
+    checkClientMessagesForIncorrectTickTiming(message: $MessageHeader) {
         /**
          * TODO
          * Receive client id
@@ -356,14 +471,14 @@ export class GameRouter {
 
         let clientTick = message.contents.at(0).tick;
 
-        switch (this.checkClientsTickForAnAdjustment(clientTick)) {
+        switch (this.clientsTickChecker(clientTick)) {
             case 1:
                 console.log("Message was dropped by the server. Tick was behind schedule. " + "\n client tick:" + clientTick + " server tick: " + this.currentServerTick);
                 this.adjustClientsTick((this.currentServerTick + clientTickAdjustment) - clientTick, clientId);
                 break;
 
             case 2:
-                console.log("Client is too far ahead of the server.");
+                console.log("Client is too far ahead of the server." + "\n client tick:" + clientTick + " server tick: " + this.currentServerTick);
                 this.adjustClientsTick((this.currentServerTick + clientTickAdjustment) - clientTick, clientId);
                 break;
 
@@ -386,7 +501,7 @@ export class GameRouter {
     }
 
     //create an enum or constant for the return type
-    checkClientsTickForAnAdjustment(tick: number): number {
+    clientsTickChecker(tick: number): number {
         const clientTickAdjustment = 4;
 
         if (tick < this.currentServerTick) {
@@ -582,8 +697,14 @@ export class GameRouter {
         let gameRouter = GameRouter.GameRouterInstance;
         let cleanMessage: string = ''
         if (message) {
-            cleanMessage = message;
+            let wordFilter = new WordFilter();
+            if (wordFilter.isProfane(message)) {
+                cleanMessage = wordFilter.replaceProfane(message, '*');
+            } else {
+                cleanMessage = message;
+            }
         }
+
         if (serverRoom.toLocaleLowerCase() == 'global' || serverRoom == '') {
             console.log('Emitting globally.');
             gameRouter.io.emit($socketRoutes.RESPONSE_MESSAGE, cleanMessage, user);

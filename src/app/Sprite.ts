@@ -160,4 +160,10 @@ export class Sprite {
         this.updateAnimationProgress();
     }
 
+    toJSON() {
+        return {
+            src: this.src,
+        }
+    }
+
 }

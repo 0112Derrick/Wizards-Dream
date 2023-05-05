@@ -91,10 +91,12 @@ export class Character extends $GameObject implements $characterDataInterface {
             player: this.player,
             gameObjectID: this.gameObjectID,
             attributes: this.attributes,
-            gender: this.characterGender,
+            characterGender: this.characterGender,
             class: this.class,
             guild: this.guild,
             items: this.items,
+            equipment: this.equipment,
+            friends: this.friends,
             x: this.x,
             y: this.y,
             location: this.location,
@@ -105,7 +107,7 @@ export class Character extends $GameObject implements $characterDataInterface {
             width: this.width,
             height: this.height,
             walking: this.walking,
-            sprite: this.sprite.src,
+            sprite: this.sprite.toJSON(),
         }
     }
     /**

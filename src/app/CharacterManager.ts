@@ -7,6 +7,7 @@ import { Utils as $Utils } from "./Utils.js";
 import { CharacterCreationDataInterface as $characterSignup } from "../players/interfaces/CharacterDataInterface.js"
 import { Direction as $Direction } from "./DirectionInput.js";
 
+
 export default class CharacterManager {
     private character: $Character = null;
     private listOfCharacters: any[] = null;
@@ -102,10 +103,13 @@ export default class CharacterManager {
             xVelocity: $CharacterVelocity.xVelocity,
             yVelocity: $CharacterVelocity.yVelocity,
         });
+        if (!char.location) {
+            char.location = $MapNames.GrassyField
+        }
         this.SETCharacter(char);
         return char;
     }
 
-    
+
 
 }

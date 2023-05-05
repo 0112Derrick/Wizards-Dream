@@ -2,11 +2,12 @@ import { Character as $Character } from "../app/Character.js";
 import { Direction as $Direction } from "../app/DirectionInput.js";
 import $Queue from "../framework/Queue.js";
 import { Socket } from "socket.io";
+import { characterDataInterface as $characterDataInterface } from "./interfaces/CharacterDataInterface.js";
 
 export class ClientObject {
     private socket: Socket = null;
     private clientOBJ: any = null;
-    private activeCharacter: $Character = null;
+    private activeCharacter: $characterDataInterface = null;
     private inputHistory: $Queue<[number, string]> = new $Queue();
     private adjustmentIteration: number = 0;
     private clientTickAdjustment: Map<number, number> = new Map<number, number>();
@@ -41,7 +42,7 @@ export class ClientObject {
     }
 
     //Returns the active character for the client
-    getActiveCharacter(): $Character {
+    getActiveCharacter(): $characterDataInterface {
         return this.activeCharacter;
     }
 
@@ -54,9 +55,10 @@ export class ClientObject {
         this.clientOBJ = clientObj;
     }
     //Sets clients the active character
-    setActiveCharacter(activeCharacter: $Character): void {
-        if (activeCharacter instanceof $Character)
+    setActiveCharacter(activeCharacter: $characterDataInterface): void {
+        if (activeCharacter) {
             this.activeCharacter = activeCharacter;
+        }
     }
     //Sets the clients socket
     setClientSocket(socket: Socket): void {
