@@ -1,7 +1,7 @@
 import { GameObject } from "./GameObject.js";
 import { Character } from "./Character.js";
 import { Direction, DirectionInput } from "./DirectionInput.js";
-import { ClientController as $ClientController } from "./ClientController.js";
+import { ClientController as $ClientController, ClientController } from "./ClientController.js";
 import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
@@ -187,43 +187,14 @@ export class GameMap implements MapI {
         if (!currentDirection) {
             currentDirection = Direction.STANDSTILL;
         } else {
-            $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight)
+            let tick = $ClientController.ClientControllerInstance.CurrentSystemTick;
+            $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight, tick)
             let pos = this.movementSystem.updateCharacterPosition(character, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight)
+            ClientController.ClientControllerInstance.setInputHistory(pos, tick);
             character.x = pos.x;
             character.y = pos.y;
-
-            /*  switch (currentDirection) {
-                 case Direction.UP:
-                     character.y -= character.yVelocity;
-                     // console.log(character.y)
-                     break;
-                 case Direction.DOWN:
-                     character.y += character.yVelocity;
-                     // console.log(character.y)
-                     break;
-                 case Direction.LEFT:
-                     character.x -= character.xVelocity;
-                     //  console.log(character.x)
-                     break;
-                 case Direction.RIGHT:
-                     character.x += character.xVelocity;
-                     //console.log(character.x)
-                     break;
-                 case Direction.JUMP:
-                     console.log('character did a jump')
-                     break;
-                 default:
-                     character.playIdleAnimation();
-                     break;
-             } */
-
-            /*  character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width));
-             character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height));
-      */
-
-            // console.log(character.x = Math.max(this.mapMinWidth, Math.min(character.x, this.worldWidth - character.width)));
-            // console.log(character.y = Math.max(this.mapMinHeight, Math.min(character.y, this.worldHeight - character.height)));
         }
+
         this.updateCamera(this.character);
     }
 

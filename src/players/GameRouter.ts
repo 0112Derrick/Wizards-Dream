@@ -383,7 +383,7 @@ export class GameRouter {
                     message = messageHeader.contents.at(0);
 
 
-                    console.log("client action: ", message);
+                    console.log("\n client action: ", message, "\n");
 
                     if (!message.action) {
                         break;
@@ -492,6 +492,7 @@ export class GameRouter {
          } */
 
     }
+
 
     addCharacterActionRequestToQueue(message: $MessageHeader) {
         //Receive clients messages and queue them

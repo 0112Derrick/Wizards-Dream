@@ -91,6 +91,12 @@ export interface characterDataInterface extends CharacterCreationDataInterface {
         weapon: number[] | null,
     }
 }
+
+export interface inputHistory {
+    location: { x: number, y: number },
+    tick: number,
+    confirmedPosition: boolean,
+}
 export default interface playerDataInterface extends playerProfileDataInterface {
     characters: [characterDataInterface];
     playerID: string

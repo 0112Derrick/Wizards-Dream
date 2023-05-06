@@ -6,7 +6,7 @@ import { EventConstants as $events, ServerNameConstants as $servers } from '../c
 import { SocketConstants as $socketRoutes } from "../constants/ServerConstants.js";
 
 import { appendFile } from "fs";
-import { CharacterCreationDataInterface as $characterSignup, characterDataInterface as $characterDataInterface } from '../players/interfaces/CharacterDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup, characterDataInterface as $characterDataInterface, inputHistory as $inputHistory } from '../players/interfaces/CharacterDataInterface.js'
 import { Character as $Character, Character } from "../app/Character.js"
 import { Utils } from "../app/Utils.js"
 import { GameObject as $GameObject } from "./GameObject.js";
@@ -27,7 +27,6 @@ import $MapManager from "./MapManager.js";
 import $CharacterManager from "./CharacterManager.js";
 import $MessageManager from "./MessageManager.js";
 
-
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
     basicEmit: (a: number, b: string, c: number[]) => void;
@@ -39,11 +38,6 @@ interface ServerToClientEvents {
     withAck: (d: string, cb: (e: number) => void) => void;
 }
 
-interface inputHistory {
-    location: { x: number, y: number },
-    tick: number,
-    confirmedPosition: boolean,
-}
 
 export class ClientController extends $OBSERVER {
 
@@ -61,7 +55,6 @@ export class ClientController extends $OBSERVER {
     private client_server_latency: number = 0;
     private latency_count: number = 3;
     private adjustmentIteration: number = 0;
-    private clientInputHistory: Map<number, inputHistory> = new Map<number, inputHistory>();
     private clientMovementBuffer: Queue<$Direction> = new Queue();
     private messageHistory: Array<$MessageHeader> = [];
 
@@ -137,7 +130,6 @@ export class ClientController extends $OBSERVER {
         }, this.view);
 
         this.listenForEvent($events.MESSAGE, (message) => { this.sendMessage(message, ClientController.ClientControllerInstance.CharacterManager.Character.username) }, this.view);
-
 
         document.addEventListener('visibilitychange', () => {
             console.log('Visibility state:', document.visibilityState);
@@ -275,8 +267,11 @@ export class ClientController extends $OBSERVER {
         console.log(`current client tick: ${this.currentClientTick}, iteration: ${this.adjustmentIteration}`);
     }
 
-    notifyServer(type: ServerMessages, _currentDirection: $Direction | undefined, _worldWidth: number, _worldHeight: number, _mapMinWidth: number, _mapMinHeight: number) {
+    public get CurrentSystemTick(): number {
+        return this.currentClientTick;
+    }
 
+    notifyServer(type: ServerMessages, _currentDirection: $Direction | undefined, _worldWidth: number, _worldHeight: number, _mapMinWidth: number, _mapMinHeight: number, tick: number) {
         let messageCount = 1;
         if (!_currentDirection) {
             _currentDirection = $Direction.STANDSTILL;
@@ -295,7 +290,7 @@ export class ClientController extends $OBSERVER {
                     mapMinHeight: _mapMinHeight,
                 }
 
-                let message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, this.currentClientTick, this.getID());
+                let message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
 
                 if (!message) {
                     console.log("Failed to create message.");
@@ -326,6 +321,7 @@ export class ClientController extends $OBSERVER {
 
             /*predict clients movement
                 based on clients input direction */
+
             //add movement to buffer
             //pop client off of buffer and begin processing
             //update clients movement on screen and x / y coordinate
@@ -362,7 +358,8 @@ export class ClientController extends $OBSERVER {
     * If interpolated positions are incorrect then it performs the corrections.
     */
 
-    processServerActionMessages(serverMessageHeader: any) {
+    processServerActionMessages(data: any) {
+        let serverMessageHeader = ClientController.ClientControllerInstance.createMessageHeaderAndMessagesFromData(data);
         let messages: $Message[];
         if (!(serverMessageHeader instanceof $MessageHeader)) {
             console.log("No message header found.", serverMessageHeader);
@@ -377,31 +374,70 @@ export class ClientController extends $OBSERVER {
 
         messages = serverMessageHeader.contents;
         messages.forEach((message: $Message) => {
+
             if (!(message instanceof $Message)) {
                 console.log("Message is not the correct typing.", message);
                 return;
             }
-            let [name, action] = message.action;
-            if (name == ClientController.ClientControllerInstance.CharacterManager.Character.name) {
-                let predictedPositionsAreCorrect = ClientController.ClientControllerInstance.checkInterpolatedPositions(message);
-                if (!predictedPositionsAreCorrect) {
+
+            let { username } = message.action;
+
+            if (username == ClientController.ClientControllerInstance.CharacterManager.Character.name) {
+                let predictedPositions = ClientController.ClientControllerInstance.checkInterpolatedPositions(message);
+                if (!predictedPositions) {
                     ClientController.clientController.fixIncorrectPredections(message);
                 }
+                console.log(`Predicted position result for tick: ${message.tick} : ${predictedPositions}.`);
             }
         });
+
+    }
+
+    setInputHistory(position: { x: number, y: number }, tick: number) {
+        let predictedPosition: $inputHistory = {
+            location: {
+                x: position.x,
+                y: position.y
+            },
+            tick: tick,
+            confirmedPosition: false
+        };
+        ClientController.ClientControllerInstance.CharacterManager.InputHistory.set(tick, predictedPosition);
+    }
+
+    /**
+     * 
+     * @param data Object received from the server containg the necessary info to create a messageheader and messages.
+     * 
+     */
+    createMessageHeaderAndMessagesFromData(data: any): $MessageHeader | null {
+        let messageArray: $Message[] = [];
+        if (data.contents && Array.isArray(data.contents)) {
+            console.log("Converting object into Message.");
+            for (let message of data.contents) {
+                messageArray.push(new $Message(message.type, message.action, message.tick, message.id));
+            }
+        } else {
+            console.log("Unable to convert object into Message.");
+            return null;
+        }
+        let messageHeader: $MessageHeader = new $MessageHeader(data.adjustmentIteration, messageArray, data.id, data.tickAdjustment);
+        return messageHeader;
     }
 
     /**
      * Check the message array to make sure its the correct typing.
      * Check the messages in the array
      */
+
     checkInterpolatedPositions(serverMessage: $Message): boolean {
+        console.log("Check interpolated positions.");
         if (!(serverMessage instanceof $Message)) {
             console.log("Message is not the correct type. " + typeof (serverMessage));
             return false;
         }
 
-        if (!ClientController.ClientControllerInstance.clientInputHistory.has(serverMessage.tick)) {
+        if (!ClientController.ClientControllerInstance.CharacterManager.InputHistory.has(serverMessage.tick)) {
 
             console.log("Tick was not found in input history.");
 
@@ -415,15 +451,15 @@ export class ClientController extends $OBSERVER {
                 confirmedPosition: true,
             }
 
-            ClientController.ClientControllerInstance.clientInputHistory.set(serverMessage.tick, input);
+            ClientController.ClientControllerInstance.CharacterManager.InputHistory.set(serverMessage.tick, input);
             console.log("Tick was added to input history.");
             return true;
         }
 
-        let inputHistory: inputHistory;
-        inputHistory = this.clientInputHistory.get(serverMessage.tick);
+        let inputHistory: $inputHistory;
+        inputHistory = ClientController.ClientControllerInstance.CharacterManager.InputHistory.get(serverMessage.tick);
 
-        let [name, coords] = serverMessage.action;
+        let { coords } = serverMessage.action;
 
         if (coords.x == inputHistory.location.x && coords.y == inputHistory.location.y) {
             inputHistory.confirmedPosition = true;
@@ -433,14 +469,22 @@ export class ClientController extends $OBSERVER {
     }
 
     fixIncorrectPredections(message: $Message) {
-        let inputHistory: inputHistory;
-        inputHistory = this.clientInputHistory.get(message.tick);
+        console.log("Fixing incorrect predicted position.");
+
+        let inputHistory: $inputHistory;
+        inputHistory = ClientController.ClientControllerInstance.CharacterManager.InputHistory.get(message.tick);
+
         let x = message.action.coords.x;
         let y = message.action.coords.y;
-        let pos = { x, y }
+        let pos = { x, y };
+
+        console.log(`Prediction: x:${inputHistory.location.x} | y:${inputHistory.location.y} : Actual: x:${x} | y:${y}.`);
+
         inputHistory.location = pos;
         inputHistory.confirmedPosition = true;
-        ClientController.ClientControllerInstance.MapManger.updateCharacterPositionViaServerREQ(ClientController.ClientControllerInstance.Character, x, y);
+        ClientController.ClientControllerInstance.CharacterManager.Character.x = x;
+        ClientController.ClientControllerInstance.CharacterManager.Character.y = y;
+        ClientController.ClientControllerInstance.MapManger.updateCharacterPositionViaServerREQ(ClientController.ClientControllerInstance.CharacterManager.Character, x, y);
     }
 
     public get Character() {

@@ -1,7 +1,7 @@
 import { Character as $Character } from "./Character.js";
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js"
 import { Sprite } from "./Sprite.js";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
+import { characterDataInterface as $characterDataInterface, inputHistory as $inputHistory } from "../players/interfaces/CharacterDataInterface.js"
 import { MapNames as $MapNames } from "../constants/MapNames.js"
 import { Utils as $Utils } from "./Utils.js";
 import { CharacterCreationDataInterface as $characterSignup } from "../players/interfaces/CharacterDataInterface.js"
@@ -11,9 +11,13 @@ import { Direction as $Direction } from "./DirectionInput.js";
 export default class CharacterManager {
     private character: $Character = null;
     private listOfCharacters: any[] = null;
+    private clientInputHistory: Map<number, $inputHistory> = new Map<number, $inputHistory>();
 
     constructor() {
 
+    }
+    public get InputHistory(): Map<number, $inputHistory> {
+        return this.clientInputHistory;
     }
 
     public get Character(): $Character {
