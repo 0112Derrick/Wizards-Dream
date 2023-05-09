@@ -8,7 +8,7 @@ export interface MapConfigI {
     mapMinWidth: number;
     mapMinHeight: number;
     gameObjects: $GameObject[];
-    activeCharacters: Map<string, $Character> | null,
+    activeCharacters: Map<string, $characterDataInterface> | null,
     lowerImageSrc: string | null;
     upperImageSrc: string | null;
     canvas: HTMLCanvasElement | null;
@@ -24,9 +24,9 @@ export interface OverworldMapsI {
 }
 
 export interface MapI {
-    addCharacter(character: $Character): void;
+    addCharacter(character: $Character): boolean;
     addGameObject(object: $GameObject): void;
-    removeCharacter(player: $Character): void;
+    removeCharacter(character: $Character, map: $GameMap): boolean;
     removeAllCharacters(): void;
     viewCharacters(): IterableIterator<$characterDataInterface>;
     findCharacter(character: $Character): Boolean;
@@ -45,6 +45,21 @@ export interface OverWorld_MapI {
     gameObjects: $Character[],
     lowerSrc: string,
     upperSrc: string,
+}
+
+export interface syncOverworldTransmit {
+
+    grassyfield: {
+        name: $MapNames.GrassyField,
+        activePlayers: { [k: string]: $characterDataInterface },
+        gameObjects: $Character[],
+    }
+
+    hallway: {
+        name: $MapNames.Hallway,
+        activePlayers: { [k: string]: $characterDataInterface },
+        gameObjects: $Character[],
+    }
 }
 
 export interface syncOverworld {

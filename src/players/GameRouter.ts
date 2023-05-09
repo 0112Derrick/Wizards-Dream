@@ -3,13 +3,13 @@ import { OverworldMap } from "../app/OverworldMap.js";
 import { Character as $Character } from "../app/Character.js";
 import { Overworld } from "../app/Overworld.js";
 import { GameObject } from "../app/GameObject.js"
-import { Utils } from "../app/Utils.js";
+import { Utils, utilFunctions } from "../app/Utils.js";
 import { Direction as $Direction } from "../app/DirectionInput.js";
 import { CharacterMovementData, CharacterData_Direction } from "./interfaces/CharacterInterfaces.js";
 import $Queue from ".././framework/Queue.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Overworld_Server } from "./Overworld_Server.js";
-import { OverWorld_MapI as $OverWorld_MapI, syncOverworld as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
+import { OverWorld_MapI as $OverWorld_MapI, syncOverworldTransmit as $syncOverworld } from "./interfaces/OverworldInterfaces.js";
 import { characterDataInterface as $characterDataInterface } from "./interfaces/CharacterDataInterface.js";
 import { Socket } from "socket.io";
 import { ClientObject as $ClientObject } from "./ClientObject.js";
@@ -66,6 +66,8 @@ export class GameRouter {
     private serverTickRate: number = 50;
 
     private Overworld: Overworld_Server = null;
+
+    private activeSockets: Array<string> = [];
 
     private constructor() {
 
@@ -142,6 +144,40 @@ export class GameRouter {
         return this.clientMap;
     }
 
+    setActiveSockets(sockets: Array<string>): boolean {
+        this.activeSockets = sockets;
+        return true;
+    }
+
+    addToActiveSockets(socket: string): boolean {
+        try {
+            for (let currentSocket of GameRouter.GameRouterInstance.activeSockets) {
+                if (currentSocket == socket) {
+                    return false;
+                }
+            }
+
+            GameRouter.GameRouterInstance.activeSockets.push(socket);
+            return true
+        } catch (error) {
+            return false
+        }
+    }
+
+    deleteFromActiveSocket(socket: string): boolean {
+        for (let i = 0; i < GameRouter.GameRouterInstance.activeSockets.length; i++) {
+            if (GameRouter.GameRouterInstance.activeSockets[i] == socket) {
+                GameRouter.GameRouterInstance.activeSockets.splice(i, 1);
+                return true;
+            }
+        }
+        return false
+    }
+
+    getActiveSockets(): any {
+        return this.activeSockets;
+    }
+
     public setClientSocket(_gameSocket) {
         this.clientSocket = _gameSocket;
     }
@@ -192,8 +228,7 @@ export class GameRouter {
 
         _socket.on($socketRoutes.REQUEST_CHARACTER_MOVEMENT, gameRouter.addCharacterMoveRequestsToQueue);
         _socket.on($socketRoutes.REQUEST_ADD_CREATED_CHARACTER, (character: any, map: MapNames, clientID: string) => {
-            let implementsInterface = this.implementsCharacterDataInterface(character)
-            console.log(implementsInterface);
+            let implementsInterface = utilFunctions.checkIfObjectMeetsCharacterDataInterface(character); //this.implementsCharacterDataInterface(character)
             let char: $characterDataInterface = null;
             //this data should not come from the client but instead should be set by the server using the data from the db.
             if (implementsInterface) {
@@ -224,9 +259,6 @@ export class GameRouter {
             if (char) {
                 gameRouter.clientMap.has(clientID) ? gameRouter.setClientMap({ id: clientID, arg: char }, ClientMapSlot.ClientActiveCharacter) : console.log("Unknown Client");
 
-                /*  if (!gameRouter.clientMap.get(clientID).getActiveCharacter()) {
-                     gameRouter.clientMap.get(clientID).setActiveCharacter(character);
-                 } */
                 console.log("id: ", clientID, " active character: ", gameRouter.clientMap.get(clientID).getActiveCharacter().username);
             }
 
@@ -239,79 +271,17 @@ export class GameRouter {
 
         this.createServerRooms();
 
-
-        //Move characters at a set interval.
-        setInterval(() => {
-            if (!GameRouter.GameRouterInstance.moveRequestQue.isEmpty()) {
-                GameRouter.GameRouterInstance.moveCharacter(GameRouter.GameRouterInstance.moveRequestQue);
-            }
-            //this.syncOverworld();
-        }, GameRouter.GameRouterInstance.getMoveRequestIntervalTime());
+        /* 
+                //Move characters at a set interval.
+                setInterval(() => {
+                    if (!GameRouter.GameRouterInstance.moveRequestQue.isEmpty()) {
+                        GameRouter.GameRouterInstance.moveCharacter(GameRouter.GameRouterInstance.moveRequestQue);
+                    }
+                    //this.syncOverworld();
+                }, GameRouter.GameRouterInstance.getMoveRequestIntervalTime()); */
 
     }
 
-    implementsCharacterDataInterface(obj: Object): boolean {
-        let atrr: boolean, gender: boolean, guild: boolean, items: boolean, x: boolean, y: boolean, xVelocity: boolean, yVelocity: boolean, _class: boolean, _id: boolean, username: boolean, player: boolean, sprite: boolean, friends: boolean, equipment: boolean, location: boolean, height: boolean, width: boolean, name: boolean = false;
-
-        if ("attributes" in (obj as $characterDataInterface)) {
-            atrr = true;
-        }
-        if ("characterGender" in (obj as $characterDataInterface)) {
-            gender = true;
-        }
-        if ("class" in (obj as $characterDataInterface)) {
-            _class = true;
-        }
-        if ("x" in (obj as $characterDataInterface)) {
-            x = true;
-        }
-        if ("y" in (obj as $characterDataInterface)) {
-            y = true;
-        }
-        if ("xVelocity" in (obj as $characterDataInterface)) {
-            xVelocity = true;
-        }
-        if ("yVelocity" in (obj as $characterDataInterface)) {
-            yVelocity = true;
-        }
-        if ("gameObjectID" in (obj as $characterDataInterface)) {
-            _id = true;
-        }
-        if ("sprite" in (obj as $characterDataInterface)) {
-            sprite = true;
-        }
-        if ("username" in (obj as $characterDataInterface)) {
-            username = true;
-        }
-        if ("friends" in (obj as $characterDataInterface)) {
-            friends = true;
-        }
-        if ("equipment" in (obj as $characterDataInterface)) {
-            equipment = true;
-        }
-        if ("player" in (obj as $characterDataInterface)) {
-            player = true;
-        }
-        if ("location" in (obj as $characterDataInterface)) {
-            location = true;
-        }
-        if ("name" in (obj as $characterDataInterface)) {
-            name = true;
-        }
-        if ("height" in (obj as $characterDataInterface)) {
-            height = true;
-        }
-        if ("width" in (obj as $characterDataInterface)) {
-            width = true;
-        }
-
-        if (atrr && gender && _class && x && y && xVelocity && yVelocity && sprite && _id && username && name && friends && equipment && player && location && name && height && width) {
-            console.log(`${obj} satisfies characterDataInterface.`)
-            return true;
-        }
-        console.log(`${obj} does not satisfy the interface. It is missing \nname:${name} attributes:${atrr} gender:${gender} class:${_class} x:${x} y:${y} xVelocity:${xVelocity} yVelocity:${yVelocity} sprite:${sprite} id:${_id} username:${username} friends:${friends} equipment:${equipment} player:${player}  location:${location} height:${height}  width:${width}`)
-        return false;
-    }
 
     createMessageHeaders() {
         throw new Error("Method not implemented.")
@@ -355,6 +325,16 @@ export class GameRouter {
         return new $MessageHeader(adjustmentIteration, content, id, tickAdjustment);
     }
 
+    checkIfClientHasActiveSocketConnection(id: any): boolean {
+        let sockets = GameRouter.GameRouterInstance.getActiveSockets()
+        for (let socket of sockets) {
+            if (id == socket) {
+                return true
+            }
+        }
+        return false;
+    }
+
     serverTick() {
         // Server Tick
         setInterval(() => {
@@ -363,27 +343,19 @@ export class GameRouter {
 
 
             while (!this.clientMessageQueue.isEmpty()) {
+
                 serverMessageHeaders = this.createMessageHeadersForActiveClients();
+
                 let messageHeader = this.clientMessageQueue.dequeue();
-                // this.checkClientMessagesForIncorrectTickTiming(messageHeader);
+
                 let client = this.getClientMap().get(messageHeader.id);
-                //let adjustmentIteration = client.getAdjustmentIteration();
+
                 let clientCharacter = client.getActiveCharacter();
-
-                // if (adjustmentIteration != messageHeader.adjustmentIteration) {
-                //    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(adjustmentIteration, null, null, client.getAdjustedTick(adjustmentIteration))]);
-                // } else {
-                //    serverMessageHeaders.push([messageHeader.id, new $MessageHeader(adjustmentIteration, null, null, null)]);
-                // }
-
 
                 if (messageHeader.contents.at(0).type == $serverMessages.Movement) {
 
                     let message: $Message;
                     message = messageHeader.contents.at(0);
-
-
-                    console.log("\n client action: ", message, "\n");
 
                     if (!message.action) {
                         break;
@@ -392,13 +364,25 @@ export class GameRouter {
                     const { direction, worldWidth, worldHeight, mapMinWidth, mapMinHeight } = message.action;
                     //console.log("client character:", clientCharacter);
 
+                    if (!this.checkIfClientHasActiveSocketConnection(message.id)) {
+                        console.log("Client not connected");
+                        return;
+                    }
+
                     let coords = $MovementSystem.updateCharacterPosition(clientCharacter, direction, worldWidth, worldHeight, mapMinWidth, mapMinHeight);
 
                     let clientPosition = {
                         username: clientCharacter.username,
+                        id: clientCharacter.gameObjectID,
+                        location: clientCharacter.location,
                         coords: coords,
                     }
+
+                    console.log(clientPosition);
+
                     serverMessages.push(new $Message($serverMessages.Movement, clientPosition, message.tick, null));
+
+
 
                 } else {
                     //write code for tracking attacks here.
@@ -493,11 +477,8 @@ export class GameRouter {
 
     }
 
-
+    //Receive clients messages and queue them
     addCharacterActionRequestToQueue(message: $MessageHeader) {
-        //Receive clients messages and queue them
-        //Check if queue is being read from before adding a new message
-        //if queue is in use then use a secondary queue to store messages.
         this.clientMessageQueue.add(message);
     }
 
@@ -527,8 +508,6 @@ export class GameRouter {
         client = this.getClientMap().get(id);
         client.incrementAdjustmentIteration();
         client.setAdjustedTick(client.getAdjustmentIteration(), tickAdjustmentAmount);
-
-        //gameRouter.io.to(id).emit($socketRoutes.RESPONSE_UPDATE_CLIENTS_TICK, tickAdjustmentAmount, client.getAdjustmentIteration());
     }
 
     //sends an array of arrays with server names
@@ -550,35 +529,18 @@ export class GameRouter {
         let syncedOverworld: $syncOverworld = {
             grassyfield: {
                 name: MapNames.GrassyField,
-                activePlayers: Object.assign({}, overworld.grassyfield.activePlayers),
+                activePlayers: Object.fromEntries(overworld.grassyfield.activePlayers.entries()),
                 gameObjects: [...overworld.grassyfield.gameObjects],
             },
             hallway: {
                 name: MapNames.Hallway,
-                activePlayers: Object.assign({}, overworld.hallway.activePlayers),
+                activePlayers: Object.fromEntries(overworld.hallway.activePlayers.entries()),
                 gameObjects: [...overworld.hallway.gameObjects],
             }
         }
         console.log("Synced Overworld maps data with client");
         gameRouter.io.emit($socketRoutes.RESPONSE_SYNC_OVERWORLD, syncedOverworld);
     }
-
-    /* syncOverworld(): void {
-        let syncedOverworld = GameRouter.GameRouterInstance.copyOverworld();
-        console.log("\n" + syncedOverworld);
-        GameRouter.GameRouterInstance.io.emit("syncOverworld", syncedOverworld);
-        return;
-    } */
-
-    /* copyOverworld(): Object {
-        //let clientOverworld = Object.assign({}, GameRouter.GameRouterInstance.OverworldMaps);
-        if (GameRouter.GameRouterInstance.Overworld != null) {
-            let clientOverworld = Object.assign({}, GameRouter.GameRouterInstance.Overworld);
-            return clientOverworld;
-        } else {
-            return Object.assign({}, GameRouter.GameRouterInstance.getOverworld());
-        }
-    } */
 
     syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
         GameRouter.GameRouterInstance.io.emit($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, charactersMovementData)
@@ -599,27 +561,11 @@ export class GameRouter {
     }
 
     checkServerRoomCapacity(serverID: number) {
-        let gameRouter = GameRouter.GameRouterInstance;
-
-        /* if (gameRouter.server.has(serverID)) {
-            return gameRouter.server.get(serverID).length;
-        } else {
-            return null;
-        } */
+        throw new Error("Not implemented.");
     }
 
     serverRoomFull() {
-        console.log("Not implemented");
-        /* let gameRouter = GameRouter.GameRouterInstance;
-        gameRouter.server.forEach(serverRoom => {
-            if (serverRoom.findIndex(null) != -1) {
-                console.log(serverRoom.findIndex(null));
-            } else {
-                console.log("create a new server room");
-            }
-        })
-     
-        throw new Error("Method not implemented"); */
+        throw new Error("Not implemented.");
     }
 
 
@@ -645,25 +591,72 @@ export class GameRouter {
 
     }
 
+    disconnectPlayer(id: any) {
+        let gameRouter = GameRouter.GameRouterInstance;
+        let characterOBJ = gameRouter.clientMap.get(id);
+        let character: $characterDataInterface;
+        try {
+            character = characterOBJ.getActiveCharacter();
+            if (!("location" in character)) {
+                console.log("Character location not set.")
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+
+
+        let map = gameRouter.Overworld.maps.get(character.location);
+        let foundCharacter = utilFunctions.findObjectByNameInArray(character.name, map.gameObjects);
+        if (!foundCharacter) {
+            return;
+        }
+
+        let arr = utilFunctions.removeObjectFromArray(map.gameObjects, "name", foundCharacter.name);
+
+        if (!arr) {
+            return;
+        }
+        
+        map.gameObjects = arr;
+        let delCharacter = map.activePlayers.delete(foundCharacter.name);
+        if (delCharacter) { console.log(`${foundCharacter.name} is no longer active: ${delCharacter}`) }
+
+        let result = gameRouter.clientMap.delete(id);
+        console.log("data cleaned: ", result);
+        gameRouter.syncOverworld();
+
+    }
+
 
     //TODO update all clients and server to remove the character from active characters
-    playerDisconnect(client, clientIP) {
-        let gameRouter = GameRouter.GameRouterInstance;
-        gameRouter.clientSocket.emit($socketRoutes.RESPONSE_OFFLINE_CLIENT);
-        throw new Error("method not implemented")
-        // gameRouter.clientMap.delete(client.id);
-        // gameRouter.removeCharacterFromOverworld(client.characters.at(0));
-        //update clients gameMap that the player is no longer there
+    handlePlayerDisconnection(client, clientID) {
+        GameRouter.GameRouterInstance.disconnectPlayer(clientID);
 
     }
 
     //TODO update all clients and server to remove the character from active characters
-    playerLogout(id, character: $Character) {
+    playerLogout(id: any) {
         let gameRouter = GameRouter.GameRouterInstance;
-        console.log(`${character.username} has logged out.`);
-        gameRouter.clientSocket.emit($socketRoutes.RESPONSE_OFFLINE_CLIENT);
-        gameRouter.clientMap.delete(id);
-        gameRouter.removeCharacterFromOverworld(character);
+        let characterOBJ = gameRouter.clientMap.get(id);
+        let character: $characterDataInterface;
+        try {
+            if (!characterOBJ) {
+                return
+            }
+            character = characterOBJ.getActiveCharacter();
+            if (!character) { return }
+            if (!("location" in character)) {
+                console.log("Character location not set.")
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+        gameRouter.io.emit($socketRoutes.RESPONSE_OFFLINE_CLIENT, character);
+        gameRouter.disconnectPlayer(id);
     }
 
     getOverworld() {
@@ -743,8 +736,8 @@ export class GameRouter {
         character.location = overworldMap;
 
         overworld.maps.get(overworldMap).gameObjects.forEach((gameObj, i) => {
-            if (gameObj instanceof $Character) {
-                if ((gameObj as $Character).username == character.username) {
+            if (utilFunctions.checkIfObjectMeetsCharacterDataInterface(gameObj)) {
+                if ((gameObj as $characterDataInterface).username == character.username) {
                     console.log(`${character.username} already exists in ${overworld.maps.get(overworldMap).name} map gameObjects list.`);
                     return;
                 }
@@ -757,7 +750,7 @@ export class GameRouter {
     }
 
     //TODO update characters class to have character location to speed this function up
-    removeCharacterFromOverworld(character: $Character): void {
+    removeCharacterFromOverworld(character: $characterDataInterface): void {
         let gameRouter = GameRouter.GameRouterInstance;
         let overworld: Overworld_Server = gameRouter.getOverworld();
         let playerFound = false;
@@ -806,71 +799,6 @@ export class GameRouter {
             direction: characterMovingDirection,
             characterObj: characterObject,
         });
-    }
-
-
-    //TODO Movement system will be updated to be client side using interpolation and periodic updates by the server and anti cheat checks on the server.
-    //characterMovingDirection: Direction, characterObject: Character
-    moveCharacter(characterMoveRequests: $Queue<CharacterData_Direction>) {
-
-        /*  while (!characterMoveRequests.isEmpty()) {
-             let currentCharacterMoveRequest = characterMoveRequests.dequeue();
-             let delta = {
-                 x: currentCharacterMoveRequest.characterObj.x,
-                 y: currentCharacterMoveRequest.characterObj.y,
-             }
-     
-             const updateDelta: Coordniate = {
-                 x: MovementContants.West_East,
-                 y: MovementContants.North_South,
-             }
-     
-             switch (currentCharacterMoveRequest.direction) {
-     
-                 case Direction.UP:
-                     delta.y -= updateDelta.y;
-                     break;
-     
-                 case Direction.DOWN:
-                     delta.y += updateDelta.y;
-                     break;
-     
-                 case Direction.LEFT:
-                     delta.x -= updateDelta.x;
-                     break;
-     
-                 case Direction.RIGHT:
-                     delta.x += updateDelta.x;
-                     break;
-     
-                 default:
-                     break;
-             }
-             let gameObjectsArray = GameRouter.GameRouterInstance.OverworldMaps.grassyField.gameObjects;
-     
-             gameObjectsArray.forEach(char => {
-                 if (char.username == currentCharacterMoveRequest.characterObj.username) {
-                     char.x = delta.x;
-                     char.y = delta.y;
-                 }
-     
-                 //GameRouter.GameRouterInstance.copyOverworld();
-                 GameRouter.GameRouterInstance.syncOverworld();
-             });
-     
-             let characterDeltas: Array<CharacterMovementData> = [];
-     
-             characterDeltas.push({
-                 characterObj: currentCharacterMoveRequest.characterObj,
-                 delta: {
-                     x: delta.x,
-                     y: delta.y,
-                 },
-                 direction: currentCharacterMoveRequest.direction,
-             });
-             GameRouter.GameRouterInstance.syncPlayersMovements(characterDeltas);
-         }
-    */
     }
 
 }

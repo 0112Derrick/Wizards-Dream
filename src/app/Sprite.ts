@@ -50,7 +50,6 @@ export class Sprite {
 
         //Configure Animation & initial state
         this.animations = config.animations || {
-
             [SpriteAnimations.idle_up]: [[0, 2]],
             [SpriteAnimations.idle_down]: [[0, 0]],
             [SpriteAnimations.idle_left]: [[0, 3]],
@@ -81,7 +80,6 @@ export class Sprite {
     }
 
     get frame() {
-
         // console.log('animations: ', this.animations);
         //onsole.log('this.currentAnimation: ', this.currentAnimation, ' currentAnimationFrame: ', this.currentAnimationFrame)
         return this.animations[this.currentAnimation][this.currentAnimationFrame];
@@ -134,8 +132,6 @@ export class Sprite {
             NamePositionXCoordinate = this.gameObject.x + 7;
             NamePositionYCoordinate = this.gameObject.y - 10;
         }
-
-
 
 
         const CharacterSpriteSheetSize = 32;

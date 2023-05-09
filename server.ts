@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import { ClientMapSlot, GameRouter } from './src/players/GameRouter.js';
-
+import { mapManagerTest } from './src/test2/testMapManager.js';
 
 //import exp from 'constants';
 import { nextTick } from 'process';
@@ -26,7 +26,7 @@ import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
 import { SocketConstants as $SocketConstants } from './src/constants/ServerConstants.js';
 import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
-//import authorRouter from './testDB.js'
+
 
 //import { createGameState } from './src/app/game.js';
 
@@ -146,7 +146,39 @@ const fs = fsModule.promises;
     let gameRouter = $gameRouter.GameRouterInstance;
     gameRouter.setIO(io);
 
+    let activeSockets;
+
     io.on('connection', clientSocket => {
+        activeSockets = io.sockets.sockets.entries();
+        for (let [socketId, connectedSocket] of activeSockets) {
+            console.log(`Socket ID: ${socketId} is connected.`);
+            gameRouter.addToActiveSockets(socketId);
+        }
+
+        clientSocket.on('disconnect', () => {
+
+            let foundSocket = false;
+
+            for (const [socketId, connectedSocket] of activeSockets) {
+                if (clientSocket.id == socketId) {
+                    foundSocket = true;
+                    gameRouter.deleteFromActiveSocket(socketId);
+                }
+            }
+
+            if (foundSocket) {
+                let client = gameRouter.getClientMap().get(clientSocket.id).getActiveCharacter();
+                io.emit($SocketConstants.RESPONSE_OFFLINE_CLIENT, client);
+                gameRouter.handlePlayerDisconnection(clientSocket, clientSocket.id);
+                console.log("player disconnected: id:", clientSocket.id, " ip:", clientSocket.handshake.address);
+            }
+
+        });
+
+        clientSocket.on('connect_error', (err) => {
+            console.log("sockets connection error " + err.message);
+        })
+
         console.log("connecting client: " + clientSocket.handshake.address);
 
         //set by express via req obj temporarily until the data is saved in the ClientMap 
@@ -157,7 +189,7 @@ const fs = fsModule.promises;
             * If client does not exist in client map then add them to the map
             */
 
-            if (!gameRouter.getClientMap().has(clientSocket.handshake.address)) {
+            if (!gameRouter.getClientMap().has(clientSocket.id)) {
                 let mapArr: $ClientObject = new $ClientObject();
                 console.log('new Client Added: ', clientSocket.handshake.address);
                 gameRouter.getClientMap().set(clientSocket.id, mapArr);
@@ -204,23 +236,16 @@ const fs = fsModule.promises;
             clientSocket.emit($SocketConstants.RESPONSE_RECONNECT_CLIENT);
         }
 
+
         // console.log(gameRouter.client.characters.at(0).username);
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
     });
 
-    io.on('connect_error', (err) => {
-        console.log("sockets connection error " + err.message);
-    })
-
-    io.on('disconnect', clientSocket => {
-        gameRouter.playerDisconnect(clientSocket, clientSocket.handshake.address);
-    });
 
     server.on('error', (err) => {
         console.error(err);
     });
-
 
 })();
 

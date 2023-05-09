@@ -5,8 +5,8 @@ export enum Direction {
     RIGHT = "right",
     W = "up",
     A = "left",
-    S = "right",
-    D = "down",
+    S = "down",
+    D = "right",
     JUMP = "jump",
     STANDSTILL = "standstill",
 }

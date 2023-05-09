@@ -182,6 +182,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
         let message: string = (<HTMLInputElement>this.DOM[$id.GAME_CHAT_INPUT]).value;
         this.dispatchEventLocal($events.MESSAGE, message);
         this.resetMessageForm();
+
     }
 
     postMessage(message, username) {
@@ -197,6 +198,7 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
     resetMessageForm() {
         <HTMLFormElement>this.DOM[$id.GAME_CHAT_FORM].reset();
+        <HTMLInputElement>this.DOM[$id.GAME_CHAT_INPUT].blur();
     }
 
     characterCreateCallback() {

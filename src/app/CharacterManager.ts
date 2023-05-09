@@ -107,9 +107,11 @@ export default class CharacterManager {
             xVelocity: $CharacterVelocity.xVelocity,
             yVelocity: $CharacterVelocity.yVelocity,
         });
+        
         if (!char.location) {
             char.location = $MapNames.GrassyField
         }
+
         this.SETCharacter(char);
         return char;
     }

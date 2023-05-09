@@ -12,7 +12,7 @@ import $Movement_System from "./MovementSystem.js";
 
 export class GameMap implements MapI {
     private gameObjects: Array<GameObject>;
-    activeCharacters: Map<string, $characterDataInterface> = new Map<string, $characterDataInterface>();
+    activeCharacters: Map<string, $characterDataInterface>;
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
     private name: MapNames;
@@ -43,6 +43,7 @@ export class GameMap implements MapI {
         this.upperImage.src = config.upperImageSrc;
         this.element = config.element || null;
         this.name = config.name;
+        this.activeCharacters = config.activeCharacters;
         this.lowerImage.onload = (() => {
             this.worldHeight = this.lowerImage.height;
             this.worldWidth = this.lowerImage.width;
@@ -253,26 +254,6 @@ export class GameMap implements MapI {
         }
     }
 
-    animate(): void {
-        //setInterval(() => {
-        this.clearCanvas(this.ctx);
-        //this.updateCamera();
-        this.drawLowerImage(this.ctx);
-        this.drawUpperImage(this.ctx);
-
-        this.gameObjects.forEach((gameObject) => {
-
-            if (gameObject instanceof Character) {
-                this.controller.serverRequestMoveCharacter(gameObject, this.directionInput.direction);
-            }
-
-            gameObject.sprite.draw(this.ctx);
-        });
-
-        // }, 16);
-        window.requestAnimationFrame(() => this.animate());
-    }
-
 
     drawLowerImage(ctx: CanvasRenderingContext2D): void {
         ctx.drawImage(this.lowerImage, 0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -287,13 +268,29 @@ export class GameMap implements MapI {
         ctx ? ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height) : this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 
-    addCharacter(character: Character): void {
-        if (this.activeCharacters.has(character.name)) {
-            return;
+    get ActiveCharacters() {
+        if (!this.activeCharacters) {
+            return this.activeCharacters = new Map<string, $characterDataInterface>();
+        } else {
+            return this.activeCharacters;
         }
+
+    }
+
+    set ActiveCharacters(characters: Map<string, $characterDataInterface>) {
+        this.activeCharacters = characters;
+    }
+
+    addCharacter(character: Character): boolean {
+        if (this.activeCharacters.has(character.name)) {
+            console.log("Character already created.")
+            return false;
+        }
+
         this.activeCharacters.set(character.name, character);
         this.gameObjects.push(character);
         console.log('Player:' + character.name + " has been added to: " + this.name);
+        return true;
     }
 
     addGameObject(object: GameObject): void {
@@ -305,16 +302,26 @@ export class GameMap implements MapI {
         this.gameObjects.push(object);
     }
 
-    removeCharacter(character: Character): void {
-        if (this.activeCharacters.has(character.name)) {
-            let result = this.activeCharacters.delete(character.name);
+    removeCharacter = (character: Character, map: GameMap): boolean => {
+        let activeCharacters = map.ActiveCharacters;
+
+        if (activeCharacters.has(character.name)) {
+
+            let result = activeCharacters.delete(character.name);
             console.log('Character was removed: ' + result);
-            for (let i = 0; i < this.gameObjects.length; i++) {
-                if (character.name == this.gameObjects[i].name) {
-                    this.gameObjects.splice(i);
+
+            for (let i = 0; i < map.gameObjects.length; i++) {
+
+                if (character.name == map.gameObjects[i].name) {
+                    let characters = map.gameObjects.splice(i, 1);
+                    let delCharacter: GameObject = characters.at(0);
+                    console.log(`${delCharacter.name} successfully removed.`);
+                    return true;
                 }
             }
+            return false;
         }
+        return false;
     }
 
     removeAllCharacters(): void {
@@ -359,9 +366,22 @@ export class GameMap implements MapI {
     }
 
     syncActiveCharacters(activeCharactersList: Map<string, $characterDataInterface>): void {
-        console.log("Synced characters: " + activeCharactersList + "\nType: " + typeof activeCharactersList);
-        this.activeCharacters = activeCharactersList;
+        if (activeCharactersList.size == 0) {
+            console.log("Cannot set activeCharacters map with an empty map.");
+            return;
+        }
+
+        let characterNames = activeCharactersList.keys();
+        let namesString: string = "";
+
+        for (let characterName of characterNames) {
+            namesString += characterName + ", ";
+        }
+
+        console.log("Synced characters: " + namesString + "\nType: " + typeof activeCharactersList);
+        this.ActiveCharacters = activeCharactersList;
     }
+
     updateCharacterLocation(character: Character): void {
         throw new Error("Method not implemented.");
     }

@@ -45,7 +45,7 @@ export class Overworld<T> {
                 if (gameOBJ instanceof GameObject) {
                     if (this.ctx) {
                         if (gameOBJ instanceof Character) {
-                            ClientController.ClientControllerInstance.serverRequestMoveCharacter(gameOBJ, this.directionInput.direction);
+                            // ClientController.ClientControllerInstance.serverRequestMoveCharacter(gameOBJ, this.directionInput.direction);
                         }
                         gameOBJ.sprite.draw(this.ctx);
                     }

@@ -103,6 +103,7 @@ export class Character extends $GameObject implements $characterDataInterface {
             xVelocity: this.xVelocity,
             yVelocity: this.yVelocity,
             lastDirection: this.lastDirection,
+            direction: this.direction,
             name: this.name,
             width: this.width,
             height: this.height,

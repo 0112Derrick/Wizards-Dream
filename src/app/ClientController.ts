@@ -8,14 +8,14 @@ import { SocketConstants as $socketRoutes } from "../constants/ServerConstants.j
 import { appendFile } from "fs";
 import { CharacterCreationDataInterface as $characterSignup, characterDataInterface as $characterDataInterface, inputHistory as $inputHistory } from '../players/interfaces/CharacterDataInterface.js'
 import { Character as $Character, Character } from "../app/Character.js"
-import { Utils } from "../app/Utils.js"
+import { Utils, utilFunctions } from "../app/Utils.js"
 import { GameObject as $GameObject } from "./GameObject.js";
 import { DirectionInput, Direction as $Direction } from "./DirectionInput.js";
 import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
 import { GameMap } from "./GameMap.js";
 import { Overworld_Test } from "./Overworld_Test.js";
 import { MapNames } from "../constants/MapNames.js";
-import { MapConfigI, syncOverworld as $syncOverworld } from "../players/interfaces/OverworldInterfaces.js";
+import { MapConfigI, syncOverworld as $syncOverworld, syncOverworldTransmit as $syncOverworldTransmit } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
 import { Socket } from "socket.io-client";
 import { MessageHeader as $MessageHeader, Message as $Message } from "../framework/MessageHeader.js"
@@ -181,7 +181,8 @@ export class ClientController extends $OBSERVER {
                     window.location.reload();
                 }
             });
-            //this.socket.on($socketRoutes.RESPONSE_UPDATE_CLIENTS_TICK, (tick: number, iteration: number) => { this.adjustCurrentTick(tick, iteration) })
+
+
             this.socket.on($socketRoutes.RESPONSE_UPDATED_GAME_OBJECTS, (gameObjects, map: MapNames) => {
                 this.updateGameObjects(gameObjects, map);
             });
@@ -191,7 +192,7 @@ export class ClientController extends $OBSERVER {
             //this.socket.on('movePlayer', () => { this.updatePlayer });
             //this.socket.on('syncPlayer', (ListOfCharacters) => { this.sendViewCharacterSelection(ListOfCharacters); });
             this.socket.on($socketRoutes.RESPONSE_SYNC_OVERWORLD, (overworld) => { this.syncOverworld(overworld) })
-            this.socket.on($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
+            //  this.socket.on($socketRoutes.RESPONSE_SYNC_PLAYERS_MOVEMENTS, (charactersMovementData: Array<CharacterMovementData>) => { this.syncPlayersMovements(charactersMovementData) })
             this.socket.on($socketRoutes.RESPONSE_MESSAGE, (message: string, username: string) => { this.postMessage(message, username) })
             this.socket.on($socketRoutes.RESPONSE_SERVER_MESSAGE, (message: string) => { this.postMessage(message, 'Server') });
             this.socket.on($socketRoutes.RESPONSE_CLIENT_ACTION_MESSAGE, (messages: $MessageHeader) => {
@@ -381,13 +382,27 @@ export class ClientController extends $OBSERVER {
             }
 
             let { username } = message.action;
-
-            if (username == ClientController.ClientControllerInstance.CharacterManager.Character.name) {
-                let predictedPositions = ClientController.ClientControllerInstance.checkInterpolatedPositions(message);
-                if (!predictedPositions) {
-                    ClientController.clientController.fixIncorrectPredections(message);
+            /**
+             * Checks to message sent by server
+             * Checks to see if the message references the current clients character
+             * If message is of type movement than the system checks to see if it correctly inerpolated the clients position.
+             * If it did not than the system will correct the movement.
+             * If the message is not about the current clients character the system will move that character on the clients sceen and play the appropriate animation.
+            **/
+            if (message.type == ServerMessages.Movement) {
+                if (username == ClientController.ClientControllerInstance.CharacterManager.Character.name) {
+                    let predictedPositions = ClientController.ClientControllerInstance.checkInterpolatedPositions(message);
+                    if (!predictedPositions) {
+                        ClientController.clientController.fixIncorrectPredections(message);
+                    }
+                    console.log(`Predicted position result for tick: ${message.tick} : ${predictedPositions}.`);
+                } else {
+                    ClientController.ClientControllerInstance.MapManger.moveNonControlledCharactersWithAnimations(message.action)
                 }
-                console.log(`Predicted position result for tick: ${message.tick} : ${predictedPositions}.`);
+            }
+
+            if (message.type == ServerMessages.Attack) {
+
             }
         });
 
@@ -605,11 +620,15 @@ export class ClientController extends $OBSERVER {
      * 
      */
 
-    syncOverworld(overworld: $syncOverworld) {
+    syncOverworld(overworld: $syncOverworldTransmit) {
         let clientController = ClientController.ClientControllerInstance;
-        clientController.MapManger.syncOverworld(overworld, clientController.CharacterManager);
+        let convertedOverWorld: any = Object.assign({}, overworld);
+        convertedOverWorld.grassyfield.activePlayers = utilFunctions.objectToMap(overworld.grassyfield.activePlayers);
+        convertedOverWorld.hallway.activePlayers = utilFunctions.objectToMap(overworld.hallway.activePlayers);
+        clientController.MapManger.syncOverworld(convertedOverWorld as $syncOverworld, clientController.CharacterManager);
     }
 
+    
     findRecentlyAddedCharacters(currentPlayers: Map<string, $characterDataInterface>, newPlayers: Map<string, $characterDataInterface>): Array<$characterDataInterface> {
         let newPlayersList = new Array<$characterDataInterface>();
         console.log("newPlayers: ", newPlayers, " Type: ", typeof newPlayers);
@@ -626,33 +645,6 @@ export class ClientController extends $OBSERVER {
         }
         return newPlayersList;
     }
-
-    /* syncOverworld(overworld) {
-     
-        let foundMatch = false;
-     
-        overworld.grassyField.gameObjects.forEach((character: GameObject) => {
-            foundMatch = false;
-            if (character instanceof Character) {
-                for (let i = 0; i < this.OverworldMaps.grassyField.gameObjects.length; i++) {
-     
-                    if (character.username == this.OverworldMaps.grassyField.gameObjects[i].username) {
-                        this.OverworldMaps.grassyField.gameObjects[i].x = character.x;
-                        this.OverworldMaps.grassyField.gameObjects[i].y = character.y;
-                        foundMatch = true;
-                        break;
-                    }
-                }
-            }
-     
-            if (!foundMatch) {
-                this.addCharacterToOverworld((character as Character));
-            }
-     
-        })
-     
-        window.OverworldMaps = this.OverworldMaps;
-    } */
 
     createCharacterFromCharacterDataI(character: $characterDataInterface): Character {
         /*  if (character.y >= 400) {
@@ -675,100 +667,6 @@ export class ClientController extends $OBSERVER {
     syncUsertoCharacter(obj) {
         let char = ClientController.ClientControllerInstance.CharacterManager.syncUsertoCharacter(obj);
         return char;
-    }
-
-    /**
-     * @description See function name
-     * @param character See parameter name
-     * @param moveDirection See parameter name
-     */
-    public serverRequestMoveCharacter(character: $Character, moveDirection: $Direction) {
-        //If moveDirection is valid than move the character in the given direction and change their sprite direction
-        // console.log("character id:" + character.player + '\nclient character id:' + this.client.characters.at(0).player);
-        //TODO: The check needs to be for Character Ids which are currently being assigned to 1.
-        let clientController = ClientController.ClientControllerInstance;
-        if (character.player == clientController.character.player) {
-
-            if (moveDirection) {
-                console.log(character.gameObjectID + " " + "movement req")
-                clientController.moveCharacter(moveDirection, character);
-            } else {
-                clientController.moveCharacter($Direction.STANDSTILL, character);
-            }
-
-            //console.log('ClientController func requestServerGameObjectMove\n Direction: ' + moveDirection);
-            // If no direction than keep the sprite direction the same.
-            //character.updateCharacterLocationAndAppearance({ arrow: moveDirection })
-        }
-    }
-
-    /**
-     * 
-     * @param direction 
-     * @param gameOBJ 
-    */
-
-    public moveCharacter(direction: $Direction, gameOBJ: $Character) {
-        let clientController = ClientController.ClientControllerInstance;
-        switch (direction) {
-            case $Direction.UP:
-                if (gameOBJ.y - 0.5 <= 10) {
-                    return;
-                } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.UP, gameOBJ);
-                }
-                break;
-
-            case $Direction.DOWN:
-                if (gameOBJ.y + 0.5 >= 200) {
-                    return;
-                } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.DOWN, gameOBJ);
-                }
-                break;
-
-            case $Direction.LEFT:
-                if (gameOBJ.x - 0.5 <= 0) {
-                    return;
-                } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.LEFT, gameOBJ);
-                }
-                break;
-
-            case $Direction.RIGHT:
-                if (gameOBJ.x + 0.5 >= 250) {
-                    return;
-                } else {
-                    clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.RIGHT, gameOBJ);
-                }
-                break;
-
-            default:
-                clientController.socket.emit($socketRoutes.REQUEST_CHARACTER_MOVEMENT, $Direction.STANDSTILL, gameOBJ);
-        }
-    }
-
-    //Receives a list of characters from the server to update their positions
-    syncPlayersMovements(charactersMovementData: Array<CharacterMovementData>) {
-        let characterCreated: boolean = false;
-
-        charactersMovementData.forEach((character) => {
-            window.OverworldMaps.grassyField.gameObjects.forEach((char: $GameObject) => {
-                if (char instanceof $Character) {
-                    console.log("username: " + character.characterObj.username + " searching username: " + char.username);
-                    if (character.characterObj.username == char.username) {
-                        char.updateCharacterLocationAndAppearance({ arrow: character.direction });
-                        char.x = character.delta.x;
-                        char.y = character.delta.y;
-                        characterCreated = true;
-                    }
-                }
-            });
-
-            if (!characterCreated) {
-                ClientController.ClientControllerInstance.addCharacterToOverworld(character.characterObj);
-            }
-        });
     }
 
     emit(event: string, data: any = false) {
@@ -841,8 +739,14 @@ export class ClientController extends $OBSERVER {
     }
 
     //TODO
-    disconnect() {
-        console.log(`User: ${this.clientID} is offline.`)
+    disconnect(client: Object) {
+        console.log("disconnected client", client);
+        let result = utilFunctions.checkIfObjectMeetsCharacterDataInterface(client);
+        if (result) {
+            console.log(`User: ${(client as Character).username} is offline.`);
+            ClientController.ClientControllerInstance.MapManger.removeCharacterFromMap(client);
+        }
+
     }
 
 
@@ -852,10 +756,11 @@ export class ClientController extends $OBSERVER {
 
     //TODO
     async playerLogout() {
-        this.socket.emit($socketRoutes.REQUEST_CLIENT_LOGOUT, this.clientID, this.character);
+        this.socket.emit($socketRoutes.REQUEST_CLIENT_LOGOUT, ClientController.ClientControllerInstance.socket.id);
         let response = await this.networkProxy.postJSON('/player/logout', null);
         if (response.ok) {
             console.log("Logged out");
+            window.location.reload();
         } else {
             console.log('error');
         }
