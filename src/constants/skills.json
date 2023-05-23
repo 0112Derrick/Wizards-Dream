@@ -1,0 +1,63 @@
+[
+    {
+        "name": "Melee attack",
+        "power": 10,
+        "element": "Neutral",
+        "type": "Melee",
+        "effectTime": 2,
+        "cooldown": 0,
+        "castTime": 0,
+        "src": null,
+        "x": null,
+        "y": null,
+        "velocity": 0,
+        "shape": {
+            "x": null,
+            "y": null,
+            "type": "rectangle",
+            "width": 12,
+            "height": 5,
+            "color": "red"
+        }
+    },
+    {
+        "name": "Ranged attack",
+        "power": 10,
+        "element": "Neutral",
+        "type": "Ranged",
+        "effectTime": 2,
+        "cooldown": 0,
+        "castTime": 0,
+        "src": null,
+        "x": null,
+        "y": null,
+        "velocity": 2,
+        "shape": {
+            "x": null,
+            "y": null,
+            "type": "circle",
+            "radius": 5,
+            "color": "white"
+        }
+    },
+    {
+        "name": "Water sphere",
+        "power": 25,
+        "element": "Water",
+        "type": "Ranged",
+        "effectTime": 3,
+        "cooldown": 0,
+        "castTime": 0,
+        "src": null,
+        "x": null,
+        "y": null,
+        "velocity": 0,
+        "shape": {
+            "x": null,
+            "y": null,
+            "type": "circle",
+            "radius": 8,
+            "color": "blue"
+        }
+    }
+]

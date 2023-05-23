@@ -9,7 +9,7 @@ class OverworldMap {
     gameObjects: any;
     lowerImage: HTMLImageElement;
     upperImage: HTMLImageElement;
-
+    
 
     // ctx!: CanvasRenderingContext2D | null;
 
@@ -52,25 +52,25 @@ window.OverworldMaps = {
         // }),
 
     },
-    hallway: {
-        lowerSrc: "/images/maps/Battleground2.png",
-        upperSrc: "/images/maps/Battleground2.png",
-        gameObjects: {
-            hero: new Character({
-                isPlayerControlled: true,
-                x: 5,
-                y: 5,
-            }),
-            npcHero: new GameObject({
-                x: 10,
-                y: 4,
-                src: "/images/characters/players/witch-girl.png"
-            })
-        }
-    },
-    giantTree: {
-
-    }
+    /*  hallway: {
+         lowerSrc: "/images/maps/Battleground2.png",
+         upperSrc: "/images/maps/Battleground2.png",
+         gameObjects: {
+             hero: new Character({
+                 isPlayerControlled: true,
+                 x: 5,
+                 y: 5,
+             }),
+             npcHero: new GameObject({
+                 x: 10,
+                 y: 4,
+                 src: "/images/characters/players/witch-girl.png"
+             })
+         }
+     },
+     giantTree: {
+ 
+     } */
 };
 
 

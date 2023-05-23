@@ -1,4 +1,5 @@
 
+import { config } from "process";
 import { isThisTypeNode } from "typescript";
 import { DefaultDeserializer } from "v8";
 
@@ -7,7 +8,7 @@ export enum SpriteAnimations {
     idle_down,
     idle_left,
     idle_right,
-    idle_jump,
+    attack1,
     walking_up,
     walking_down,
     walking_left,
@@ -28,6 +29,9 @@ export class Sprite {
     animationFrameProgress: any;
     usernames: boolean = true;
     src: string = '';
+    originalImgData = null;
+    animationSpeed = null;
+    attacks = [];
 
     constructor(config) {
 
@@ -47,6 +51,8 @@ export class Sprite {
             this.isShadowLoaded = true;
         }
 
+        this.animationSpeed = 2;
+
 
         //Configure Animation & initial state
         this.animations = config.animations || {
@@ -54,7 +60,7 @@ export class Sprite {
             [SpriteAnimations.idle_down]: [[0, 0]],
             [SpriteAnimations.idle_left]: [[0, 3]],
             [SpriteAnimations.idle_right]: [[0, 1]],
-            [SpriteAnimations.idle_jump]: [[0, 0]],
+            [SpriteAnimations.attack1]: [[0, 0]],
 
             [SpriteAnimations.walking_up]: [[1, 2], [0, 2], [3, 2], [0, 2]],
             [SpriteAnimations.walking_down]: [[1, 0], [0, 0], [3, 0], [0, 0]],
@@ -81,7 +87,7 @@ export class Sprite {
 
     get frame() {
         // console.log('animations: ', this.animations);
-        //onsole.log('this.currentAnimation: ', this.currentAnimation, ' currentAnimationFrame: ', this.currentAnimationFrame)
+        //console.log('this.currentAnimation: ', this.currentAnimation, ' currentAnimationFrame: ', this.currentAnimationFrame)
         return this.animations[this.currentAnimation][this.currentAnimationFrame];
     }
 
@@ -102,10 +108,17 @@ export class Sprite {
 
         // Reset the counter
         this.animationFrameProgress = this.animationFrameLimit;
-        this.currentAnimationFrame += 1;
+        this.currentAnimationFrame += this.animationSpeed;
 
-        if (this.frame === undefined) {
-            this.currentAnimationFrame = 0;
+
+        while (this.frame === undefined) {
+            this.currentAnimationFrame -= this.animations[this.currentAnimation].length;
+        }
+    }
+
+    drawGameObject(ctx: CanvasRenderingContext2D, x, y) {
+        if (this.isLoaded) {
+            ctx.drawImage(this.image, x, y);
         }
     }
 
@@ -122,8 +135,8 @@ export class Sprite {
             ObjectPositionXCoordinate = characterX - offsetX;
             ObjectPositionYCoordinate = characterY - offsetY;
             //console.log("Sprite being drawn at:\nx: ", ObjectPositionXCoordinate, " y: ", ObjectPositionYCoordinate);
-            NamePositionXCoordinate = characterX;
-            NamePositionYCoordinate = characterY;
+            NamePositionXCoordinate = characterX - 15;
+            NamePositionYCoordinate = characterY - 20;
         } else {
             ObjectPositionXCoordinate = this.gameObject.x - offsetX;
             ObjectPositionYCoordinate = this.gameObject.y - offsetY;
@@ -133,26 +146,36 @@ export class Sprite {
             NamePositionYCoordinate = this.gameObject.y - 10;
         }
 
+        if (this.isLoaded) {
+            this.originalImgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+        }
 
         const CharacterSpriteSheetSize = 32;
         this.isShadowLoaded && ctx.drawImage(this.shadow, ObjectPositionXCoordinate, ObjectPositionYCoordinate
         );
 
-        if (this.usernames) {
-            ctx.font = '9px sans-serif';
-            ctx.fillText(this.gameObject.username, NamePositionXCoordinate, NamePositionYCoordinate, 18);
-            ctx.textAlign = 'center';
-            ctx.fillStyle = 'white';
-        }
 
         const [frameX, frameY] = this.frame;
+
+
+        if (this.currentAnimation == SpriteAnimations.attack1 && this.currentAnimationFrame == 0) {
+            this.updateAnimationProgress();
+        }
+        if (this.usernames) {
+            ctx.font = '9px sans-serif';
+            ctx.fillStyle = 'white';
+            ctx.fillText(this.gameObject.username, NamePositionXCoordinate, NamePositionYCoordinate, 18);
+            ctx.textAlign = 'center';
+            
+        }
 
         this.isLoaded && ctx.drawImage(this.image,
             frameX * CharacterSpriteSheetSize, frameY * CharacterSpriteSheetSize,
             CharacterSpriteSheetSize, CharacterSpriteSheetSize,
             ObjectPositionXCoordinate, ObjectPositionYCoordinate,
             CharacterSpriteSheetSize, CharacterSpriteSheetSize,
-        )
+        );
+
         this.updateAnimationProgress();
     }
 

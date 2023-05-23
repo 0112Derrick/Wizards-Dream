@@ -81,7 +81,7 @@ class UtilFunctions {
         }
 
         let missingItemsArray: Array<string> = [];
-        let direction: boolean, name: boolean, xVelocity: boolean, yVelocity: boolean, username: boolean, _class: boolean, characterGender: boolean, width: boolean, height: boolean, location: boolean, attributes: boolean, guild: boolean, items: boolean, player: boolean, friends: boolean, equipment: boolean, x: boolean, y: boolean, sprite: boolean = false;
+        let direction: boolean, unlockedSkills: boolean, name: boolean, xVelocity: boolean, yVelocity: boolean, username: boolean, _class: boolean, characterGender: boolean, width: boolean, height: boolean, location: boolean, attributes: boolean, guild: boolean, items: boolean, player: boolean, friends: boolean, equipment: boolean, x: boolean, y: boolean, sprite: boolean = false;
 
         "name" in object ? name = true : missingItemsArray.push(" name");
 
@@ -98,6 +98,8 @@ class UtilFunctions {
         "characterGender" in object ? characterGender = true : missingItemsArray.push(" characterGender");
 
         "width" in object ? width = true : missingItemsArray.push(" width");
+
+        "unlockedSkills" in object ? unlockedSkills = true : missingItemsArray.push(" unlockedSkills");
 
         "height" in object ? height = true : missingItemsArray.push(" height");
 
@@ -175,6 +177,7 @@ class UtilFunctions {
                 Men: 0,
                 Dex: 0
             },
+            unlockedSkills: [],
             class: "test",
             guild: "test",
             friends: [],
@@ -198,7 +201,7 @@ class UtilFunctions {
             yVelocity: 0,
             gameObjectID: 0,
             name: "test",
-            username: "test"
+            username: "test",
         }
 
         let testResults: string = "";

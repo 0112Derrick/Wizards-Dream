@@ -37,6 +37,14 @@ export default class Camera {
         return false;
     }
 
+    isCircleInsideOfView(x: number, y: number, radius: number = 16): boolean {
+        if (x + radius >= 0 && x - radius <= this.width &&
+            y + radius >= 0 && y - radius <= this.height) {
+            return true;
+        }
+        return false;
+    }
+
     setWorldHeight(height: number) {
         this.worldHeight = height;
     }

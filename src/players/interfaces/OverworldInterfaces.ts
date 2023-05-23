@@ -62,6 +62,16 @@ export interface syncOverworldTransmit {
     }
 }
 
+export interface gameMapGameObjectsI {
+    addGameObject(object: $GameObject): void;
+    removeGameObject(object: $GameObject): boolean;
+}
+
+export interface characterAddAndRemoveGameObjectsFromRenderI {
+    addSkillToRenderContex(object: $GameObject): void;
+    removeSkillFromRenderContex(object: $GameObject): boolean;
+}
+
 export interface syncOverworld {
     grassyfield: {
         name: $MapNames.GrassyField,

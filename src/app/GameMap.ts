@@ -2,15 +2,18 @@ import { GameObject } from "./GameObject.js";
 import { Character } from "./Character.js";
 import { Direction, DirectionInput } from "./DirectionInput.js";
 import { ClientController as $ClientController, ClientController } from "./ClientController.js";
-import { MapI, MapConfigI } from "../players/interfaces/OverworldInterfaces.js";
+import { MapI, MapConfigI, gameMapGameObjectsI } from "../players/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js"
+import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { Circle, Rectangle, ShapeTypes } from "../framework/Shapes.js";
 import Camera from "./Camera.js";
 import { ServerMessages as $serverMessages } from '../constants/ServerMessages.js';
 import $Movement_System from "./MovementSystem.js";
+import { Intersector as $Intersector } from "./Intesector.js";
+import { Skill as $Skill } from "./Skill.js";
 
 
-export class GameMap implements MapI {
+export class GameMap implements MapI, gameMapGameObjectsI {
     private gameObjects: Array<GameObject>;
     activeCharacters: Map<string, $characterDataInterface>;
     lowerImage: HTMLImageElement;
@@ -34,6 +37,7 @@ export class GameMap implements MapI {
     targetInterval = 1000 / this.targetFPS; // in milliseconds
     lastFrameTime = 0;
     private movementSystem = $Movement_System;
+    private intersector = new $Intersector();
 
     constructor(config: MapConfigI) {
         this.gameObjects = config.gameObjects || [];
@@ -95,10 +99,7 @@ export class GameMap implements MapI {
         if (!this.stopLoop) {
             //temporarily set to a testing function
             window.requestAnimationFrame((time) => this.animate2(time));
-            //this.animate2();
-            // window.requestAnimationFrame(() => this.animate);
         }
-        //throw new Error("Method not implemented.");
     }
 
     updateCamera(player) {
@@ -124,21 +125,31 @@ export class GameMap implements MapI {
 
 
         this.gameObjects.forEach((gameObject) => {
-            let character = (gameObject as Character);
+            if (gameObject instanceof Character) {
+                let character = (gameObject as Character);
 
-            if (character.username == this.character.username) {
-                character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction })
-            } else {
-                character.updateCharacterLocationAndAppearance({})
+                if (character.username == this.character.username) {
+                    character.updateCharacterLocationAndAppearance({ arrow: this.directionInput.direction })
+                } else {
+                    character.updateCharacterLocationAndAppearance({})
+                }
+                let characterX = character.x - this.camera.x;
+                let characterY = character.y - this.camera.y;
+
+                if (this.camera.isInsideOfView(characterX, characterY)) {
+                    character.sprite.draw(this.ctx, characterX, characterY);
+                }
             }
-            let characterX = character.x - this.camera.x;
-            let characterY = character.y - this.camera.y;
 
-            if (this.camera.isInsideOfView(characterX, characterY)) {
-                character.sprite.draw(this.ctx, characterX, characterY);
+            let currentDirection = this.directionInput.direction;
+            if (currentDirection == Direction.ATTACK1 && this.character.sprite.currentAnimationFrame == 0) {
+                this.updateCamera(this.character);
+                this.character.renderSkill(this.ctx, "melee attack", this.camera);
+                return;
             }
 
         });
+
     }
 
     /*      
@@ -149,30 +160,39 @@ export class GameMap implements MapI {
     */
 
     animate2(currentTime: number): void {
-        const timeSinceLastFrame = currentTime - this.lastFrameTime;
 
+        const timeSinceLastFrame = currentTime - this.lastFrameTime;
+        //manages game loop speed.
         if (timeSinceLastFrame >= this.targetInterval) {
             this.lastFrameTime = currentTime;
 
-            if (this.character && this.mapLoaded) {
-
-                this.gameObjects.forEach((gameObject) => {
-
-                    if ((gameObject instanceof Character)) {
-                        if ((gameObject as Character).player == this.character.player) {
-                            this.character = gameObject;
-                            //send message to server with the clients direction.
-                            this.updateCharacter((gameObject as Character));
-
-                        } else {
-                            this.updateNpcCharacter((gameObject as Character));
-                        }
-                    }
-
-                });
-
-                this.draw();
+            if (!this.character || !this.mapLoaded) {
+                window.requestAnimationFrame((time) => this.animate2(time));
+                return;
             }
+
+            this.gameObjects.forEach((gameObject) => {
+
+                if (!(gameObject instanceof Character)) {
+                    window.requestAnimationFrame((time) => this.animate2(time));
+                    return;
+                }
+
+                if ((gameObject as Character).player == this.character.player) {
+                    this.character = gameObject;
+                    //send message to server with the clients direction.
+                    this.updateCharacter((gameObject as Character));
+
+                } else {
+                    this.updateNpcCharacter((gameObject as Character));
+                }
+
+                if (gameObject instanceof $Skill) {
+                    this.handleCollisions(gameObject);
+                }
+            });
+
+            this.draw();
 
         }
 
@@ -183,8 +203,55 @@ export class GameMap implements MapI {
 
     }
 
+    handleCollisions(skill: $Skill) {
+        this.gameObjects.filter(characterObj => characterObj instanceof Character).forEach(characterObj => {
+
+            if (skill.Shape.type == ShapeTypes.Rectangle) {
+                if (this.intersector.isRect2DColliding({
+                    width: (characterObj as Character).width,
+                    height: (characterObj as Character).height,
+                    x: (characterObj as Character).x,
+                    y: (characterObj as Character).y,
+                    type: ShapeTypes.Rectangle,
+                    color: ""
+                }, {
+                    width: (skill.Shape as Rectangle).width,
+                    height: (skill.Shape as Rectangle).height,
+                    x: skill.x,
+                    y: skill.y,
+                    type: ShapeTypes.Rectangle,
+                    color: ""
+                })) {
+                    console.log(`${skill.name} collided with ${characterObj.name}`);
+                }
+            } else {
+
+                if (this.intersector.isRectCollidingWithCircle({
+                    width: (characterObj as Character).width,
+                    height: (characterObj as Character).height,
+                    x: (characterObj as Character).x,
+                    y: (characterObj as Character).y,
+                    type: ShapeTypes.Rectangle,
+                    color: ""
+                }, {
+                    radius: (skill.Shape as Circle).radius,
+                    x: skill.x,
+                    y: skill.y,
+                    type: ShapeTypes.Circle,
+                    color: ""
+                })) {
+                    console.log(`${skill.name} collided with ${characterObj.name}`);
+                }
+            }
+
+        })
+    }
+
     updateCharacter(character: Character) {
+
         let currentDirection = this.directionInput.direction;
+        character.setGameObjects(this);
+
         if (!currentDirection) {
             currentDirection = Direction.STANDSTILL;
         } else {
@@ -230,6 +297,15 @@ export class GameMap implements MapI {
                     return character;
                 };
             }
+        }
+        return null;
+    }
+
+    findgameObjectByID(id: number): GameObject | null {
+        for (let gameObj of this.gameObjects) {
+            if (gameObj.gameObjectID == id) {
+                return gameObj;
+            };
         }
         return null;
     }
@@ -299,7 +375,20 @@ export class GameMap implements MapI {
                 return;
             }
         }
+        console.log(object.name, " added to map.")
         this.gameObjects.push(object);
+        console.log(this.gameObjects);
+    }
+
+    removeGameObject(object: GameObject): boolean {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            if (this.gameObjects[i].gameObjectID == object.gameObjectID) {
+                this.gameObjects.splice(i, 1);
+                console.log(object.name, " removed from the map.")
+                return true;
+            }
+        }
+        return false;
     }
 
     removeCharacter = (character: Character, map: GameMap): boolean => {
@@ -348,9 +437,11 @@ export class GameMap implements MapI {
     viewCharacters(): IterableIterator<$characterDataInterface> {
         return this.activeCharacters.values();
     }
+
     findCharacter(character: Character): Boolean {
         throw new Error("Method not implemented.");
     }
+
     syncGameObjects(playersList: Array<GameObject>): void {
         console.log("Synced game objects: " + playersList + "\nType: " + typeof playersList)
         if (!Array.isArray(playersList)) {

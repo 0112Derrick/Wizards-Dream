@@ -50,6 +50,7 @@ export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
     direction: { type: String },
     width: { type: Number },
     height: { type: Number },
+    unlockedSkills: { type: [Object] },
     friends: { type: [Object] },
     attributes: { type: Object },
     class: { type: String },
@@ -69,6 +70,7 @@ characterSchema.method('syncCharacter', function (character): void {
         characterGender: docAsObject.characterGender,
         width: docAsObject.width,
         height: docAsObject.height,
+        unlockedSkills: docAsObject.skills,
         location: docAsObject.location,
         attributes: {
             level: docAsObject.level,
@@ -100,7 +102,7 @@ characterSchema.method('syncCharacter', function (character): void {
         direction: docAsObject.direction,
         xVelocity: docAsObject.xVelocity,
         yVelocity: docAsObject.yVelocity,
-        name: docAsObject.name
+        name: docAsObject.name,
     }
 
     character.setData(characterLocal);

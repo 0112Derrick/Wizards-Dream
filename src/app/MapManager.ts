@@ -70,6 +70,7 @@ export default class MapManager {
     setClientsCharacterOnMap(character: $Character, map: $MapNames): void {
         let characterMap = this.findOverworldMapByName(map);
         if (characterMap != null) {
+            character.setGameObjects(characterMap);
             characterMap.setClientCharacter(character);
             return;
         }

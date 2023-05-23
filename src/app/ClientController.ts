@@ -547,6 +547,9 @@ export class ClientController extends $OBSERVER {
         if (clientController.CharacterManager.Character.location == null) {
             clientController.CharacterManager.Character.location = MapNames.GrassyField;
         }
+
+        if (clientController.CharacterManager.Character.unlockedSkills.length == 0) { clientController.CharacterManager.addCharacterBasicSkills() }
+
         clientController.MapManger.setClientsCharacterOnMap(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location)
 
         clientController.MapManger.addCharacterToOverworld(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location);
@@ -628,7 +631,6 @@ export class ClientController extends $OBSERVER {
         clientController.MapManger.syncOverworld(convertedOverWorld as $syncOverworld, clientController.CharacterManager);
     }
 
-    
     findRecentlyAddedCharacters(currentPlayers: Map<string, $characterDataInterface>, newPlayers: Map<string, $characterDataInterface>): Array<$characterDataInterface> {
         let newPlayersList = new Array<$characterDataInterface>();
         console.log("newPlayers: ", newPlayers, " Type: ", typeof newPlayers);

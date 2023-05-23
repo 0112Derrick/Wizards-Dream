@@ -253,7 +253,7 @@ const fs = fsModule.promises;
 function registerStaticPaths(app) {
     // Set __dirname
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
+    
     //Register static paths for loading modules
     app.use('/src/app', express.static(path.join(__dirname, './src/app')));
     app.use('/src/socketIO', express.static(path.join(__dirname, './src/socketIO')));

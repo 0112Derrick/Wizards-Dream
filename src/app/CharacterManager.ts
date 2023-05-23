@@ -6,16 +6,21 @@ import { MapNames as $MapNames } from "../constants/MapNames.js"
 import { Utils as $Utils } from "./Utils.js";
 import { CharacterCreationDataInterface as $characterSignup } from "../players/interfaces/CharacterDataInterface.js"
 import { Direction as $Direction } from "./DirectionInput.js";
+import { Skill as $Skill } from "./Skill.js";
 
 
 export default class CharacterManager {
+
+
     private character: $Character = null;
     private listOfCharacters: any[] = null;
     private clientInputHistory: Map<number, $inputHistory> = new Map<number, $inputHistory>();
+    private characterSkills: Array<$Skill> = [];
 
     constructor() {
-
+        this.fetchSkills();
     }
+
     public get InputHistory(): Map<number, $inputHistory> {
         return this.clientInputHistory;
     }
@@ -52,8 +57,53 @@ export default class CharacterManager {
         console.log("Character: " + this.character.toJSON());
     }
 
+    fetchSkills() {
+        fetch("/src/constants/skills.json")
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                for (let skill of data) {
+                    this.characterSkills.push(new $Skill({
+                        x: skill.x,
+                        y: skill.y,
+                        name: skill.name,
+                        src: skill.src,
+                        direction: null,
+                        createSprite: false,
+                        xVelocity: skill.velocity,
+                        yVelocity: skill.velocity,
+                        shape: skill.shape,
+                        castTime: skill.castTime,
+                        element: skill.element,
+                        power: skill.power,
+                        effectTime: skill.effectTime,
+                        cooldown: skill.cooldown,
+                    }));
+                }
+            })
+            .catch(error => { console.log("Error:", error) });
+    }
+
+    addCharacterBasicSkills() {
+        let basicMeleeAtk = this.characterSkills.find(skill => {
+            return skill.name.toLowerCase() == "melee attack";
+        });
+
+        let basicRangedAtk = this.characterSkills.find(skill => {
+            return skill.name.toLowerCase() == "ranged attack";
+        })
+
+        if (basicMeleeAtk) {
+            this.Character.unlockedSkills.push(basicMeleeAtk);
+        } else { console.log("Failure to find basic melee attack."); }
+
+        if (basicRangedAtk) {
+            this.Character.unlockedSkills.push(basicRangedAtk);
+        } else { console.log("Failure to find basic ranged attack."); }
+    }
 
     createCharacterFromCharacterDataI(character: $characterDataInterface): $Character {
+
         if (character.y >= 400) {
             character.y = 100;
         }
@@ -74,6 +124,7 @@ export default class CharacterManager {
             username: character.username,
             attributes: character.attributes,
             characterGender: character.characterGender,
+            unlockedSkills: character.unlockedSkills,
             player: character.player,
             class: character.class,
             guild: character.guild,
@@ -99,6 +150,7 @@ export default class CharacterManager {
             characterID: obj._id,
             username: obj.username,
             attributes: obj.attributes,
+            unlockedSkills: obj.unlockedSkills,
             class: obj.class,
             guild: obj.guild,
             items: obj.items,
@@ -107,7 +159,7 @@ export default class CharacterManager {
             xVelocity: $CharacterVelocity.xVelocity,
             yVelocity: $CharacterVelocity.yVelocity,
         });
-        
+
         if (!char.location) {
             char.location = $MapNames.GrassyField
         }

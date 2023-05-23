@@ -6,7 +6,12 @@ import { Direction as $Direction } from "./DirectionInput.js";
 import { CharacterAttributes as $CharacterAttributes } from "./CharacterAttributes.js";
 import { MapNames as $MapNames } from "../constants/MapNames.js";
 import { CharacterSize as $CharacterSize, CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js"
-import Camera from "./Camera.js";
+import $Camera from "./Camera.js";
+import { Skill as $Skill } from "./Skill.js";
+import { gameMapGameObjectsI, characterAddAndRemoveGameObjectsFromRenderI } from "../players/interfaces/OverworldInterfaces.js";
+import { Shape, Rectangle as $Rectangle, Circle as $Circle } from "../framework/Shapes.js";
+import { response } from "express";
+import { error } from "console";
 
 interface CharacterMovementStateI {
     arrow?: $Direction | null;
@@ -14,15 +19,16 @@ interface CharacterMovementStateI {
     mapMinWidth?: number;
     worldHeight?: number;
     worldWidth?: number;
-    camera?: Camera;
+    camera?: $Camera;
 }
-export class Character extends $GameObject implements $characterDataInterface {
+export class Character extends $GameObject implements $characterDataInterface, characterAddAndRemoveGameObjectsFromRenderI {
     movingProgressRemaining: number;
     directionUpdate: {};
     isPlayerControlled: any;
     lastDirection: $Direction;
     username: string;
     class: string;
+    unlockedSkills: $Skill[] = [];
     characterGender: string;
     width: number;
     height: number;
@@ -47,11 +53,13 @@ export class Character extends $GameObject implements $characterDataInterface {
         Men: number,//Increases sp & mdef
         Dex: number,//Increases Crit  
     };
+
     guild: string;
     items: string[];
     player: any;
     friends: string[];
     equipment: { head: number[]; chest: number[]; legs: number[]; weapon: number[]; };
+    gameMapObjects: gameMapGameObjectsI;
 
     constructor(config) {
         super(config);
@@ -64,7 +72,7 @@ export class Character extends $GameObject implements $characterDataInterface {
             [$Direction.DOWN]: ["y", + $CharacterVelocity.yVelocity],
             [$Direction.LEFT]: ["x", - $CharacterVelocity.xVelocity],
             [$Direction.RIGHT]: ["x", + $CharacterVelocity.xVelocity],
-            [$Direction.JUMP]: ["y", 0],
+            [$Direction.ATTACK1]: ["y", 0],
         }
 
         this.gameObjectID = config.gameObjectID || 1;
@@ -75,6 +83,7 @@ export class Character extends $GameObject implements $characterDataInterface {
         this.class = config.class || 'none';
         this.guild = config.guild || 'none';
         this.items = config.items || [];
+        this.unlockedSkills = config.skills || [];
         this.name = config.name || 'newCharacter';
         this.width = config.width || $CharacterSize.width;
         this.height = config.height || $CharacterSize.height;
@@ -83,7 +92,38 @@ export class Character extends $GameObject implements $characterDataInterface {
         this.yVelocity = $CharacterVelocity.yVelocity;
         this.equipment = config.equipment || {};
         this.friends = config.friends || [];
+        this.init();
     }
+
+    init() {
+
+    }
+
+    setGameObjects(gameMap: gameMapGameObjectsI) {
+        this.gameMapObjects = gameMap;
+    }
+
+    renderSkill(ctx: CanvasRenderingContext2D, _skill: string, camera: $Camera): boolean {
+        for (let skill of this.unlockedSkills) {
+            skill.GameObjectsCallback = this;
+            if (_skill.toLowerCase() == skill.Name.toLowerCase()) {
+                skill.draw(ctx, camera, this.lastDirection, { x: this.x, y: this.y });
+                return true;
+            }
+        }
+        return false;
+    }
+
+    removeSkillFromRenderContex(object: $GameObject): boolean {
+        let result = this.gameMapObjects.removeGameObject(object);
+        if (result) { return true }
+        return false;
+    }
+
+    addSkillToRenderContex(object: $GameObject) {
+        this.gameMapObjects.addGameObject(object);
+    }
+
 
     toJSON() {
         return {
@@ -105,6 +145,7 @@ export class Character extends $GameObject implements $characterDataInterface {
             lastDirection: this.lastDirection,
             direction: this.direction,
             name: this.name,
+            unlockedSkills: this.unlockedSkills,
             width: this.width,
             height: this.height,
             walking: this.walking,
@@ -120,13 +161,20 @@ export class Character extends $GameObject implements $characterDataInterface {
         // console.log(characterMovementState);
         const GridBlockSize = 16;
         this.movingProgressRemaining = 0;
-
+        //testing for attacks
+        if (characterMovementState.arrow == $Direction.ATTACK1) {
+            this.movingProgressRemaining = GridBlockSize;
+            return;
+        }
         //this.isPlayerControlled &&
         //if player is not moving and controlled it reassigns their direction to their last button clicked
         if (this.movingProgressRemaining === 0 && characterMovementState.arrow) {
             this.direction = characterMovementState.arrow;
             this.movingProgressRemaining = GridBlockSize;
         }
+
+
+
         //if player is moving and controlled it reassigns their direction to their last button clicked and updates the movement gauge
         if (characterMovementState.arrow) {
 
@@ -138,10 +186,11 @@ export class Character extends $GameObject implements $characterDataInterface {
                 return;
             }
 
-            this.direction = characterMovementState.arrow;
             this.lastDirection = this.direction;
+            this.direction = characterMovementState.arrow;
             this.movingProgressRemaining = GridBlockSize;
         }
+
         //if player is not moving it reassigns their animation to the idle ver. of the last direction they were moving in or defaults to right. 
         else if (!characterMovementState.arrow) {
             this.movingProgressRemaining = 0;
@@ -182,8 +231,8 @@ export class Character extends $GameObject implements $characterDataInterface {
                 case 'right':
                     animation = $SpriteAnimations.idle_right;
                     break;
-                case 'jump':
-                    animation = $SpriteAnimations.idle_jump;
+                case 'attack1':
+                    animation = $SpriteAnimations.attack1;
                     break;
                 default:
                     animation = $SpriteAnimations.idle_right;
@@ -241,8 +290,8 @@ export class Character extends $GameObject implements $characterDataInterface {
             case 'right':
                 animation = $SpriteAnimations.idle_right;
                 break;
-            case 'jump':
-                animation = $SpriteAnimations.idle_jump;
+            case 'attack1':
+                animation = $SpriteAnimations.attack1;
                 break;
             default:
                 animation = $SpriteAnimations.idle_right;

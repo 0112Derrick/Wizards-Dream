@@ -7,6 +7,7 @@
     "test": "npm run compile && mocha --recursive './lib/test/*.test.js' --exit",
     "compile": "tsc --project tsconfig.json",
     "package": "cp -r package.json ./lib",
+    "copySkillsJson": "cp ./src/constants/skills.json ./lib/src/constants",
     "socket-io": "cp -r ./node_modules/socket.io-client/ ./lib/",
     "css": "mkdirp ./lib/css && cp -r ./css/* ./lib/css",
     "favicon": "mkdirp ./lib/favicon && cp -r ./favicon/* ./lib/favicon",
@@ -14,7 +15,7 @@
     "views": "cp -r ./render-templates ./lib/",
     "delete": "rm -rf lib",
     "images": "mkdirp ./lib/images && cp -r ./images/* ./lib/images",
-    "build": "npm run delete && npm run css && npm run images && npm run views && npm run socket-io && npm run compile  && npm run package && npm start"
+    "build": "npm run delete && npm run css && npm run images && npm run views && npm run socket-io && npm run compile && npm run copySkillsJson && npm run package && npm start"
   },
   "author": "",
   "license": "ISC",

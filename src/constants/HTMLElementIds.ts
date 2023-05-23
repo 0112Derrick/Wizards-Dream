@@ -5,7 +5,7 @@ const HTML_IDS = {
     GAME_CHAT_UL: 'game-chat-ul',
     CHARACTER_NAME: 'character-name',
     CHARACTER_GENDER_MALE_BTN: 'character-gender-male-btn',
-    CHARACTER_GENDER_FEMALE_BTN: 'character-gender-male-btn',
+    CHARACTER_GENDER_FEMALE_BTN: 'character-gender-female-btn',
     CHARACTER_CREATE_FORM: 'character-create-form',
     CHARACTER_CREATE_FORM_SUBMIT_BTN: 'character-create-form-submit-btn',
     SELECT_SERVER: 'select-server',

@@ -52,6 +52,7 @@ export class Player {
                 direction: 'right',
                 class: '',
                 guild: '',
+                unlockedSkills: [],
                 xVelocity: $CharacterVelocity.xVelocity,
                 yVelocity: $CharacterVelocity.yVelocity,
                 name: 'name',

@@ -36,7 +36,7 @@ async function addPlayer(playerInfo) {
 let id = 1;
 async function addCharacter(characterInfo: $characterSignup) {
     let png: string;
-    
+
     if (characterInfo.characterGender == 'male') {
         png = "/images/characters/players/erio.png";
     } else {
@@ -77,6 +77,7 @@ async function addCharacter(characterInfo: $characterSignup) {
             legs: null,
             weapon: null,
         },
+        unlockedSkills: [],
         class: '',
         friends: [],
         guild: '',

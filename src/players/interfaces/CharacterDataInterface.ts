@@ -1,5 +1,6 @@
 import { MapNames } from '../../constants/MapNames.js';
 import { Character } from '../../app/Character.js';
+import { Skill } from '../../app/Skill.js';
 
 export interface playerSignupDataInterface {
     username: string,
@@ -80,6 +81,7 @@ export interface characterDataInterface extends CharacterCreationDataInterface {
         Men: number,//Increases sp & mdef
         Dex: number,//Increases Crit  
     },
+    unlockedSkills: Skill[],
     class: string,
     guild: string,
     friends: string[],

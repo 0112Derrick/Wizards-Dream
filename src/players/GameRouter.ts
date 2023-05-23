@@ -247,6 +247,7 @@ export class GameRouter {
                     guild: character.guild,
                     items: character.items,
                     player: character.player,
+                    unlockedSkills: character.unlockedSkills || [],
                     location: character.location,
                     xVelocity: character.xVelocity,
                     yVelocity: character.yVelocity,
@@ -618,7 +619,7 @@ export class GameRouter {
         if (!arr) {
             return;
         }
-        
+
         map.gameObjects = arr;
         let delCharacter = map.activePlayers.delete(foundCharacter.name);
         if (delCharacter) { console.log(`${foundCharacter.name} is no longer active: ${delCharacter}`) }
