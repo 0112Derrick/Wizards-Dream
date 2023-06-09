@@ -5,8 +5,9 @@ import { characterAddAndRemoveGameObjectsFromRenderI as $characterAddAndRemoveGa
 import $Camera from "./Camera.js";
 import { Direction as $Direction } from "./DirectionInput.js";
 import { CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js"
-
+import { SkillTypes as $SkillTypes } from "../constants/SkillTypes.js"
 export class Skill extends $GameObject {
+
     private shape: Shape;
     private castTime: number;
     private power: number;
@@ -16,9 +17,12 @@ export class Skill extends $GameObject {
     private gameObjectsListCommandsCallback: $characterAddAndRemoveGameObjectsFromRenderI;
     private element: string;
     private cycle: number = 1000 / 20;
+    private owner: string = "";
+    private src: string = "";
+    private skillType: $SkillTypes;
 
     constructor(config: {
-        gameObjectID?, x: number, y: number, element: string, name: string, src: string, direction: string, createSprite: boolean, shape: Shape, castTime: number, power: number, effectTime: number, cooldown: number, xVelocity: number, yVelocity: number
+        gameObjectID?, x: number, y: number, element: string, name: string, type: $SkillTypes, src: string, direction: string, createSprite: boolean, shape: Shape, castTime: number, power: number, effectTime: number, cooldown: number, xVelocity: number, yVelocity: number
     }) {
 
         const timestamp = new Date().getTime();
@@ -37,6 +41,8 @@ export class Skill extends $GameObject {
         this.element = config.element;
         this.xVelocity = config.xVelocity;
         this.yVelocity = config.yVelocity;
+        this.src = this.src;
+        this.skillType = config.type;
 
         if (config.src) {
             this.createSprite(config.src);
@@ -69,12 +75,20 @@ export class Skill extends $GameObject {
         return this.onCooldown;
     }
 
-    get Damage(): number {
+    get Power(): number {
         return this.power;
     }
 
-    set Damage(damage: number) {
-        this.power = damage;
+    set Power(power: number) {
+        this.power = power;
+    }
+
+    set Owner(owner: string) {
+        this.owner = owner;
+    }
+
+    get Owner(): string {
+        return this.owner;
     }
 
     private addToGameObjectsListCallback() {
@@ -86,7 +100,7 @@ export class Skill extends $GameObject {
         if (result) {
             return;
         }
-        console.log("Failure to remove attack.");
+        //console.log("Failure to remove attack.");
     }
 
     createSprite(src: string) {
@@ -120,7 +134,23 @@ export class Skill extends $GameObject {
         return circ;
     }
 
+    toJSON(): any {
+        return {
+            name: this.name,
+            power: this.power,
+            shape: this.shape,
+            castTime: this.castTime,
+            effectTime: this.effectTime,
+            cooldown: this.cooldown,
+            element: this.element,
+            owner: this.owner,
+            src: this.src,
+            skillType: this.skillType,
+        }
+    }
+
     draw(ctx: CanvasRenderingContext2D, camera: $Camera, facingDirection: $Direction, coords: { x: number, y: number }) {
+        const xOFFSET = 2, yOFFSET = 2;
 
         if (this.onCooldown) {
             return;
@@ -132,29 +162,35 @@ export class Skill extends $GameObject {
         }
 
         this.direction = facingDirection;
+        console.log("coords: ", coords);
 
         switch (facingDirection) {
             case $Direction.UP:
-                this.shape.x = coords.x - ($CharacterSize.width / 1.8);
-                this.shape.y = coords.y - $CharacterSize.height / 1.5;
+                this.shape.x = Math.round(coords.x - ($CharacterSize.width / 4));
+                this.shape.y = Math.round(coords.y - ($CharacterSize.height / 4));
                 break;
             case $Direction.DOWN:
-                this.shape.x = coords.x - ($CharacterSize.width / 1.8);
-                this.shape.y = coords.y;
+                this.shape.x = Math.round(coords.x - ($CharacterSize.width / 4));
+                this.shape.y = Math.round(coords.y + ($CharacterSize.height / 4));
                 break;
             case $Direction.LEFT:
-                this.shape.x = coords.x - $CharacterSize.width;
-                this.shape.y = coords.y - ($CharacterSize.height / 2.5);
+                this.shape.x = Math.round(coords.x - ($CharacterSize.width / 2));
+                this.shape.y = coords.y;
                 break;
             case $Direction.RIGHT:
                 this.shape.x = coords.x;
-                this.shape.y = coords.y - ($CharacterSize.height / 2.5);
+                this.shape.y = coords.y;
                 break;
             default:
                 console.log("unknown direction: ", facingDirection);
                 return;
         }
 
+        //this.shape.x = coords.x;
+        //this.shape.y = coords.y;
+
+        this.x = this.shape.x;
+        this.y = this.shape.y;
 
         if (this.sprite) {
 
@@ -210,16 +246,19 @@ export class Skill extends $GameObject {
         }
 
         this.addToGameObjectsListCallback();
-        this.shape.x -= camera.x;
-        this.shape.y -= camera.y;
-        this.x = this.shape.x;
-        this.y = this.shape.y;
+
+        // this.shape.x -= camera.x;
+        //this.shape.y -= camera.y;
+
 
         if (this.shape.type == ShapeTypes.Rectangle) {
             //draw rectangle
+            const skillX = (this.shape.x - $CharacterSize.width / 2);
+            const skillY = (this.shape.y - $CharacterSize.height / 2);
             if (camera.isInsideOfView((this.shape as Rectangle).x, (this.shape as Rectangle).y, (this.shape as Rectangle).width, (this.shape as Rectangle).height)) {
                 ctx.fillStyle = this.shape.color;
-                ctx.fillRect(this.shape.x, this.shape.y, (this.shape as Rectangle).width, (this.shape as Rectangle).height);
+                ctx.fillRect(skillX - camera.x, skillY - camera.y, (this.shape as Rectangle).width, (this.shape as Rectangle).height);
+
             }
         }
 

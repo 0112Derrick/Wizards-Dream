@@ -3,12 +3,16 @@ import { Direction as $Direction } from "../app/DirectionInput.js";
 import $Queue from "../framework/Queue.js";
 import { Socket } from "socket.io";
 import { characterDataInterface as $characterDataInterface } from "./interfaces/CharacterDataInterface.js";
+import { Skill as $Skill } from "../app/Skill.js";
+import { SkillI as $SkillI } from "./interfaces/SkillInterface.js";
 
 export class ClientObject {
     private socket: Socket = null;
     private clientOBJ: any = null;
     private activeCharacter: $characterDataInterface = null;
     private inputHistory: $Queue<[number, string]> = new $Queue();
+    private usuableSkills: $Skill[] = [];
+    private skillsTree: $SkillI[] = [];
     private adjustmentIteration: number = 0;
     private clientTickAdjustment: Map<number, number> = new Map<number, number>();
     constructor() { }
@@ -20,6 +24,21 @@ export class ClientObject {
 
     setAdjustmentIteration(iteration: number): void {
         this.adjustmentIteration = iteration;
+    }
+
+    setSkillTree(skillTree: $SkillI[]): void {
+        this.skillsTree = skillTree;
+    }
+
+    getSkillTree(): $SkillI[] {
+        return this.skillsTree;
+    }
+
+    isSkillTreeEmpty(): boolean {
+        if (this.skillsTree.length == 0) {
+            return true;
+        }
+        return false;
     }
 
     getAdjustmentIteration(): number {
@@ -50,16 +69,19 @@ export class ClientObject {
     getClientSocket(): Socket {
         return this.socket;
     }
+
     //Sets the client Object
     setClientOBJ(clientObj): void {
         this.clientOBJ = clientObj;
     }
+
     //Sets clients the active character
     setActiveCharacter(activeCharacter: $characterDataInterface): void {
         if (activeCharacter) {
             this.activeCharacter = activeCharacter;
         }
     }
+
     //Sets the clients socket
     setClientSocket(socket: Socket): void {
         if (socket instanceof Socket)

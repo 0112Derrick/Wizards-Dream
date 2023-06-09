@@ -1,9 +1,10 @@
 [
     {
         "name": "Melee attack",
+        "owner": "user",
         "power": 10,
         "element": "Neutral",
-        "type": "Melee",
+        "type": "melee",
         "effectTime": 2,
         "cooldown": 0,
         "castTime": 0,
@@ -15,8 +16,8 @@
             "x": null,
             "y": null,
             "type": "rectangle",
-            "width": 12,
-            "height": 5,
+            "width": 16,
+            "height": 16,
             "color": "red"
         }
     },
@@ -24,7 +25,7 @@
         "name": "Ranged attack",
         "power": 10,
         "element": "Neutral",
-        "type": "Ranged",
+        "type": "ranged",
         "effectTime": 2,
         "cooldown": 0,
         "castTime": 0,
@@ -44,7 +45,7 @@
         "name": "Water sphere",
         "power": 25,
         "element": "Water",
-        "type": "Ranged",
+        "type": "ranged",
         "effectTime": 3,
         "cooldown": 0,
         "castTime": 0,

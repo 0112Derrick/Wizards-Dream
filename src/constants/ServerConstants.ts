@@ -33,4 +33,5 @@ export enum SocketConstants {
     RESPONSE_ONLINE_CLIENT = 'response-online-client',
     RESPONSE_OFFLINE_CLIENT = 'response-offline-client',
     RESPONSE_RECONNECT_CLIENT = 'response-reconnect-client',
+    RESPONSE_DISPLAY_LOADING_SCREEN = 'response-display-loading-screen',
 }

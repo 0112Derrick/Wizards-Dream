@@ -16,9 +16,10 @@ class MissingElementError extends Error {
 
 class ClientView extends $ClientSyntheticEventEmitter {
 
+
     private DOM: HTMLElement[] = [];
     private characterMenuStatus = false;
-
+    private loadingScreenToggle = false;
 
     constructor() {
         super();
@@ -122,6 +123,20 @@ class ClientView extends $ClientSyntheticEventEmitter {
 
     deleteServerButtons() {
         this.DOM[$id.SERVER_SELECTION_BUTTONS_CONTAINER].innerHTML = '';
+    }
+
+    toggleLoadingScreen(): void {
+
+        if (this.loadingScreenToggle) {
+            this.DOM[$id.LOADING_SCREEN].style.display = 'none';
+            this.loadingScreenToggle = false;
+            console.log("loading screen closing");
+        } else {
+            this.DOM[$id.LOADING_SCREEN].style.display = 'block';
+            this.loadingScreenToggle = true;
+            console.log("loading screen open");;
+        }
+
     }
 
     serverButtons(serverRooms: Array<string>) {

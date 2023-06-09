@@ -17,7 +17,8 @@ const HTML_IDS = {
     LOGOUT: 'logout',
     CHARACTER_MODAL_BTN: 'character-modal-btn',
     SELECT_CHARACTERS: 'select-characters',
-    CHARACTER_CREATE_MODAL: 'character-create-modal'
+    CHARACTER_CREATE_MODAL: 'character-create-modal',
+    LOADING_SCREEN: 'loading-screen',
 };
 
 const SIGNUP_HTML_IDS = {

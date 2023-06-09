@@ -17,13 +17,25 @@ import { MessageHeader as $MessageHeader, Message as $Message } from "../framewo
 import $MovementSystem from "../app/MovementSystem.js"
 import { ServerMessages as $serverMessages } from "../constants/ServerMessages.js"
 import WordFilter from "../app/WordFilter.js";
+import { Skill as $Skill } from "../app/Skill.js";
+import { SkillI as $SkillI } from "./interfaces/SkillInterface.js";
+import { SkillTypes as $SkillTypes } from "../constants/SkillTypes.js";
+import { MessageContentsI as $MessageContentsI } from "./interfaces/ServerInterfaces.js";
+import * as SkillsData from "../constants/skills.json" assert {type: 'json'};
+import fsModule from 'fs';
+import { type } from "os";
+
+
+const fs = fsModule.promises;
 
 export enum ClientMapSlot {
     ClientSocket = 0,
     ClientOBJ = 1,
     ClientActiveCharacter = 2,
     ClientInputQue = 3,
+    ClientSkillTree = 4,
 }
+
 
 export interface ClientDATA {
     id: string,
@@ -50,6 +62,8 @@ export class GameRouter {
     //Set by req obj 
     private clientIP: string;
 
+    private skillsTree: $SkillI[] = [];
+
     private serverRooms: Map<string, string> = new Map();
 
     /* private OverworldMaps = {
@@ -70,8 +84,13 @@ export class GameRouter {
     private activeSockets: Array<string> = [];
 
     private constructor() {
-
         this.serverTick();
+        fs.readFile("./src/constants/skills.json", "utf8").then((data) => {
+            const jsonData = JSON.parse(data);
+            this.skillsTree = [...jsonData];
+        }).catch((err) => {
+            console.log("Error: ", err);
+        })
     }
 
     public static get GameRouterInstance(): GameRouter {
@@ -122,7 +141,7 @@ export class GameRouter {
 
             switch (slot) {
                 case ClientMapSlot.ClientSocket:
-                    this.clientMap.get(_data.id)?.setClientSocket(_data.arg as Socket)
+                    this.clientMap.get(_data.id)?.setClientSocket(_data.arg as Socket);
                     //this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientSocket, deletedElement, _data.arg);
                     break;
                 case ClientMapSlot.ClientOBJ:
@@ -134,7 +153,11 @@ export class GameRouter {
                     //this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientActiveCharacter, deletedElement, _data.arg as $Character);
                     break;
                 case ClientMapSlot.ClientInputQue:
-                    this.clientMap.get(_data.id)?.addInput(_data.arg.tick, _data.arg.input)
+                    this.clientMap.get(_data.id)?.addInput(_data.arg.tick, _data.arg.input);
+                    break;
+                case ClientMapSlot.ClientSkillTree:
+                    this.clientMap.get(_data.id)?.setSkillTree(_data.arg as $SkillI[]);
+                    break;
                 //this.clientMap.get(_data.id)?.splice(ClientMapSlot.ClientInputQue, deletedElement, (_data.arg as $Queue<$Direction>));
             }
         }
@@ -158,9 +181,9 @@ export class GameRouter {
             }
 
             GameRouter.GameRouterInstance.activeSockets.push(socket);
-            return true
+            return true;
         } catch (error) {
-            return false
+            return false;
         }
     }
 
@@ -171,7 +194,8 @@ export class GameRouter {
                 return true;
             }
         }
-        return false
+
+        return false;
     }
 
     getActiveSockets(): any {
@@ -353,24 +377,29 @@ export class GameRouter {
 
                 let clientCharacter = client.getActiveCharacter();
 
-                if (messageHeader.contents.at(0).type == $serverMessages.Movement) {
+                let message: $Message;
 
-                    let message: $Message;
-                    message = messageHeader.contents.at(0);
+                message = messageHeader.contents.at(0);
 
-                    if (!message.action) {
-                        break;
-                    }
+                const { action, worldWidth, worldHeight, mapMinWidth, mapMinHeight } = (message.action as $MessageContentsI);
 
-                    const { direction, worldWidth, worldHeight, mapMinWidth, mapMinHeight } = message.action;
+                if (!message.action) {
+                    break;
+                }
+
+                if (message.type == $serverMessages.Movement) {
+
                     //console.log("client character:", clientCharacter);
+                    if (typeof action !== "string") {
+                        return;
+                    }
 
                     if (!this.checkIfClientHasActiveSocketConnection(message.id)) {
                         console.log("Client not connected");
                         return;
                     }
 
-                    let coords = $MovementSystem.updateCharacterPosition(clientCharacter, direction, worldWidth, worldHeight, mapMinWidth, mapMinHeight);
+                    let coords = $MovementSystem.updateCharacterPosition(clientCharacter, action, worldWidth, worldHeight, mapMinWidth, mapMinHeight);
 
                     let clientPosition = {
                         username: clientCharacter.username,
@@ -383,10 +412,39 @@ export class GameRouter {
 
                     serverMessages.push(new $Message($serverMessages.Movement, clientPosition, message.tick, null));
 
-
-
                 } else {
-                    //write code for tracking attacks here.
+                    //write code for tracking skills here.
+                    /**
+                     * Check skill for collision
+                     *  - Check if player can use the skill I.E its unlocked or if its on cooldown or if they have the available skill points. 
+                     *  - Render the usuable skill on player's screens.
+                     *  - Check skill is a heal or an attack
+                     *      - If skill is a heal: 
+                     *          - Check if its a self heal skill
+                     *              - Update players with the % the player healed by.
+                     *          - Check if theres a collision for the heal and targeted player.
+                     *              -  Update players with the % the player(s) healed by.
+                     *      - If skill is an atack
+                     *          - Add the attack to the gameObjects list for its duration amount.
+                     *          - Detect any collisions amongst skills and gameObjects
+                     *              - Calculate the damage dealt
+                     *              - Update players with their current hp.
+                     */
+
+                    //Check skill type
+                    if (typeof action == "string") {
+                        return;
+                    }
+
+                    if (action.skillType == $SkillTypes.HEAL) {
+                        //implement code for healing logic.
+                    }
+                    if (action.skillType == $SkillTypes.MELEE) {
+                        //implement code for melee logic.
+                    }
+                    if (action.skillType == $SkillTypes.RANGED) {
+                        //implement code for ranged logic.
+                    }
                 }
             }
             if (serverMessageHeaders)

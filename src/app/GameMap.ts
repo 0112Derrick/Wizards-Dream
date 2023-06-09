@@ -123,6 +123,7 @@ export class GameMap implements MapI, gameMapGameObjectsI {
 
         this.ctx.drawImage(this.lowerImage, backgroundX, backgroundY, imageWidth, imageHeight, offsetX, offsetY, imageWidth, imageHeight);
 
+        const meleeAtk = "melee attack";
 
         this.gameObjects.forEach((gameObject) => {
             if (gameObject instanceof Character) {
@@ -142,9 +143,18 @@ export class GameMap implements MapI, gameMapGameObjectsI {
             }
 
             let currentDirection = this.directionInput.direction;
+
             if (currentDirection == Direction.ATTACK1 && this.character.sprite.currentAnimationFrame == 0) {
                 this.updateCamera(this.character);
-                this.character.renderSkill(this.ctx, "melee attack", this.camera);
+
+                let tick = $ClientController.ClientControllerInstance.CurrentSystemTick;
+                let clientSkillUsed = this.character.findSkill(meleeAtk);
+                if (!clientSkillUsed) { return }
+                //ClientController.ClientControllerInstance.setInputHistory(pos, tick);
+                //this.character.x = pos.x;
+                //this.character.y = pos.y;
+                this.character.renderSkill(this.ctx, meleeAtk, this.camera);
+                $ClientController.ClientControllerInstance.notifyServer($serverMessages.Skill, this.character.lastDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight, tick, clientSkillUsed.toJSON());
                 return;
             }
 
@@ -173,6 +183,10 @@ export class GameMap implements MapI, gameMapGameObjectsI {
 
             this.gameObjects.forEach((gameObject) => {
 
+                if (gameObject instanceof $Skill) {
+                    this.handleCollisions(gameObject);
+                }
+
                 if (!(gameObject instanceof Character)) {
                     window.requestAnimationFrame((time) => this.animate2(time));
                     return;
@@ -185,10 +199,6 @@ export class GameMap implements MapI, gameMapGameObjectsI {
 
                 } else {
                     this.updateNpcCharacter((gameObject as Character));
-                }
-
-                if (gameObject instanceof $Skill) {
-                    this.handleCollisions(gameObject);
                 }
             });
 
@@ -208,21 +218,23 @@ export class GameMap implements MapI, gameMapGameObjectsI {
 
             if (skill.Shape.type == ShapeTypes.Rectangle) {
                 if (this.intersector.isRect2DColliding({
-                    width: (characterObj as Character).width,
-                    height: (characterObj as Character).height,
-                    x: (characterObj as Character).x,
-                    y: (characterObj as Character).y,
-                    type: ShapeTypes.Rectangle,
-                    color: ""
-                }, {
                     width: (skill.Shape as Rectangle).width,
                     height: (skill.Shape as Rectangle).height,
                     x: skill.x,
                     y: skill.y,
                     type: ShapeTypes.Rectangle,
                     color: ""
+                }, {
+                    width: (characterObj as Character).width,
+                    height: (characterObj as Character).height,
+                    x: (characterObj as Character).x,
+                    y: (characterObj as Character).y,
+                    type: ShapeTypes.Rectangle,
+                    color: ""
                 })) {
                     console.log(`${skill.name} collided with ${characterObj.name}`);
+                } else {
+                    console.log("No collision.");
                 }
             } else {
 
@@ -252,9 +264,7 @@ export class GameMap implements MapI, gameMapGameObjectsI {
         let currentDirection = this.directionInput.direction;
         character.setGameObjects(this);
 
-        if (!currentDirection) {
-            currentDirection = Direction.STANDSTILL;
-        } else {
+        if (currentDirection) {
             let tick = $ClientController.ClientControllerInstance.CurrentSystemTick;
             $ClientController.ClientControllerInstance.notifyServer($serverMessages.Movement, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight, tick)
             let pos = this.movementSystem.updateCharacterPosition(character, currentDirection, this.worldWidth, this.worldHeight, this.mapMinWidth, this.mapMinHeight)

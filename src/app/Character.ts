@@ -103,6 +103,12 @@ export class Character extends $GameObject implements $characterDataInterface, c
         this.gameMapObjects = gameMap;
     }
 
+    addOwnershipOfSkills() {
+        for (let skill of this.unlockedSkills) {
+            skill.Owner = this.name;
+        }
+    }
+
     renderSkill(ctx: CanvasRenderingContext2D, _skill: string, camera: $Camera): boolean {
         for (let skill of this.unlockedSkills) {
             skill.GameObjectsCallback = this;
@@ -112,6 +118,12 @@ export class Character extends $GameObject implements $characterDataInterface, c
             }
         }
         return false;
+    }
+
+    findSkill(skillName: string): $Skill | undefined {
+        return this.unlockedSkills.find((skill) => {
+            return skill.name.toLowerCase() == skillName.toLowerCase();
+        })
     }
 
     removeSkillFromRenderContex(object: $GameObject): boolean {

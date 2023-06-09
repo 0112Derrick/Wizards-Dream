@@ -10,6 +10,7 @@
     color: blue;
     margin-top: 10px;
 }
+
 .gameButtons {
     list-style-type: none;
     display: flex;
@@ -38,6 +39,46 @@
     border: none;
     height: 10px;
     font-size: 5px;
+}
+
+.loading-screen {
+    position: relative;
+    top: -100%;
+    height: 100svh;
+    width: 100%;
+    overflow: hidden;
+    border: none;
+    background-color: rgba(255, 255, 255, 0);
+    outline: none;
+    display: none;
+}
+
+.loading-screen-content {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    top: 8%;
+    left: 40%;
+    transform: translate(0, -50%);
+}
+
+.spinning-wheel {
+    width: 50px;
+    height: 50px;
+    border: 10px solid #ffffff;
+    border-top-color: #f44336;
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 #game-chat-ul {

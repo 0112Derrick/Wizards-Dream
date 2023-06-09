@@ -1,4 +1,4 @@
 export enum ServerMessages {
-    Attack = "attack",
+    Skill = "skill",
     Movement = "movement"
 }

@@ -7,7 +7,7 @@ import { Utils as $Utils } from "./Utils.js";
 import { CharacterCreationDataInterface as $characterSignup } from "../players/interfaces/CharacterDataInterface.js"
 import { Direction as $Direction } from "./DirectionInput.js";
 import { Skill as $Skill } from "./Skill.js";
-
+import { SkillTypes as $SkillTypes } from "../constants/SkillTypes.js";
 
 export default class CharacterManager {
 
@@ -62,7 +62,25 @@ export default class CharacterManager {
             .then(response => response.json())
             .then(data => {
                 console.log(data);
+
+
                 for (let skill of data) {
+                    let type:$SkillTypes;
+                    switch (data.type) {
+                        case $SkillTypes.RANGED: {
+                            type = $SkillTypes.RANGED
+                            break;
+                        }
+                        case $SkillTypes.MELEE: {
+                            type = $SkillTypes.MELEE
+                            break;
+                        }
+                        case $SkillTypes.HEAL: {
+                            type = $SkillTypes.HEAL
+                            break;
+                        }
+                    }
+
                     this.characterSkills.push(new $Skill({
                         x: skill.x,
                         y: skill.y,
@@ -72,6 +90,7 @@ export default class CharacterManager {
                         createSprite: false,
                         xVelocity: skill.velocity,
                         yVelocity: skill.velocity,
+                        type: type,
                         shape: skill.shape,
                         castTime: skill.castTime,
                         element: skill.element,

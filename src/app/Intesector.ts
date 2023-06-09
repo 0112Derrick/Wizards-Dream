@@ -11,7 +11,12 @@ export class Intersector {
             this.printDialogue("Collision!");
             return true;
         }
-
+        this.printDialogue(`Failure:\n rec1[x]:${rect1.x}, rec1[y]:${rect1.y}\n rec2[x]:${rect2.x}, rec2[y]:${rect2.y}\n
+        test1: rec1[x]: ${rect1.x} < rec2[x] + rec2[width]: ${rect2.x + rect2.width} result ${rect1.x < rect2.x + rect2.width ? true : false}\n
+        test2:  rec1[x] + rec1[width] ${rect1.x + rect1.width} > rec2[x] ${rect2.x} result ${rect1.x + rect1.width > rect2.x ? true : false}\n
+        test3: rec1[y]: ${rect1.y} < rec2[y] + rec2[height]: ${rect2.y + rect2.height} result ${rect1.y < rect2.y + rect2.height ? true : false}\n
+        test4:  rec1[y] + rec1[height] ${rect1.y + rect1.height} > rec2[y] ${rect2.y} result ${rect1.y + rect1.height > rect2.y ? true : false}\n
+        `);
         return false;
     }
 

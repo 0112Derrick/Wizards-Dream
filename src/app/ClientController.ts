@@ -26,11 +26,13 @@ import { ServerMessages } from '../constants/ServerMessages.js'
 import $MapManager from "./MapManager.js";
 import $CharacterManager from "./CharacterManager.js";
 import $MessageManager from "./MessageManager.js";
+import { MessageContentsI as $MessageContentsI } from "../players/interfaces/ServerInterfaces.js";
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
     basicEmit: (a: number, b: string, c: number[]) => void;
 }
+
 
 
 
@@ -174,7 +176,15 @@ export class ClientController extends $OBSERVER {
         this.connectSocket().then(async () => {
 
             this.socket.on($socketRoutes.RESPONSE_CLIENT_JOINED_SERVER, this.playerJoinedServer);
-            this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => { this.connect(client) });
+            this.socket.on($socketRoutes.RESPONSE_DISPLAY_LOADING_SCREEN, () => this.view.toggleLoadingScreen());
+            this.socket.on($socketRoutes.RESPONSE_ONLINE_CLIENT, (client) => {
+                setTimeout(() => {
+                    this.view.toggleLoadingScreen();
+                    this.connect(client);
+                }, 1000);
+
+            });
+
             this.socket.on($socketRoutes.RESPONSE_OFFLINE_CLIENT, this.disconnect);
             this.socket.on($socketRoutes.RESPONSE_RECONNECT_CLIENT, () => {
                 if (!document.hidden) {
@@ -272,26 +282,40 @@ export class ClientController extends $OBSERVER {
         return this.currentClientTick;
     }
 
-    notifyServer(type: ServerMessages, _currentDirection: $Direction | undefined, _worldWidth: number, _worldHeight: number, _mapMinWidth: number, _mapMinHeight: number, tick: number) {
+    notifyServer(type: ServerMessages, _currentDirection: $Direction | undefined, _worldWidth: number, _worldHeight: number, _mapMinWidth: number, _mapMinHeight: number, tick: number, skill?) {
         let messageCount = 1;
         if (!_currentDirection) {
             _currentDirection = $Direction.STANDSTILL;
         }
-        switch (type) {
-            case ServerMessages.Attack:
-                //  this.createMessage(currentDirection,attack, type);
-                break;
 
-            case ServerMessages.Movement:
-                let movementParameters = {
-                    direction: _currentDirection,
+        let message = null;
+
+        switch (type) {
+            case ServerMessages.Skill:
+                let skillParameters: $MessageContentsI = {
+                    action: skill,
                     worldWidth: _worldWidth,
                     worldHeight: _worldHeight,
                     mapMinWidth: _mapMinWidth,
                     mapMinHeight: _mapMinHeight,
                 }
 
-                let message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
+                message = this.createMessage(skillParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
+
+                console.log("message being sent: ", message.contents.at(0), " ", message.contents.at(0).action);
+                this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message)
+                break;
+
+            case ServerMessages.Movement:
+                let movementParameters: $MessageContentsI = {
+                    action: _currentDirection,
+                    worldWidth: _worldWidth,
+                    worldHeight: _worldHeight,
+                    mapMinWidth: _mapMinWidth,
+                    mapMinHeight: _mapMinHeight,
+                }
+
+                message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
 
                 if (!message) {
                     console.log("Failed to create message.");
@@ -401,7 +425,7 @@ export class ClientController extends $OBSERVER {
                 }
             }
 
-            if (message.type == ServerMessages.Attack) {
+            if (message.type == ServerMessages.Skill) {
 
             }
         });

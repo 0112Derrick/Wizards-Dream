@@ -35,6 +35,8 @@ import { COOKIE_SECRET, MONGO_URI } from './src/authentication/secrets.js';
 import Queue from './src/framework/Queue.js';
 import { Direction } from './src/app/DirectionInput.js';
 import { ClientObject as $ClientObject } from './src/players/ClientObject.js';
+//import * as SkillsData from "./src/constants/skills.json" assert {type: 'json'};
+//import * as fs from 'fs';
 
 //import { a, b } from './testDB.js';
 
@@ -149,6 +151,9 @@ const fs = fsModule.promises;
     let activeSockets;
 
     io.on('connection', clientSocket => {
+
+        clientSocket.emit($SocketConstants.RESPONSE_DISPLAY_LOADING_SCREEN);
+
         activeSockets = io.sockets.sockets.entries();
         for (let [socketId, connectedSocket] of activeSockets) {
             console.log(`Socket ID: ${socketId} is connected.`);
@@ -195,11 +200,13 @@ const fs = fsModule.promises;
                 gameRouter.getClientMap().set(clientSocket.id, mapArr);
             }
 
+            const CLIENT = gameRouter.getClientMap().get(clientSocket.id);
             /*
             * Check to see if client socket data is set in our map
             * If client socket data does not exist in client map then add the data to the map
             */
-            if (!gameRouter.getClientMap().get(clientSocket.id).getClientSocket()) {
+            
+            if (!CLIENT.getClientSocket()) {
 
                 let clientSocketOBJ = {
                     id: clientSocket.id,
@@ -215,7 +222,7 @@ const fs = fsModule.promises;
             * If client Obj does not exist in client map then add the data to the map
             */
             // if (!gameRouter.getClientMap().get(clientSocket.handshake.address).at(ClientMapSlot.ClientOBJ)) {
-            if (!gameRouter.getClientMap().get(clientSocket.id).getClientOBJ()) {
+            if (!(CLIENT.getClientOBJ())) {
 
                 let clientOBJ = {
                     id: clientSocket.id,
@@ -225,8 +232,30 @@ const fs = fsModule.promises;
                 }
 
                 gameRouter.setClientMap(clientOBJ, ClientMapSlot.ClientOBJ);
-            }
 
+                if (gameRouter.getClientMap().has(clientSocket.id)) {
+
+                    if (CLIENT.isSkillTreeEmpty()) {
+                        fs.readFile("./src/constants/skills.json", "utf8").then((data) => {
+
+                            const jsonData = JSON.parse(data);
+
+                            jsonData.forEach(skill => { console.log("skill: ", skill, "\n") });
+
+                            let skillsTree = {
+                                id: clientSocket.id,
+                                arg: jsonData,
+                            }
+
+                            gameRouter.setClientMap(skillsTree, ClientMapSlot.ClientSkillTree);
+                            
+
+                        }).catch((err) => {
+                            console.log("Error: ", err);
+                        });
+                    }
+                } 
+         }
 
             console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.id)?.getClientOBJ()));
             // gameRouter.setIO(io);
@@ -235,8 +264,6 @@ const fs = fsModule.promises;
         } else {
             clientSocket.emit($SocketConstants.RESPONSE_RECONNECT_CLIENT);
         }
-
-
         // console.log(gameRouter.client.characters.at(0).username);
         //client.emit('message', 'You are connected');
         //client.on('message', (text) => { io.emit('message', text) });
@@ -253,7 +280,7 @@ const fs = fsModule.promises;
 function registerStaticPaths(app) {
     // Set __dirname
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    
+
     //Register static paths for loading modules
     app.use('/src/app', express.static(path.join(__dirname, './src/app')));
     app.use('/src/socketIO', express.static(path.join(__dirname, './src/socketIO')));
