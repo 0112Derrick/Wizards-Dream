@@ -301,9 +301,6 @@ export class ClientController extends $OBSERVER {
                 }
 
                 message = this.createMessage(skillParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
-
-                console.log("message being sent: ", message.contents.at(0), " ", message.contents.at(0).action);
-                this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message)
                 break;
 
             case ServerMessages.Movement:
@@ -314,17 +311,17 @@ export class ClientController extends $OBSERVER {
                     mapMinWidth: _mapMinWidth,
                     mapMinHeight: _mapMinHeight,
                 }
-
                 message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
-
-                if (!message) {
-                    console.log("Failed to create message.");
-                    return;
-                }
-                console.log("message being sent: ", message.contents.at(0), " ", message.contents.at(0).action);
-                this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message)
                 break;
         }
+
+        if (!message) {
+            console.log("Failed to create message.");
+            return;
+        }
+        
+        console.log("message being sent: ", message.contents.at(0), " ", message.contents.at(0).action);
+        this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message);
 
         //throw new Error("Method not implemented.");
     }
