@@ -88,6 +88,7 @@ export default class CharacterManager {
                         src: skill.src,
                         direction: null,
                         createSprite: false,
+                        dependencies:skill.dependencies,
                         xVelocity: skill.velocity,
                         yVelocity: skill.velocity,
                         type: type,

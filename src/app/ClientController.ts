@@ -18,7 +18,7 @@ import { MapNames } from "../constants/MapNames.js";
 import { MapConfigI, syncOverworld as $syncOverworld, syncOverworldTransmit as $syncOverworldTransmit } from "../players/interfaces/OverworldInterfaces.js";
 import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
 import { Socket } from "socket.io-client";
-import { MessageHeader as $MessageHeader, Message as $Message } from "../framework/MessageHeader.js"
+import { MessageHeader as $MessageHeader, Message as $Message, Message } from "../framework/MessageHeader.js"
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
 import { Sprite } from "./Sprite.js";
 import Queue from "../framework/Queue.js";
@@ -288,7 +288,7 @@ export class ClientController extends $OBSERVER {
             _currentDirection = $Direction.STANDSTILL;
         }
 
-        let message = null;
+        let messageHeader:$MessageHeader = null;
 
         switch (type) {
             case ServerMessages.Skill:
@@ -300,7 +300,7 @@ export class ClientController extends $OBSERVER {
                     mapMinHeight: _mapMinHeight,
                 }
 
-                message = this.createMessage(skillParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
+                messageHeader = this.createMessage(skillParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
                 break;
 
             case ServerMessages.Movement:
@@ -311,17 +311,17 @@ export class ClientController extends $OBSERVER {
                     mapMinWidth: _mapMinWidth,
                     mapMinHeight: _mapMinHeight,
                 }
-                message = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
+                messageHeader = this.createMessage(movementParameters, type, this.adjustmentIteration, messageCount, tick, this.getID());
                 break;
         }
 
-        if (!message) {
+        if (!messageHeader) {
             console.log("Failed to create message.");
             return;
         }
         
-        console.log("message being sent: ", message.contents.at(0), " ", message.contents.at(0).action);
-        this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, message);
+        console.log("message being sent: ", messageHeader.contents.at(0), " ", messageHeader.contents.at(0).action);
+        this.socket.emit($socketRoutes.REQUEST_CLIENT_ACTION_MESSAGE, messageHeader);
 
         //throw new Error("Method not implemented.");
     }

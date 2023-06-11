@@ -41,7 +41,9 @@ export class Character extends $GameObject implements $characterDataInterface, c
         experienceCap: number, // Determines when the player will level up
         statPoints: number,
         hp: number,// Determines how many times a player can take damage before dying & hp regen amount
+        hpCap:number,
         sp: number, // Determines how many times a magic atk can be used and regen amount
+        spCap:number,
         def: number,// Determines how much damage is taken from phyiscal hits
         mdef: number,// Determines how much damage is taken from Magic hits
         crit: number,// Determines wheter or not a hit does increased damgage & increased damage amount

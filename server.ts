@@ -26,6 +26,7 @@ import playerRouter from './src/players/routes/PlayerRouter.js';
 import runDBTest from './src/db-test.js';
 import { SocketConstants as $SocketConstants } from './src/constants/ServerConstants.js';
 import { GameRouter as $gameRouter } from './src/players/GameRouter.js';
+import { Skill as $skill } from './src/app/Skill.js';
 
 
 //import { createGameState } from './src/app/game.js';
@@ -205,7 +206,7 @@ const fs = fsModule.promises;
             * Check to see if client socket data is set in our map
             * If client socket data does not exist in client map then add the data to the map
             */
-            
+
             if (!CLIENT.getClientSocket()) {
 
                 let clientSocketOBJ = {
@@ -240,7 +241,14 @@ const fs = fsModule.promises;
 
                             const jsonData = JSON.parse(data);
 
-                            jsonData.forEach(skill => { console.log("skill: ", skill, "\n") });
+                            jsonData.forEach(skill => {
+                                console.log("skill: ", skill, "\n");
+
+                                if (skill.dependencies.class == null) {
+                                    let createdSkill = new $skill(skill);
+                                    CLIENT.setUsableSkill(createdSkill);
+                                }
+                            });
 
                             let skillsTree = {
                                 id: clientSocket.id,
@@ -248,14 +256,15 @@ const fs = fsModule.promises;
                             }
 
                             gameRouter.setClientMap(skillsTree, ClientMapSlot.ClientSkillTree);
-                            
+
+
 
                         }).catch((err) => {
                             console.log("Error: ", err);
                         });
                     }
-                } 
-         }
+                }
+            }
 
             console.log("server sent client info: " + clientSocket.emit($SocketConstants.RESPONSE_ONLINE_CLIENT, gameRouter.getClientMap().get(clientSocket.id)?.getClientOBJ()));
             // gameRouter.setIO(io);

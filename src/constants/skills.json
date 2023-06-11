@@ -12,6 +12,13 @@
         "x": null,
         "y": null,
         "velocity": 0,
+        "dependencies": {
+            "class": null,
+            "cost-category": [
+                null
+            ],
+            "cost-amount": 0
+        },
         "shape": {
             "x": null,
             "y": null,
@@ -33,6 +40,13 @@
         "x": null,
         "y": null,
         "velocity": 2,
+        "dependencies": {
+            "class": null,
+            "cost-category": [
+                null
+            ],
+            "cost-amount": 0
+        },
         "shape": {
             "x": null,
             "y": null,
@@ -53,6 +67,13 @@
         "x": null,
         "y": null,
         "velocity": 0,
+        "dependencies": {
+            "class": null,
+            "cost-category": [
+                "sp"
+            ],
+            "cost-amount": 5
+        },
         "shape": {
             "x": null,
             "y": null,

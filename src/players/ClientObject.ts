@@ -41,6 +41,26 @@ export class ClientObject {
         return false;
     }
 
+    setUsableSkill(skill: $Skill) {
+        this.usuableSkills.push(skill);
+        this.activeCharacter.unlockedSkills.push(skill);
+    }
+
+    setUsableSkills(skills: $Skill[]) {
+        skills.forEach(skill => {
+            this.usuableSkills.push(skill);
+            this.activeCharacter.unlockedSkills.push(skill);
+        });
+    }
+
+    findUsableSkill(skillName: string): $SkillI {
+        let skill = this.usuableSkills.find((skill) => {
+            return skill.Name.toLowerCase() == skillName.toLowerCase();
+        });
+
+        return skill;
+    }
+
     getAdjustmentIteration(): number {
         return this.adjustmentIteration;
     }

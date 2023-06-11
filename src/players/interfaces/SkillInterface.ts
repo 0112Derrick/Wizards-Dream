@@ -2,14 +2,15 @@ import { ShapeTypes as $ShapeTypes, Shape as $Shape } from "../../framework/Shap
 import { SkillTypes as $SkillTypes } from "../../constants/SkillTypes.js";
 
 export interface SkillI {
-    name: string;
-    power: number;
-    shape: $Shape;
-    castTime: number;
-    effectTime: number;
-    cooldown: number;
-    element: string;
-    owner: string;
-    src: string;
-    skillType: $SkillTypes
+    get Power(): number
+    get Shape(): $Shape
+    get Name(): string
+    get CastTime(): number
+    get EffectTime(): number
+    get Cooldown(): number
+    get Element(): string
+    get Owner(): string
+    get Src(): string
+    get SkillType(): $SkillTypes
+    get Dependencies():{class:string,costCategory:string[],costAmount:number}
 }

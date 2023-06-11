@@ -6,7 +6,8 @@ import $Camera from "./Camera.js";
 import { Direction as $Direction } from "./DirectionInput.js";
 import { CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js"
 import { SkillTypes as $SkillTypes } from "../constants/SkillTypes.js"
-export class Skill extends $GameObject {
+import { SkillI as $SkillI } from "../players/interfaces/SkillInterface.js";
+export class Skill extends $GameObject implements $SkillI {
 
     private shape: Shape;
     private castTime: number;
@@ -20,9 +21,14 @@ export class Skill extends $GameObject {
     private owner: string = "";
     private src: string = "";
     private skillType: $SkillTypes;
+    private dependencies: { class: string; costCategory: string[]; costAmount: number; } = {
+        class: "",
+        costCategory: [],
+        costAmount: 0
+    };
 
     constructor(config: {
-        gameObjectID?, x: number, y: number, element: string, name: string, type: $SkillTypes, src: string, direction: string, createSprite: boolean, shape: Shape, castTime: number, power: number, effectTime: number, cooldown: number, xVelocity: number, yVelocity: number
+        gameObjectID?, x: number, y: number, element: string, name: string, type: $SkillTypes, src: string, direction: string, createSprite: boolean, shape: Shape, castTime: number, power: number, effectTime: number, cooldown: number, xVelocity: number, yVelocity: number, dependencies: { class: string; costCategory: []; costAmount: number; }
     }) {
 
         const timestamp = new Date().getTime();
@@ -43,12 +49,33 @@ export class Skill extends $GameObject {
         this.yVelocity = config.yVelocity;
         this.src = this.src;
         this.skillType = config.type;
+        this.dependencies = config.dependencies;
 
         if (config.src) {
             this.createSprite(config.src);
         } else {
             this.sprite = null;
         }
+
+    }
+    get Dependencies(): { class: string; costCategory: string[]; costAmount: number; } {
+        return this.dependencies;
+    }
+
+    get CastTime(): number {
+        return this.castTime;
+    }
+
+    get Cooldown(): number {
+        return this.cooldown;
+    }
+
+    get Src(): string {
+        return this.src;
+    }
+
+    get SkillType(): $SkillTypes {
+        return this.skillType;
     }
 
     set GameObjectsCallback(object: $characterAddAndRemoveGameObjectsFromRenderI) {

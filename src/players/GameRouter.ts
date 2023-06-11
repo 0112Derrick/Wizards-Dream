@@ -415,17 +415,20 @@ export class GameRouter {
                 } else {
                     //write code for tracking skills here.
                     /**
-                     * Check skill for collision
-                     *  - Check if player can use the skill I.E its unlocked or if its on cooldown or if they have the available skill points. 
-                     *  - Render the usuable skill on player's screens.
+                     * 
+                     * Check if player can use the skill I.E its unlocked or if its on cooldown or if they have the available skill points. 
+                     *  - Check the skills document for the correct skill stats. 
+                     *  - Render the usuable skill on players' screens.(Add skill to gameObjects list).
+                     * 
+                     * Check skill for collision:
                      *  - Check skill is a heal or an attack
                      *      - If skill is a heal: 
                      *          - Check if its a self heal skill
                      *              - Update players with the % the player healed by.
                      *          - Check if theres a collision for the heal and targeted player.
                      *              -  Update players with the % the player(s) healed by.
+                     *              - Update players with their current hp.
                      *      - If skill is an atack
-                     *          - Add the attack to the gameObjects list for its duration amount.
                      *          - Detect any collisions amongst skills and gameObjects
                      *              - Calculate the damage dealt
                      *              - Update players with their current hp.
@@ -436,13 +439,23 @@ export class GameRouter {
                         return;
                     }
 
-                    if (action.skillType == $SkillTypes.HEAL) {
+                    let skill = message.action;
+
+                    if (!this.checkIfCharacterCanUseSkill(skill, message.id)) {
+                        return;
+                    };
+
+                    //add skill to gameObjects list
+
+                    //detect collisions for gameObjects
+
+                    if (action.SkillType == $SkillTypes.HEAL) {
                         //implement code for healing logic.
                     }
-                    if (action.skillType == $SkillTypes.MELEE) {
+                    if (action.SkillType == $SkillTypes.MELEE) {
                         //implement code for melee logic.
                     }
-                    if (action.skillType == $SkillTypes.RANGED) {
+                    if (action.SkillType == $SkillTypes.RANGED) {
                         //implement code for ranged logic.
                     }
                 }
@@ -573,6 +586,51 @@ export class GameRouter {
     sendServersList() {
         let gameRouter = GameRouter.GameRouterInstance;
         gameRouter.io.emit($socketRoutes.RESPONSE_ACTIVE_SERVERS, [...gameRouter.serverRooms]);
+    }
+
+    checkIfCharacterCanUseSkill(skill: $SkillI, id: string): boolean {
+
+        if (!this.clientMap.has(id)) {
+            return false;
+        }
+
+        let clientOBJ = this.clientMap.get(id);
+
+        let foundSkill = clientOBJ.findUsableSkill(skill.Name);
+
+        if (!foundSkill) {
+            return false;
+        }
+
+        let clientCharacter = this.clientMap.get(id).getActiveCharacter();
+        //check clients skill points if they have over the required amount they can use the skill
+        if (!clientCharacter) {
+            return false;
+        }
+
+        if (foundSkill.Dependencies.class != null && foundSkill.Dependencies.class != clientCharacter.class) {
+            return false;
+        }
+
+        if (foundSkill.Dependencies.costCategory.length == 0) {
+            return true;
+        }
+
+        for (let costCategory of foundSkill.Dependencies.costCategory) {
+            if (costCategory.toLowerCase() == "sp") {
+                if (clientCharacter.attributes.sp >= foundSkill.Dependencies.costAmount) {
+                    return true;
+                };
+            }
+
+            if (costCategory.toLowerCase() == "hp") {
+                if (clientCharacter.attributes.hp > foundSkill.Dependencies.costAmount) {
+                    return true;
+                };
+            }
+        }
+
+        return false;
     }
 
     /**
