@@ -61,7 +61,7 @@ export interface CharacterCreationDataInterface extends commonGameDataInterface 
     characterGender: string
     player: any
     location: MapNames,
-}
+};
 export interface characterDataInterface extends CharacterCreationDataInterface {
     attributes: {
         level: number,

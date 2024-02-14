@@ -31,18 +31,21 @@ export class Player {
                     experience: 0,
                     experienceCap: 0,
                     statPoints: 0,
-                    hp: 0,// Determines how many times a player can take damage before dying & hp regen amount
-                    sp: 0, // Determines how many times a magic atk can be used and regen amount
-                    def: 0,// Determines how much damage is taken from phyiscal hits
-                    mdef: 0,// Determines how much damage is taken from Magic hits
-                    crit: 0,// Determines wheter or not a hit does increased damgage & increased damage amount
+                    hp: 0,
+                    sp: 0,
+                    def: 0,
+                    mdef: 0,
+                    crit: 0,
+
 
                     //stats directly controlled by the player when using levelinh points
-                    Atk: 0,// Determines Physical atk damage and gives a minor boost to hp total
-                    Matk: 0,// Determines Magic atk damage and gives a minor boost to sp total
-                    Vit: 0,// Increases hp and def
-                    Men: 0,//Increases sp & mdef
-                    Dex: 0,//Increases Crit  
+                    Atk: 0,
+                    Matk: 0,
+                    Vit: 0,
+                    Men: 0,
+                    Dex: 0,
+                    hpCap: 0,
+                    spCap: 0
                 },
                 x: 0,
                 y: 0,

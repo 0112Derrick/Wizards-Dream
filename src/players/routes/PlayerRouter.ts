@@ -31,7 +31,7 @@ playerRouter.post('/signup', express.json(), async function (req, res, next) {
             email: req.body.email,
             password: req.body.password,
         }).then((player) => { console.log("Added player", player) })
-            .catch((err) => { console.log("Failed to add player") })
+            .catch((err) => { console.log("Failed to add player ", err) })
             .finally(() => res.redirect('/'));
     } else {
         res.status($StatusConstants.CLIENT_ERROR_BASE);

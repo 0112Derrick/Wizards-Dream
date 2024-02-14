@@ -13,6 +13,8 @@ export const CharacterAttributesConstants = {
     Vit: 1,
     Men: 1,
     Dex: 1,
+    hpCap: 15,
+    spCap: 10
 };
 export enum StatNames {
     ATK = 1,

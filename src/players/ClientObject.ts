@@ -11,7 +11,7 @@ export class ClientObject {
     private clientOBJ: any = null;
     private activeCharacter: $characterDataInterface = null;
     private inputHistory: $Queue<[number, string]> = new $Queue();
-    private usuableSkills: $Skill[] = [];
+    private usableSkills: $Skill[] = [];
     private skillsTree: $SkillI[] = [];
     private adjustmentIteration: number = 0;
     private clientTickAdjustment: Map<number, number> = new Map<number, number>();
@@ -42,19 +42,22 @@ export class ClientObject {
     }
 
     setUsableSkill(skill: $Skill) {
-        this.usuableSkills.push(skill);
-        this.activeCharacter.unlockedSkills.push(skill);
+        this.usableSkills.push(skill);
+        //this.activeCharacter.unlockedSkills.push(skill);
     }
 
     setUsableSkills(skills: $Skill[]) {
         skills.forEach(skill => {
-            this.usuableSkills.push(skill);
-            this.activeCharacter.unlockedSkills.push(skill);
+            console.log("usable skill array:" + this.usableSkills)
+            this.usableSkills.push(skill);
+
+            //this.activeCharacter.unlockedSkills.push(skill);
         });
     }
 
     findUsableSkill(skillName: string): $SkillI {
-        let skill = this.usuableSkills.find((skill) => {
+        let skill = this.usableSkills.find((skill) => {
+            console.log(typeof skill.Name + " " + typeof skillName);
             return skill.Name.toLowerCase() == skillName.toLowerCase();
         });
 

@@ -175,7 +175,9 @@ class UtilFunctions {
                 Matk: 0,
                 Vit: 0,
                 Men: 0,
-                Dex: 0
+                Dex: 0,
+                hpCap: 0,
+                spCap: 0
             },
             unlockedSkills: [],
             class: "test",

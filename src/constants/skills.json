@@ -1,85 +1,79 @@
 [
-    {
-        "name": "Melee attack",
-        "owner": "user",
-        "power": 10,
-        "element": "Neutral",
-        "type": "melee",
-        "effectTime": 2,
-        "cooldown": 0,
-        "castTime": 0,
-        "src": null,
-        "x": null,
-        "y": null,
-        "velocity": 0,
-        "dependencies": {
-            "class": null,
-            "cost-category": [
-                null
-            ],
-            "cost-amount": 0
-        },
-        "shape": {
-            "x": null,
-            "y": null,
-            "type": "rectangle",
-            "width": 16,
-            "height": 16,
-            "color": "red"
-        }
+  {
+    "name": "Melee attack",
+    "owner": "user",
+    "power": 10,
+    "element": "Neutral",
+    "type": "melee",
+    "effectTime": 2,
+    "cooldown": 0,
+    "castTime": 0,
+    "src": null,
+    "x": null,
+    "y": null,
+    "velocity": 0,
+    "dependencies": {
+      "class": null,
+      "costCategory": [],
+      "costAmount": 0
     },
-    {
-        "name": "Ranged attack",
-        "power": 10,
-        "element": "Neutral",
-        "type": "ranged",
-        "effectTime": 2,
-        "cooldown": 0,
-        "castTime": 0,
-        "src": null,
-        "x": null,
-        "y": null,
-        "velocity": 2,
-        "dependencies": {
-            "class": null,
-            "cost-category": [
-                null
-            ],
-            "cost-amount": 0
-        },
-        "shape": {
-            "x": null,
-            "y": null,
-            "type": "circle",
-            "radius": 5,
-            "color": "white"
-        }
-    },
-    {
-        "name": "Water sphere",
-        "power": 25,
-        "element": "Water",
-        "type": "ranged",
-        "effectTime": 3,
-        "cooldown": 0,
-        "castTime": 0,
-        "src": null,
-        "x": null,
-        "y": null,
-        "velocity": 0,
-        "dependencies": {
-            "class": null,
-            "cost-category": [
-                "sp"
-            ],
-            "cost-amount": 5
-        },
-        "shape": {
-            "x": null,
-            "y": null,
-            "type": "circle",
-            "radius": 8,
-            "color": "blue"
-        }
+    "shape": {
+      "x": null,
+      "y": null,
+      "type": "rectangle",
+      "width": 16,
+      "height": 16,
+      "color": "red"
     }
+  },
+  {
+    "name": "Ranged attack",
+    "power": 10,
+    "element": "Neutral",
+    "type": "ranged",
+    "effectTime": 2,
+    "cooldown": 0,
+    "castTime": 0,
+    "src": null,
+    "x": null,
+    "y": null,
+    "velocity": 2,
+    "dependencies": {
+      "class": null,
+      "costCategory": [],
+      "costAmount": 0
+    },
+    "shape": {
+      "x": null,
+      "y": null,
+      "type": "circle",
+      "radius": 5,
+      "color": "white"
+    }
+  },
+  {
+    "name": "Water sphere",
+    "power": 25,
+    "element": "Water",
+    "type": "ranged",
+    "effectTime": 3,
+    "cooldown": 0,
+    "castTime": 0,
+    "src": null,
+    "x": null,
+    "y": null,
+    "velocity": 0,
+    "dependencies": {
+      "class": null,
+      "costCategory": ["sp"],
+      "costAmount": 5
+    },
+    "shape": {
+      "x": null,
+      "y": null,
+      "type": "circle",
+      "radius": 8,
+      "color": "blue"
+    }
+  }
 ]

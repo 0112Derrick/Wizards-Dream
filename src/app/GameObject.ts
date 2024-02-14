@@ -34,7 +34,6 @@ export class GameObject {
                 src: config.src || "/images/characters/players/erio.png"
             });
         }
-
     }
 
     updateCharacterLocationAndAppearance({ }) {
