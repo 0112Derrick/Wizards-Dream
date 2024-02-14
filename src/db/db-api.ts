@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import { userInfo } from "os";
-import PlayerModel from "../players/PlayerDBModel.js";
-import { CharacterCreationDataInterface as $characterSignup } from "../players/interfaces/CharacterDataInterface.js";
-import { CharacterModel as $CharacterModel } from "../players/PlayerDBModel.js";
+import PlayerModel from "../game-server/PlayerDBModel.js";
+import { CharacterCreationDataInterface as $characterSignup } from "../game-server/interfaces/CharacterDataInterface.js";
+import { CharacterModel as $CharacterModel } from "../game-server/PlayerDBModel.js";
 import { CharacterAttributes } from "../app/CharacterAttributes";
 import { CharacterAttributesConstants as $chAttr } from "../constants/CharacterAttributesConstants.js";
-import { characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { characterDataInterface } from "../game-server/interfaces/CharacterDataInterface.js";
 import { Sprite } from "../app/Sprite.js";
 import { MapNames } from "../constants/MapNames.js";
 import { Direction } from "../app/DirectionInput.js";

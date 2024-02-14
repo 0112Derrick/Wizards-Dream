@@ -1,7 +1,7 @@
 import { HTML_IDS as $id } from "../constants/HTMLElementIds.js";
 import $ClientSyntheticEventEmitter from '../framework/ClientSyntheticEventEmitter.js'
 import { EventConstants as $events } from '../constants/EventConstants.js'
-import { CharacterCreationDataInterface as $characterSignup } from '../players/interfaces/CharacterDataInterface.js'
+import { CharacterCreationDataInterface as $characterSignup } from "../game-server/interfaces/CharacterDataInterface.js";
 import { resolve } from "path";
 import { MapNames as $MapNames } from "../constants/MapNames.js";
 import { CharacterSize as $CharacterSize, CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js";

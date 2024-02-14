@@ -1,7 +1,7 @@
 import { Direction as $Direction } from "./DirectionInput.js";
 import { Character as $Character } from "./Character.js";
 import { CharacterVelocity as $CharacterVelocity } from "../constants/CharacterAttributesConstants.js";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { characterDataInterface as $characterDataInterface } from "../game-server/interfaces/CharacterDataInterface.js";
 class MovementSystem {
 
     updateCharacterPosition(character: $Character | $characterDataInterface, direction: $Direction, worldWidth: number, worldHeight: number, mapMinWidth: number, mapMinHeight: number): { x: number, y: number } {

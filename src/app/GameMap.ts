@@ -9,9 +9,9 @@ import {
   MapI,
   MapConfigI,
   gameMapGameObjectsI,
-} from "../players/interfaces/OverworldInterfaces.js";
+} from "../game-server/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { characterDataInterface as $characterDataInterface } from "../game-server/interfaces/CharacterDataInterface.js";
 import { Circle, Rectangle, ShapeTypes } from "../framework/Shapes.js";
 import Camera from "./Camera.js";
 import { ServerMessages as $serverMessages } from "../constants/ServerMessages.js";
@@ -179,20 +179,47 @@ export class GameMap implements MapI, gameMapGameObjectsI {
       let currentDirection = this.directionInput.direction;
 
       if (
-        currentDirection == Direction.SKILL1 &&
+        (currentDirection == Direction.SKILL1 ||
+          currentDirection == Direction.SKILL2 ||
+          currentDirection == Direction.SKILL3 ||
+          currentDirection == Direction.SKILL4 ||
+          currentDirection == Direction.SKILL5) &&
         this.character.sprite.currentAnimationFrame == 0
       ) {
         this.updateCamera(this.character);
 
         let tick = $ClientController.ClientControllerInstance.CurrentSystemTick;
+        let skillUsed = "";
+        switch (currentDirection) {
+          case Direction.SKILL1:
+            skillUsed = this.character.hotbar.at(0);
+            break;
+          case Direction.SKILL2:
+            skillUsed = this.character.hotbar.at(1);
+            break;
+          case Direction.SKILL3:
+            skillUsed = this.character.hotbar.at(2);
+            break;
+          case Direction.SKILL4:
+            skillUsed = this.character.hotbar.at(3);
+            break;
+          case Direction.SKILL5:
+            skillUsed = this.character.hotbar.at(4);
+            break;
+          default:
+            skillUsed = meleeAtk;
+        }
+        if (skillUsed) {
+        }
         let clientSkillUsed = this.character.findSkill(meleeAtk);
+        
         if (!clientSkillUsed) {
           return;
         }
         //ClientController.ClientControllerInstance.setInputHistory(pos, tick);
         //this.character.x = pos.x;
         //this.character.y = pos.y;
-        this.character.renderSkill(this.ctx, meleeAtk, this.camera);
+        this.character.renderSkill(this.ctx, clientSkillUsed, this.camera);
         $ClientController.ClientControllerInstance.notifyServer(
           $serverMessages.Skill,
           this.character.lastDirection,

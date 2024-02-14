@@ -1,4 +1,4 @@
-import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
+import { OverworldMapsI } from "../game-server/interfaces/OverworldInterfaces.js";
 import { MapNames } from "../constants/MapNames.js";
 import { GameMap } from "./GameMap";
 

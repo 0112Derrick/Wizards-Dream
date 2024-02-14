@@ -2,12 +2,12 @@ import { Overworld_Test as $Overworld_Test } from "./Overworld_Test.js";
 import {
   MapConfigI as $MapConfigI,
   syncOverworld as $syncOverworld,
-} from "../players/interfaces/OverworldInterfaces.js";
+} from "../game-server/interfaces/OverworldInterfaces.js";
 import { GameObject as $GameObject } from "./GameObject.js";
 import { MapNames as $MapNames } from "../constants/MapNames.js";
 import { GameMap as $GameMap } from "./GameMap.js";
 import { Character as $Character } from "./Character.js";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { characterDataInterface as $characterDataInterface } from "../game-server/interfaces/CharacterDataInterface.js";
 import $CharacterManager from "./CharacterManager.js";
 import { Direction as $Direction } from "./DirectionInput.js";
 import { utilFunctions } from "./Utils.js";

@@ -1,6 +1,6 @@
 import { MapNames as $MapNames } from "../constants/MapNames.js";
 import { GameMap as $GameMap } from "./GameMap.js";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { characterDataInterface as $characterDataInterface } from "../game-server/interfaces/CharacterDataInterface.js";
 import { Direction as $Direction } from "./DirectionInput.js";
 
 export const Utils = {

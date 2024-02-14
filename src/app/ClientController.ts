@@ -6,17 +6,25 @@ import { EventConstants as $events, ServerNameConstants as $servers } from '../c
 import { SocketConstants as $socketRoutes } from "../constants/ServerConstants.js";
 
 import { appendFile } from "fs";
-import { CharacterCreationDataInterface as $characterSignup, characterDataInterface as $characterDataInterface, inputHistory as $inputHistory } from '../players/interfaces/CharacterDataInterface.js'
+import {
+  CharacterCreationDataInterface as $characterSignup,
+  characterDataInterface as $characterDataInterface,
+  inputHistory as $inputHistory,
+} from "../game-server/interfaces/CharacterDataInterface.js";
 import { Character as $Character, Character } from "../app/Character.js"
 import { Utils, utilFunctions } from "../app/Utils.js"
 import { GameObject as $GameObject } from "./GameObject.js";
 import { DirectionInput, Direction as $Direction } from "./DirectionInput.js";
-import { CharacterMovementData } from "../players/interfaces/CharacterInterfaces.js";
+import { CharacterMovementData } from "../game-server/interfaces/CharacterInterfaces.js";
 import { GameMap } from "./GameMap.js";
 import { Overworld_Test } from "./Overworld_Test.js";
 import { MapNames } from "../constants/MapNames.js";
-import { MapConfigI, syncOverworld as $syncOverworld, syncOverworldTransmit as $syncOverworldTransmit } from "../players/interfaces/OverworldInterfaces.js";
-import { OverworldMapsI } from "../players/interfaces/OverworldInterfaces.js";
+import {
+  MapConfigI,
+  syncOverworld as $syncOverworld,
+  syncOverworldTransmit as $syncOverworldTransmit,
+} from "../game-server/interfaces/OverworldInterfaces.js";
+import { OverworldMapsI } from "../game-server/interfaces/OverworldInterfaces.js";
 import { Socket } from "socket.io-client";
 import { MessageHeader as $MessageHeader, Message as $Message, Message } from "../framework/MessageHeader.js"
 import { CharacterVelocity as $CharacterVelocity, CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
@@ -26,7 +34,7 @@ import { ServerMessages } from '../constants/ServerMessages.js'
 import $MapManager from "./MapManager.js";
 import $CharacterManager from "./CharacterManager.js";
 import $MessageManager from "./MessageManager.js";
-import { MessageContentsI as $MessageContentsI } from "../players/interfaces/ServerInterfaces.js";
+import { MessageContentsI as $MessageContentsI } from "../game-server/interfaces/ServerInterfaces.js";
 
 interface ClientToServerEvents {
     playerJoinedServer: (data: number) => void;
@@ -569,7 +577,7 @@ export class ClientController extends $OBSERVER {
             clientController.CharacterManager.Character.location = MapNames.GrassyField;
         }
 
-        if (clientController.CharacterManager.Character.unlockedSkills.length == 0) { clientController.CharacterManager.addCharacterBasicSkills() }
+        if (clientController.CharacterManager.Character.unlockedSkills.length == 0) { clientController.CharacterManager.addCharacterBasicSkills(); clientController.CharacterManager.addBasicSkillsToHotBar(); }
 
         clientController.MapManger.setClientsCharacterOnMap(clientController.CharacterManager.Character, clientController.CharacterManager.Character.location)
 

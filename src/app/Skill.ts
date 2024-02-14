@@ -1,7 +1,7 @@
 import { Rectangle, Circle, Shape, ShapeTypes } from "../framework/Shapes.js";
 import { GameObject as $GameObject } from "./GameObject.js";
 import { Sprite as $Sprite } from "./Sprite.js";
-import { characterAddAndRemoveGameObjectsFromRenderI as $characterAddAndRemoveGameObjectsFromRenderI } from "../players/interfaces/OverworldInterfaces.js";
+import { characterAddAndRemoveGameObjectsFromRenderI as $characterAddAndRemoveGameObjectsFromRenderI } from "../game-server/interfaces/OverworldInterfaces.js";
 import $Camera from "./Camera.js";
 import { Direction as $Direction } from "./DirectionInput.js";
 import { CharacterSize as $CharacterSize } from "../constants/CharacterAttributesConstants.js";
@@ -9,7 +9,7 @@ import { SkillTypes as $SkillTypes } from "../constants/SkillTypes.js";
 import {
   SkillI as $SkillI,
   skillDependency,
-} from "../players/interfaces/SkillInterface.js";
+} from "../game-server/interfaces/SkillInterface.js";
 
 export class Skill extends $GameObject implements $SkillI {
   private shape: Shape;

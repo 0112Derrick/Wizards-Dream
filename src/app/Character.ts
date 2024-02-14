@@ -1,5 +1,5 @@
 import { idText } from "typescript";
-import { characterDataInterface as $characterDataInterface } from "../players/interfaces/CharacterDataInterface.js";
+import { characterDataInterface as $characterDataInterface } from "../game-server/interfaces/CharacterDataInterface.js";
 import { SpriteAnimations as $SpriteAnimations } from "./Sprite.js";
 import { GameObject as $GameObject } from "./GameObject.js";
 import { Direction as $Direction } from "./DirectionInput.js";
@@ -14,7 +14,7 @@ import { Skill as $Skill } from "./Skill.js";
 import {
   gameMapGameObjectsI,
   characterAddAndRemoveGameObjectsFromRenderI,
-} from "../players/interfaces/OverworldInterfaces.js";
+} from "../game-server/interfaces/OverworldInterfaces.js";
 import {
   Shape,
   Rectangle as $Rectangle,
@@ -44,6 +44,7 @@ export class Character
   username: string;
   class: string;
   unlockedSkills: $Skill[] = [];
+  hotbar: any[] = [];
   characterGender: string;
   width: number;
   height: number;
@@ -131,12 +132,12 @@ export class Character
 
   renderSkill(
     ctx: CanvasRenderingContext2D,
-    _skill: string,
+    _skill: $Skill,
     camera: $Camera
   ): boolean {
     for (let skill of this.unlockedSkills) {
       skill.GameObjectsCallback = this;
-      if (_skill.toLowerCase() == skill.Name.toLowerCase()) {
+      if (_skill.Name.toLowerCase() == skill.Name.toLowerCase()) {
         skill.draw(ctx, camera, this.lastDirection, { x: this.x, y: this.y });
         return true;
       }

@@ -1,6 +1,6 @@
 import passportLocal from 'passport-local';
-import PlayerModel from '../players/PlayerDBModel.js'
-import { CharacterModel } from '../players/PlayerDBModel.js';
+import PlayerModel from "../game-server/PlayerDBModel.js";
+import { CharacterModel } from "../game-server/PlayerDBModel.js";
 
 const localStrategy = passportLocal.Strategy;
 
