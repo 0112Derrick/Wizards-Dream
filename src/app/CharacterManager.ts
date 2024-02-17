@@ -118,6 +118,7 @@ export default class CharacterManager {
         console.log("Error:", error);
       });
   }
+    
   addBasicSkillsToHotBar() {
     this.Character.unlockedSkills.forEach((skill) => {
       this.Character.hotbar.push(skill);

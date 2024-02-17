@@ -43,8 +43,8 @@ export class Character
   lastDirection: $Direction;
   username: string;
   class: string;
-  unlockedSkills: $Skill[] = [];
-  hotbar: any[] = [];
+  unlockedSkills: $Skill[];
+  hotbar: any[];
   characterGender: string;
   width: number;
   height: number;
@@ -108,6 +108,7 @@ export class Character
     this.items = config.items || [];
     this.unlockedSkills = config.skills || [];
     this.name = config.name || "newCharacter";
+    this.hotbar = config.hotbar || [];
     this.width = config.width || $CharacterSize.width;
     this.height = config.height || $CharacterSize.height;
     this.walking = config.walking || false;
@@ -184,6 +185,7 @@ export class Character
       direction: this.direction,
       name: this.name,
       unlockedSkills: this.unlockedSkills,
+      hotbar: this.hotbar,
       width: this.width,
       height: this.height,
       walking: this.walking,

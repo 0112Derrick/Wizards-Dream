@@ -43,6 +43,7 @@ declare global {
     interface Request {
       player?: Player;
     }
+
     interface User {
       id: String;
       username: String;
@@ -302,8 +303,8 @@ function registerStaticPaths(app) {
     express.static(path.join(__dirname, "./src/constants"))
   );
   app.use(
-    "/src/players",
-    express.static(path.join(__dirname, "./src/players"))
+    "/src/game-server",
+    express.static(path.join(__dirname, "./src/game-server"))
   );
   app.use("/src/html", express.static(path.join(__dirname, "./src/html")));
   app.use("/src/", express.static(path.join(__dirname, "./src/")));
@@ -352,14 +353,20 @@ function configureRoutes(app, server?, io?, PORT?) {
        * */
 
       async function requestUserInfo() {
-        let clientOBJ = await req.user.populate("characters");
-        console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
-        $gameRouter.GameRouterInstance.setClientIP(req.ip);
-        $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
-      }
+        try {
+          let clientOBJ = await req.user.populate("characters");
+          console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
+          
+          $gameRouter.GameRouterInstance.setClientIP(req.ip);
+          $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
 
+          res.render("index", { layout: "index" });
+        } catch (error) {
+          console.log(error);
+          res.status(500).send("Internal Server Error.");
+        }
+      }
       requestUserInfo();
-      res.render("index", { layout: "index" });
     } else {
       res.redirect("/");
     }

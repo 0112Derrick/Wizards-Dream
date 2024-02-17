@@ -48,6 +48,7 @@ export const characterSchema = new Schema<IcharacterDoc, IcharacterModel>({
   width: { type: Number },
   height: { type: Number },
   unlockedSkills: { type: [Object] },
+  hotbar: { type: [Object] },
   friends: { type: [Object] },
   attributes: { type: Object },
   class: { type: String },
@@ -88,6 +89,7 @@ characterSchema.method("syncCharacter", function (character): void {
       hpCap: 0,
       spCap: 0,
     },
+    hotbar:docAsObject.hotbar,
     class: docAsObject.class,
     guild: docAsObject.guild,
     items: docAsObject.items,
@@ -127,29 +129,8 @@ playerSchema.method("validPassword", function (password: string): boolean {
   return this.hash === reaclHash;
 });
 
-/* crypto.createHash("sha256");
-  this.salt.on("readable", () => {
-    // Only one element is going to be produced by the
-    // hash stream.
-    const data = this.salt.read();
-    if (data) {
-      console.log(data.toString("hex"));
-      // Prints:
-      //   6a2da20943931e9834fc12cfe5bb47bbd9ae43489a30726962b576f4e3993e50
-    }
-  });
-
-  this.salt.write("some data to hash");
-  this.salt.end(); */
-
 //Add method to hash password
-/* playerSchema.method("hashPassword", function (password: string): void {
-  let arrayBufferView = new Int16Array(16);
-  this.salt = crypto.randomBytes(16).toString();
-  this.salt = getRandomValues(arrayBufferView);
 
-  this.hash = pbkdf2Sync(password, this.salt, 1000, 64, "sha512");
-}); */
 playerSchema.method(
   "hashPassword",
   function (this: IPlayerDoc, password: string): void {
@@ -182,5 +163,6 @@ export const CharacterModel = model<IcharacterDoc, IcharacterModel>(
   "Characters",
   characterSchema
 );
+
 const PlayerModel = model<IPlayerDoc, IplayerModel>("Players", playerSchema);
 export default PlayerModel;

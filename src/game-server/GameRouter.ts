@@ -283,6 +283,38 @@ export class GameRouter {
         ); /*this.checkClientActionMessages(message)*/
       }
     );
+
+    _socket.on(
+      $socketRoutes.REQUEST_CHARACTER_UPDATE,
+      (id, char: $characterDataInterface) => {
+        console.log(
+          `character update received: id:${id} character:${char.name}`
+        );
+        //FIXME - Find servers version of the character and compare updates. Save character to database.
+        let checkClientStatus = false;
+        if (char) {
+          gameRouter.clientMap.has(id)
+            ? (checkClientStatus = true)
+            : (checkClientStatus = false);
+
+          if (checkClientStatus) {
+            const activeChar = gameRouter.clientMap
+              .get(id)
+              .getActiveCharacter();
+
+            console.log(
+              "\nid: ",
+              id,
+              " active character: ",
+              activeChar.username
+            );
+            if (activeChar.username == char.name) {
+              gameRouter.clientMap.get(id).updateActiveCharacter(char);
+            }
+          }
+        }
+      }
+    );
     // _socket.on("requestOverworld", this.startServerRoom);
     // _socket.on("connection");
 
@@ -312,6 +344,7 @@ export class GameRouter {
             gameObjectID: character.gameObjectID,
             username: character.username,
             attributes: character.attributes,
+            hotbar: character.hotbar,
             class: character.class,
             guild: character.guild,
             items: character.items,

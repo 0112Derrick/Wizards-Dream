@@ -88,6 +88,7 @@ async function addCharacter(characterInfo: $characterSignup) {
     xVelocity: characterInfo.xVelocity,
     yVelocity: characterInfo.yVelocity,
     name: characterInfo.name,
+    hotbar: []
   };
 
   const newCharacter = new $CharacterModel(configCharacter);
