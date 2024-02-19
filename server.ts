@@ -241,8 +241,8 @@ const fs = fsModule.promises;
                 const jsonData = JSON.parse(data);
 
                 jsonData.forEach((skill) => {
-                  console.log("skill: ", skill, "\n");
-
+                  // console.log("skill: ", skill, "\n");
+                  
                   if (skill.dependencies.class == null) {
                     let createdSkill = new $skill(skill);
                     CLIENT.setUsableSkill(createdSkill);
@@ -355,8 +355,23 @@ function configureRoutes(app, server?, io?, PORT?) {
       async function requestUserInfo() {
         try {
           let clientOBJ = await req.user.populate("characters");
+
+          // clientOBJ.characters.forEach((char) => {
+          //   console.log(char);
+          //   if (char["characterID"] || !char.gameObjectID) {
+          //     const randomNum = Math.floor(Math.random() * 1000);
+          //     char.gameObjectID =
+          //       char["characterID"] | (Date.now() + randomNum);
+          //     try {
+          //       char.save();
+          //     } catch (error) {
+          //       console.log(error);
+          //     }
+          //   }
+          // });
+
           console.log("IP: " + req.ip + "\n player: " + req.user + "\n");
-          
+
           $gameRouter.GameRouterInstance.setClientIP(req.ip);
           $gameRouter.GameRouterInstance.setClient(clientOBJ, req.ip);
 

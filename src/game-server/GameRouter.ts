@@ -290,7 +290,7 @@ export class GameRouter {
         console.log(
           `character update received: id:${id} character:${char.name}`
         );
-        //FIXME - Find servers version of the character and compare updates. Save character to database.
+
         let checkClientStatus = false;
         if (char) {
           gameRouter.clientMap.has(id)
@@ -309,6 +309,7 @@ export class GameRouter {
               activeChar.username
             );
             if (activeChar.username == char.name) {
+              //FIXME - Check the character for cheating before saving.
               gameRouter.clientMap.get(id).updateActiveCharacter(char);
             }
           }

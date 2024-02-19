@@ -144,6 +144,7 @@ export class ClientObject {
         await charToSave.save();
         console.log("Character successfully saved to db.");
         this.setActiveCharacter(charToSave);
+        console.log("Active character after save:", this.activeCharacter);
       } catch (error) {
         console.log(error);
       }

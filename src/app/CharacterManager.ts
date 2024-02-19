@@ -118,7 +118,7 @@ export default class CharacterManager {
         console.log("Error:", error);
       });
   }
-    
+
   addBasicSkillsToHotBar() {
     this.Character.unlockedSkills.forEach((skill) => {
       this.Character.hotbar.push(skill);
@@ -188,6 +188,7 @@ export default class CharacterManager {
 
   //create an interface for obj
   syncUsertoCharacter(obj) {
+    console.log("Check to see whats on object:", obj);
     let char = new $Character({
       isPlayerControlled: true,
       name: obj.username,
@@ -202,16 +203,17 @@ export default class CharacterManager {
       characterID: obj._id,
       username: obj.username,
       attributes: obj.attributes,
-      unlockedSkills: obj.unlockedSkills,
+      unlockedSkills: [...obj.unlockedSkills],
+      hotbar: [...obj.hotbar],
       class: obj.class,
       guild: obj.guild,
-      items: obj.items,
+      items: [...obj.items],
       player: obj.player,
       location: obj.location || $MapNames.GrassyField,
       xVelocity: $CharacterVelocity.xVelocity,
       yVelocity: $CharacterVelocity.yVelocity,
     });
-
+    console.log("Check to see if char has everything:", char);
     if (!char.location) {
       char.location = $MapNames.GrassyField;
     }

@@ -739,22 +739,33 @@ export class ClientController extends $OBSERVER {
         MapNames.GrassyField;
     }
 
-    if (
-      clientController.CharacterManager.Character.unlockedSkills.length == 0
-    ) {
-      clientController.CharacterManager.addCharacterBasicSkills();
-      clientController.CharacterManager.addBasicSkillsToHotBar();
-      console.log(
-        "Client controller: ",
-        clientController.CharacterManager.Character
-      );
-      clientController.socket.emit(
-        $socketRoutes.REQUEST_CHARACTER_UPDATE,
-        this.clientID,
-        clientController.CharacterManager.Character
-      );
-      //ANCHOR - Save character hotbar
-    }
+    console.log(
+      "Check character:\n",
+      clientController.CharacterManager.Character
+    );
+
+    // if (
+    //   clientController.CharacterManager.Character.unlockedSkills.length == 0 ||
+    //   clientController.CharacterManager.Character.hotbar.length == 0
+    // ) {
+    //   if (
+    //     clientController.CharacterManager.Character.unlockedSkills.length == 0
+    //   ) {
+    //     clientController.CharacterManager.addCharacterBasicSkills();
+    //   }
+
+    //   if (clientController.CharacterManager.Character.hotbar.length == 0) {
+    //     clientController.CharacterManager.addBasicSkillsToHotBar();
+    //   }
+
+    //   clientController.socket.emit(
+    //     $socketRoutes.REQUEST_CHARACTER_UPDATE,
+    //     this.clientID,
+    //     clientController.CharacterManager.Character
+    //   );
+    // }
+
+    //ANCHOR - Save character hotbar
 
     clientController.MapManger.setClientsCharacterOnMap(
       clientController.CharacterManager.Character,
