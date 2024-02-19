@@ -744,26 +744,26 @@ export class ClientController extends $OBSERVER {
       clientController.CharacterManager.Character
     );
 
-    // if (
-    //   clientController.CharacterManager.Character.unlockedSkills.length == 0 ||
-    //   clientController.CharacterManager.Character.hotbar.length == 0
-    // ) {
-    //   if (
-    //     clientController.CharacterManager.Character.unlockedSkills.length == 0
-    //   ) {
-    //     clientController.CharacterManager.addCharacterBasicSkills();
-    //   }
+    if (
+      clientController.CharacterManager.Character.unlockedSkills.length == 0 ||
+      clientController.CharacterManager.Character.hotbar.length == 0
+    ) {
+      if (
+        clientController.CharacterManager.Character.unlockedSkills.length == 0
+      ) {
+        clientController.CharacterManager.addCharacterBasicSkills();
+      }
 
-    //   if (clientController.CharacterManager.Character.hotbar.length == 0) {
-    //     clientController.CharacterManager.addBasicSkillsToHotBar();
-    //   }
+      if (clientController.CharacterManager.Character.hotbar.length == 0) {
+        clientController.CharacterManager.addBasicSkillsToHotBar();
+      }
 
-    //   clientController.socket.emit(
-    //     $socketRoutes.REQUEST_CHARACTER_UPDATE,
-    //     this.clientID,
-    //     clientController.CharacterManager.Character
-    //   );
-    // }
+      clientController.socket.emit(
+        $socketRoutes.REQUEST_CHARACTER_UPDATE,
+        this.clientID,
+        clientController.CharacterManager.Character
+      );
+    }
 
     //ANCHOR - Save character hotbar
 
