@@ -105,6 +105,18 @@ export class ClientObject {
     }
   }
 
+  updateActiveCharacter(char: $characterDataInterface) {
+    this.activeCharacter.attributes = char.attributes;
+    this.activeCharacter.class = char.class;
+    this.activeCharacter.equipment = char.equipment;
+    this.activeCharacter.friends = [...char.friends];
+    this.activeCharacter.guild = char.guild;
+    this.activeCharacter.hotbar = [...char.hotbar];
+    this.activeCharacter.items = [...char.items];
+    this.activeCharacter.location = char.location;
+    this.activeCharacter.unlockedSkills = [...char.unlockedSkills];
+  }
+
   //Sets the clients socket
   setClientSocket(socket: Socket): void {
     if (socket instanceof Socket) this.socket = socket;
@@ -122,7 +134,7 @@ export class ClientObject {
     return this.clientTickAdjustment.get(iteration);
   }
 
-  async updateActiveCharacter(char: $characterDataInterface) {
+  async saveActiveCharacter(char: $characterDataInterface) {
     console.log("clientObj:", char);
 
     if (this.activeCharacter) {
@@ -143,7 +155,8 @@ export class ClientObject {
       try {
         await charToSave.save();
         console.log("Character successfully saved to db.");
-        this.setActiveCharacter(charToSave);
+        // this.setActiveCharacter(charToSave);
+        this.updateActiveCharacter(charToSave);
         console.log("Active character after save:", this.activeCharacter);
       } catch (error) {
         console.log(error);

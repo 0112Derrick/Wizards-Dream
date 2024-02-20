@@ -13,7 +13,18 @@
 <body>
     <div class="title-message">Server started</div>
 
-
+ <button id="{{HTML_IDS.CHARACTER_MODAL_BTN}}" class="">Create Character Menu</button>
+        <ul class="gameButtons">
+            <li>
+                <button id="{{HTML_IDS.SELECT_SERVER}}">Select Server</button>
+            </li>
+            <li><button style="cursor: pointer;" id="{{HTML_IDS.LOGOUT}}">Logout</button></li>
+            <li><button style="cursor: pointer;" id="{{HTML_IDS.LOCKSCREEN}}">Lock Screen</button></li>
+            {{!-- <li><button style="cursor: pointer;" id="{{HTML_IDS.STOP_LOOP}}">Stop</button></li>
+            <li><button style="cursor: pointer;" id="{{HTML_IDS.START_LOOP}}">Start</button></li> --}}
+            <li></li>
+        </ul>
+        
     <div class="game-container">
         <canvas class="game-canvas"></canvas>
         <div class="loading-screen" , id="{{HTML_IDS.LOADING_SCREEN}}" close>
@@ -35,16 +46,7 @@
                 </div>
             </div>
         </div>
-        <button id="{{HTML_IDS.CHARACTER_MODAL_BTN}}" class="">Create Character Menu</button>
-        <ul class="gameButtons">
-            <li>
-                <button id="{{HTML_IDS.SELECT_SERVER}}">Select Server</button>
-            </li>
-            <li><button style="cursor: pointer;" id="{{HTML_IDS.LOGOUT}}">Logout</button></li>
-            <li><button style="cursor: pointer;" id="{{HTML_IDS.STOP_LOOP}}">Stop</button></li>
-            <li><button style="cursor: pointer;" id="{{HTML_IDS.START_LOOP}}">Start</button></li>
-            <li></li>
-        </ul>
+       
 
         <div id="{{HTML_IDS.SELECT_CHARACTERS}}"></div>
 

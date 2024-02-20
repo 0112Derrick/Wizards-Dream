@@ -310,7 +310,7 @@ export class GameRouter {
             );
             if (activeChar.username == char.name) {
               //FIXME - Check the character for cheating before saving.
-              gameRouter.clientMap.get(id).updateActiveCharacter(char);
+              gameRouter.clientMap.get(id).saveActiveCharacter(char);
             }
           }
         }
